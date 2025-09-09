@@ -10,7 +10,7 @@ export interface UseScryfallCardNamedResult {
 
 export function useScryfallCardNamed(name: string): UseScryfallCardNamedResult {
     const { data, error, isLoading } = useSWR(
-        `cards/named?fuzzy=${encodeURIComponent(name)}`,
+        [`cards/named?fuzzy=${encodeURIComponent(name)}`],
         scryfallFetcher<ScryfallCard>
     )
 

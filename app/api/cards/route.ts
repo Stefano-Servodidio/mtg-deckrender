@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
         }
 
         // Parse decklist into unique card names with quantities
-        const cardStrings = decklist.split('\n').map((line) => line.trim())
+        const cardStrings = decklist
+            .split('\n')
+            .map((line) => line.replace(' ', '#').trim())
 
         const uniqueCards = cardStrings.reduce<
             { name: string; quantity: number }[]
@@ -37,9 +39,10 @@ export async function POST(request: NextRequest) {
         }
 
         const cards = []
+        const errors = []
         // Fetch card data from Scryfall for each unique card
-        for (const { name } of uniqueCards) {
-            const card = await fetch(
+        for (const { name, quantity } of uniqueCards) {
+            const response = await fetch(
                 process.env.NEXT_PUBLIC_API_URL_SCRYFALL +
                     `cards/named?fuzzy=${encodeURIComponent(name)}`,
                 {
@@ -51,18 +54,16 @@ export async function POST(request: NextRequest) {
                     }
                 }
             )
-            if (!card.ok) {
-                return NextResponse.json(
-                    { error: `Card not found: ${name}` },
-                    { status: 404 }
-                )
+            console.log(`Fetching card: ${name}, Status: ${response.status}`)
+            if (!response.ok) {
+                errors.push(name)
             }
-            const cardData = await card.json()
-            cards.push(cardData)
+            const cardData = await response.json()
+            cards.push({ card: cardData, quantity })
             await sleep(60) // Sleep for 100ms to respect rate limits
         }
 
-        return NextResponse.json({ cards })
+        return NextResponse.json({ cards, errors })
     } catch (error) {
         console.error('Error fetching card images:', error)
         return NextResponse.json(

@@ -23,15 +23,34 @@ import { Navbar } from '@/components/Navbar'
 import { DropZone } from '@/components/DropZone'
 import { Footer } from '@/components/Footer'
 import { useScryfallCardNamed } from '@/app/services/scryfall/api'
+import { useCards } from '@/app/services/serverless/api'
 
 export function ClientCreatePage() {
     const [decklistText, setDecklistText] = useState('')
+    const [decklist, setDecklist] = useState('')
     const [isGenerating, setIsGenerating] = useState(false)
-    const [isUploading, setIsUploading] = useState(false)
     const [generatedImage, setGeneratedImage] = useState<string | null>(null)
     const toast = useToast()
 
-    useScryfallCardNamed('Black Lotus')
+    const {
+        data: cards,
+        error: cardsError,
+        isLoading: isLoadingCards
+    } = useCards(decklist, {
+        onSuccess: (data) => {
+            toast({
+                title: 'Decklist uploaded!',
+                description: 'Cards fetched successfully.',
+                status: 'success',
+                duration: 3000,
+                isClosable: true
+            })
+            console.log('Fetched cards:', data.cards)
+            setDecklist('')
+            // You can add other logic here, e.g. set state
+        }
+    })
+
     const bgGradient = useColorModeValue(
         'linear(to-br, purple.50, blue.50)',
         'linear(to-br, purple.900, blue.900)'
@@ -39,9 +58,7 @@ export function ClientCreatePage() {
     const cardBg = useColorModeValue('white', 'gray.800')
 
     const handleUpload = () => {
-        console.log(decklistText)
-        console.log(JSON.stringify(decklistText))
-        console.log(decklistText.split('\n'))
+        setDecklist(decklistText)
     }
 
     const handleFileUpload = useCallback(
@@ -240,7 +257,7 @@ export function ClientCreatePage() {
                                     colorScheme="purple"
                                     leftIcon={<FaUpload />}
                                     onClick={handleUpload}
-                                    isLoading={isUploading}
+                                    isLoading={isLoadingCards}
                                     loadingText="Uploading..."
                                     w={{ base: 'full', md: 'auto' }}
                                     px={8}
@@ -250,7 +267,7 @@ export function ClientCreatePage() {
                                     }}
                                     transition="all 0.2s"
                                     disabled={
-                                        !decklistText.trim() || isUploading
+                                        !decklistText.trim() || isLoadingCards
                                     }
                                 >
                                     Upload Decklist

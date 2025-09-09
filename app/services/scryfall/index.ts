@@ -1,8 +1,8 @@
 //Scryfall fetcher function
-export async function scryfallFetcher<T = unknown>(
+export async function scryfallFetcher<T = unknown>([url, options]: [
     url: string,
-    options: RequestInit = {}
-): Promise<T> {
+    options: RequestInit
+]): Promise<T> {
     const res = await fetch(process.env.NEXT_PUBLIC_API_URL_SCRYFALL + url, {
         ...options,
         headers: {
