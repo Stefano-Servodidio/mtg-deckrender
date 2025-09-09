@@ -20,7 +20,7 @@ export function DropZone({ onFileUpload }: DropZoneProps) {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: {
-            'text/plain': ['.txt']
+            'text/plain': ['.txt'] // TODO: add support for .dek
         },
         multiple: false
     })
