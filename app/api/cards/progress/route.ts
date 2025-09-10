@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
                 // Fetch card data from Scryfall for each unique card
                 for (let i = 0; i < uniqueCards.length; i++) {
                     const { name, quantity } = uniqueCards[i]
-                    
+
                     try {
                         // Send progress update
                         controller.enqueue(
@@ -70,7 +71,9 @@ export async function POST(request: NextRequest) {
                                     type: 'progress',
                                     current: i + 1,
                                     total: totalCards,
-                                    percentage: Math.round(((i + 1) / totalCards) * 100),
+                                    percentage: Math.round(
+                                        ((i + 1) / totalCards) * 100
+                                    ),
                                     message: `Fetching ${name}...`
                                 })}\n\n`
                             )
@@ -83,14 +86,19 @@ export async function POST(request: NextRequest) {
                                 method: 'GET',
                                 headers: {
                                     'User-Agent':
-                                        process.env.NEXT_PUBLIC_API_USER_AGENT ||
+                                        process.env
+                                            .NEXT_PUBLIC_API_USER_AGENT ||
                                         'mtg-deck-to-png/1.0'
                                 }
                             }
                         )
 
-                        console.log(`Fetching card: ${name}, Status: ${response.status}`)
-                        
+                        console.log(
+                            chalk.cyan(
+                                `Fetching card: ${name}, Status: ${response.status}`
+                            )
+                        )
+
                         if (!response.ok) {
                             errors.push(name)
                         } else {
@@ -126,7 +134,7 @@ export async function POST(request: NextRequest) {
             headers: {
                 'Content-Type': 'text/event-stream',
                 'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
+                Connection: 'keep-alive',
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST',
                 'Access-Control-Allow-Headers': 'Content-Type'
@@ -149,6 +157,7 @@ export async function GET() {
     return NextResponse.json({
         message: 'Card Progress API',
         usage: 'POST with { "decklist": "4x Card Name 1\\n4x Card Name 2" }',
-        description: 'Fetches card information with real-time progress updates via Server-Sent Events.'
+        description:
+            'Fetches card information with real-time progress updates via Server-Sent Events.'
     })
 }

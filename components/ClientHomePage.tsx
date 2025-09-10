@@ -151,8 +151,8 @@ export function ClientHomePage() {
                                 </Heading>
                                 <Text color="gray.600">
                                     Clean, professional deck images with proper
-                                    card categorization and formatting that's
-                                    easy to read and share.
+                                    card categorization and formatting
+                                    that&apos;s easy to read and share.
                                 </Text>
                             </VStack>
                         </Box>

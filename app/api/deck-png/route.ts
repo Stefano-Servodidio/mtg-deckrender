@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ScryfallCard } from '@/app/services/scryfall/types'
+import sharp from 'sharp'
+import chalk from 'chalk'
 
 interface DeckCard {
     card: ScryfallCard
@@ -9,11 +11,12 @@ interface DeckCard {
 interface DeckPngRequest {
     cards: DeckCard[]
     options?: {
-        format?: 'PNG' | 'JPEG'
-        width?: number
-        height?: number
-        backgroundColor?: string
-        textColor?: string
+        rowSize?: number
+        // format?: 'PNG' | 'JPEG'
+        // width?: number
+        // height?: number
+        // backgroundColor?: string
+        // textColor?: string
     }
 }
 
@@ -26,9 +29,23 @@ interface CardImageData {
     rarity?: string
 }
 
+const defaultOptions = {
+    rowSize: 7
+    // format: 'PNG' as 'PNG' | 'JPEG',
+    // width: 800,
+    // height: 1000,
+    // backgroundColor: 'transparent',
+    // textColor: 'black'
+}
+
+const svgCount =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 35 35" role="img" aria-label="x1 box"><rect x="0" y="0" width="35" height="35" rx="4" ry="4" fill="#000000"/><text x="50%" y="50%" fill="#FFFFFF" font-size="16" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">x_count</text></svg>'
+
 export async function POST(request: NextRequest) {
     try {
-        const { cards, options = {} }: DeckPngRequest = await request.json()
+        console.log(chalk.yellow('API: ', chalk.cyan('POST /api/deck-png')))
+        const { cards, options = defaultOptions }: DeckPngRequest =
+            await request.json()
 
         if (!cards || !Array.isArray(cards)) {
             return NextResponse.json(
@@ -55,8 +72,7 @@ export async function POST(request: NextRequest) {
         }))
 
         // Filter out cards without image URIs
-        const validCardImages = cardImages.filter(card => card.imageUri)
-        const invalidCards = cardImages.filter(card => !card.imageUri)
+        const validCardImages = cardImages.filter((card) => card.imageUri)
 
         if (validCardImages.length === 0) {
             return NextResponse.json(
@@ -65,58 +81,130 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Calculate totals
-        const totalCards = validCardImages.reduce((sum, card) => sum + card.quantity, 0)
-        
-        // Group cards by type for better organization
-        const groupedCards = {
-            creatures: validCardImages.filter(card => 
-                card.typeLine.toLowerCase().includes('creature')
-            ),
-            spells: validCardImages.filter(card => 
-                card.typeLine.toLowerCase().includes('instant') ||
-                card.typeLine.toLowerCase().includes('sorcery')
-            ),
-            artifacts: validCardImages.filter(card => 
-                card.typeLine.toLowerCase().includes('artifact')
-            ),
-            enchantments: validCardImages.filter(card => 
-                card.typeLine.toLowerCase().includes('enchantment')
-            ),
-            planeswalkers: validCardImages.filter(card => 
-                card.typeLine.toLowerCase().includes('planeswalker')
-            ),
-            lands: validCardImages.filter(card => 
-                card.typeLine.toLowerCase().includes('land')
-            ),
-            other: validCardImages.filter(card => {
-                const type = card.typeLine.toLowerCase()
-                return !type.includes('creature') &&
-                       !type.includes('instant') &&
-                       !type.includes('sorcery') &&
-                       !type.includes('artifact') &&
-                       !type.includes('enchantment') &&
-                       !type.includes('planeswalker') &&
-                       !type.includes('land')
+        // Download all card images
+        const cardImageBuffers = await Promise.all(
+            validCardImages.map(async (card) => {
+                try {
+                    const response = await fetch(card.imageUri)
+                    if (!response.ok) {
+                        throw new Error(
+                            `Failed to fetch image for ${card.name}`
+                        )
+                    }
+                    const buffer = await response.arrayBuffer()
+                    return {
+                        name: card.name,
+                        buffer: Buffer.from(buffer),
+                        quantity: card.quantity
+                    }
+                } catch (error) {
+                    console.error(
+                        `Error fetching image for ${card.name}:`,
+                        error
+                    )
+                    return null
+                }
             })
+        )
+
+        // Filter out failed downloads
+        const successfulImages = cardImageBuffers.filter((img) => img !== null)
+
+        if (successfulImages.length === 0) {
+            return NextResponse.json(
+                { error: 'Failed to download any card images.' },
+                { status: 500 }
+            )
         }
 
-        return NextResponse.json({
-            success: true,
-            message: 'Card images processed successfully',
-            data: {
-                cardImages: validCardImages,
-                groupedCards,
-                totalCards,
-                totalUniqueCards: validCardImages.length,
-                invalidCards: invalidCards.map(card => card.name),
-                options: {
-                    format: options.format || 'PNG',
-                    width: options.width || 800,
-                    height: options.height || 1000,
-                    backgroundColor: options.backgroundColor || '#ffffff',
-                    textColor: options.textColor || '#000000'
+        // Create composite image using Sharp
+        const cardsPerRow = options?.rowSize || 7
+        const cardWidth = 146 // Small image width from Scryfall
+        const cardHeight = 204 // Small image height from Scryfall
+        const spacing = 4 // Space between cards
+
+        const totalRows = Math.ceil(successfulImages.length / cardsPerRow)
+        const canvasWidth =
+            cardWidth * cardsPerRow + spacing * (cardsPerRow - 1) + spacing * 2 // Add padding
+        const canvasHeight =
+            cardHeight * totalRows + spacing * (totalRows - 1) + spacing * 2 // Add padding
+
+        // Create base canvas
+        const canvas = sharp({
+            create: {
+                width: canvasWidth,
+                height: canvasHeight,
+                channels: 4,
+                background: { r: 0, g: 0, b: 0, alpha: 0 }
+            }
+        })
+
+        // Prepare card composite operations
+        const cardOperations = successfulImages.map((imageData, index) => {
+            const row = Math.floor(index / cardsPerRow)
+            const col = index % cardsPerRow
+
+            const left = spacing + col * (cardWidth + spacing)
+            const top = spacing + row * (cardHeight + spacing)
+
+            return {
+                input: imageData.buffer,
+                left,
+                top
+            }
+        })
+
+        // Prepare quantity overlay operations
+        const countOperations = successfulImages
+            .map((imageData, index) => {
+                if (imageData.quantity < 2) return null // No overlay for single cards
+
+                const row = Math.floor(index / cardsPerRow)
+                const col = index % cardsPerRow
+
+                const left = spacing + col * (cardWidth + spacing) + 15
+                const top = spacing + row * (cardHeight + spacing) + 25
+
+                let svgOverlay = svgCount.replace(
+                    '_count',
+                    imageData.quantity.toString()
+                )
+
+                return {
+                    input: Buffer.from(svgOverlay),
+                    left,
+                    top
                 }
+            })
+            .filter((op) => op !== null)
+
+        // Create the composite image
+        const compositeImage = canvas.composite([
+            ...cardOperations,
+            ...countOperations
+        ])
+        const outputBuffer = await compositeImage.png().toBuffer()
+
+        chalk
+        console.log(
+            chalk.cyan(
+                `Generated deck image with ${successfulImages.length} cards.`
+            )
+        )
+        console.log(chalk.cyan(`Canvas size: ${canvasWidth}x${canvasHeight}`))
+        console.log(
+            chalk.cyan(
+                `outputBuffer size: ${+(outputBuffer.length / (1024 * 1024)).toFixed(2)} MB`
+            )
+        )
+        // Return the image as a response
+        return new NextResponse(outputBuffer, {
+            status: 200,
+            headers: {
+                'Content-Type': 'image/png',
+                'Content-Length': outputBuffer.length.toString(),
+                'Cache-Control': 'public, max-age=31536000',
+                'Content-Disposition': 'inline; filename="mtg-deck.png"'
             }
         })
     } catch (error) {
@@ -132,7 +220,8 @@ export async function GET() {
     return NextResponse.json({
         message: 'Deck PNG Generator API',
         usage: 'POST with { "cards": [{ "card": ScryfallCard, "quantity": number }], "options": {} }',
-        description: 'Processes Magic: The Gathering cards and returns their image URIs organized for deck visualization',
+        description:
+            'Creates a composite PNG image from Magic: The Gathering cards arranged in rows of 7',
         expectedFormat: {
             cards: [
                 {
@@ -141,19 +230,13 @@ export async function GET() {
                 }
             ],
             options: {
-                format: 'PNG | JPEG (optional)',
-                width: 'number (optional, default: 800)',
-                height: 'number (optional, default: 1000)',
-                backgroundColor: 'string (optional, default: #ffffff)',
-                textColor: 'string (optional, default: #000000)'
+                rowSize: 'number of cards per row (optional, default: 7)'
+                // format: 'PNG | JPEG (optional)'
+                // width: 'number (optional, default: calculated)',
+                // height: 'number (optional, default: calculated)',
+                // backgroundColor: 'string (optional, default: transparent)'
             }
         },
-        returns: {
-            cardImages: 'Array of card data with image URIs',
-            groupedCards: 'Cards organized by type',
-            totalCards: 'Total number of cards including quantities',
-            totalUniqueCards: 'Number of unique cards',
-            invalidCards: 'Array of card names without valid images'
-        }
+        returns: 'PNG image buffer with all unique cards arranged in rows of 7'
     })
 }

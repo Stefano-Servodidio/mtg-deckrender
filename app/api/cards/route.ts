@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Simple in-memory cache for card data
@@ -5,6 +6,7 @@ const cardCache = new Map<string, { data: any; expires: number }>()
 
 export async function POST(request: NextRequest) {
     try {
+        console.log(chalk.yellow('API: ', chalk.cyan('POST /api/cards')))
         // decklist is a string with one card name per line
         const { decklist } = await request.json()
 
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
             const cached = cardCache.get(cacheKey)
             if (cached && cached.expires > now) {
                 cards.push({ card: cached.data, quantity })
+                console.log(chalk.cyan(`Cache hit for card: ${name}`))
                 continue
             }
 
@@ -67,7 +70,9 @@ export async function POST(request: NextRequest) {
                     }
                 }
             )
-            console.log(`Fetching card: ${name}, Status: ${response.status}`)
+            console.log(
+                chalk.cyan(`Fetching card: ${name}, Status: ${response.status}`)
+            )
             if (!response.ok) {
                 errors.push(name)
             }
@@ -78,7 +83,7 @@ export async function POST(request: NextRequest) {
                 data: cardData,
                 expires: now + CACHE_DURATION
             })
-            await sleep(60) // Sleep for 60ms to respect rate limits
+            await sleep(50) // Sleep for 60ms to respect rate limits
         }
 
         return NextResponse.json({ cards, errors })

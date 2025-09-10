@@ -21,79 +21,80 @@ import {
     AccordionPanel,
     AccordionIcon
 } from '@chakra-ui/react'
-import { useState, useCallback, useEffect, use } from 'react'
+import { useState, useCallback } from 'react'
+import React from 'react'
 import { useDropzone } from 'react-dropzone'
 import { FaUpload, FaImage, FaDownload, FaCog, FaList } from 'react-icons/fa'
 import { Navbar } from '@/components/Navbar'
 import { DropZone } from '@/components/DropZone'
 import { Footer } from '@/components/Footer'
-import { useCards } from '@/app/services/serverless/api'
-import { ScryfallCard } from '@/app/services/scryfall/types'
+import { useCards, useDeckPng } from '@/app/services/serverless/api'
 
 export function ClientCreatePage() {
     const [decklistText, setDecklistText] = useState('')
-    const [decklist, setDecklist] = useState('')
-    const [isGenerating, setIsGenerating] = useState(false)
-    const [generatedImage, setGeneratedImage] = useState<string | null>(null)
+    const [decklistToFetch, setDecklistToFetch] = useState<string | null>(null)
+    const [shouldGenerateImage, setShouldGenerateImage] = useState(false)
     const [accordionIndex, setAccordionIndex] = useState<number[]>([0])
-    const [cards, setCards] = useState<ScryfallCard[]>([])
     const toast = useToast()
 
-    const { isLoading: isLoadingCards } = useCards(decklist, {
-        onSuccess: ({ cards, errors }) => {
-            if (cards.length > 0) {
-                setCards(cards)
-                toast({
-                    title: 'Decklist uploaded!',
-                    description: 'Cards fetched successfully.',
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true
-                })
-            }
-            if (errors.length > 0) {
-                toast({
-                    title: 'Some cards were not found',
-                    description: `The following cards could not be found: ${errors.join(
-                        ', '
-                    )}`,
-                    status: 'warning',
-                    duration: 7000,
-                    isClosable: true
-                })
-            }
-            setDecklist('')
-            if (!errors?.length) setAccordionIndex([1]) // Move to next section
-            // You can add other logic here, e.g. set state
-            return { cards, errors }
-        },
-        onError: (err) => {
-            toast({
-                title: 'Error fetching cards',
-                description:
-                    err instanceof Error
-                        ? err.message
-                        : 'An unknown error occurred.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true
-            })
-            return err
-        }
-    })
-    console.log('Fetched cards:', cards)
+    // Use the useCards hook
+    const {
+        data: cardsData,
+        error: cardsError,
+        isLoading: isLoadingCards
+    } = useCards(decklistToFetch)
+
+    // Use the useDeckPng hook
+    const {
+        data: generatedImage,
+        error: imageError,
+        isLoading: isGenerating
+    } = useDeckPng(cardsData?.cards || null, shouldGenerateImage)
 
     const bgGradient = useColorModeValue(
         'linear(to-br, purple.50, blue.50)',
         'linear(to-br, purple.900, blue.900)'
     )
     const cardBg = useColorModeValue('white', 'gray.800')
-
     const previewBg = useColorModeValue('gray.50', 'gray.700')
 
-    const handleUpload = () => {
-        setDecklist(decklistText)
+    const handleUpload = async () => {
+        if (!decklistText.trim()) {
+            toast({
+                title: 'No decklist provided',
+                description: 'Please paste or upload a decklist first.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true
+            })
+            return
+        }
+
+        setDecklistToFetch(decklistText.trim())
     }
+
+    // Handle cards fetch completion
+    React.useEffect(() => {
+        if (cardsData && !isLoadingCards && !cardsError) {
+            toast({
+                title: 'Decklist uploaded!',
+                description: `Cards fetched successfully. Found ${cardsData.cards?.length || 0} unique cards.`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true
+            })
+            // Move to configure section after successful upload
+            setAccordionIndex([1])
+        } else if (cardsError && !isLoadingCards) {
+            toast({
+                title: 'Upload failed',
+                description: cardsError.message || 'Failed to fetch card data.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true
+            })
+        }
+    }, [cardsData, cardsError, isLoadingCards, toast])
 
     const handleFileUpload = useCallback(
         (files: File[]) => {
@@ -126,60 +127,50 @@ export function ClientCreatePage() {
     )
 
     const handleGenerateImage = async () => {
-        setIsGenerating(true)
-
-        try {
-            const response = await fetch('/api/deck-png', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    cards,
-                    options: {
-                        format: 'PNG',
-                        width: 800,
-                        height: 1000
-                    }
-                })
+        if (!cardsData?.cards || cardsData.cards.length === 0) {
+            toast({
+                title: 'No cards available',
+                description: 'Please upload and fetch cards first.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true
             })
+            return
+        }
 
-            const result = await response.json()
+        setShouldGenerateImage(true)
+    }
 
-            if (response.ok && result.success) {
-                // For now, we'll use a placeholder image since we're not generating actual images yet
-                // In a real implementation, you would create an actual image from the card data
-                setGeneratedImage(
-                    'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000'
-                )
-                toast({
-                    title: 'Image generated successfully!',
-                    description: `Processed ${result.data.totalUniqueCards} unique cards (${result.data.totalCards} total).`,
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true
-                })
-                // Move to download section after successful generation
-                setAccordionIndex([2])
-            } else {
-                throw new Error(result.error || 'Failed to generate image')
-            }
-        } catch (error) {
-            console.error('Error generating image:', error)
+    // Handle image generation completion
+    React.useEffect(() => {
+        if (generatedImage && !isGenerating && !imageError) {
+            toast({
+                title: 'Image generated successfully!',
+                description: `Generated deck image with ${cardsData?.cards?.length || 0} unique cards.`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true
+            })
+            // Move to download section after successful generation
+            setAccordionIndex([2])
+        } else if (imageError && !isGenerating) {
             toast({
                 title: 'Generation failed',
                 description:
-                    error instanceof Error
-                        ? error.message
-                        : 'An error occurred while generating the image.',
+                    imageError.message ||
+                    'An error occurred while generating the image.',
                 status: 'error',
                 duration: 5000,
                 isClosable: true
             })
-        } finally {
-            setIsGenerating(false)
         }
-    }
+    }, [
+        generatedImage,
+        imageError,
+        isGenerating,
+        cardsData?.cards?.length,
+        toast
+    ])
 
     return (
         <Box
@@ -347,14 +338,27 @@ export function ClientCreatePage() {
                                                 Upload Decklist
                                             </Button>
 
-                                            {/* Progress Bar */}
-                                            {/* <ProgressBar
-                                                current={progress.current}
-                                                total={progress.total}
-                                                percentage={progress.percentage}
-                                                message={progress.message}
-                                                isVisible={isLoadingCards}
-                                            /> */}
+                                            {/* Loading indicator */}
+                                            {isLoadingCards && (
+                                                <Text
+                                                    color="blue.500"
+                                                    textAlign="center"
+                                                >
+                                                    Fetching card data...
+                                                </Text>
+                                            )}
+
+                                            {/* Success indicator */}
+                                            {cardsData?.cards && (
+                                                <Text
+                                                    color="green.500"
+                                                    textAlign="center"
+                                                >
+                                                    Successfully loaded{' '}
+                                                    {cardsData.cards.length}{' '}
+                                                    unique cards!
+                                                </Text>
+                                            )}
                                         </VStack>
                                     </AccordionPanel>
                                 </AccordionItem>
@@ -442,7 +446,10 @@ export function ClientCreatePage() {
                                                     boxShadow: 'lg'
                                                 }}
                                                 transition="all 0.2s"
-                                                disabled={!cards?.length}
+                                                disabled={
+                                                    !cardsData?.cards ||
+                                                    cardsData.cards.length === 0
+                                                }
                                             >
                                                 Generate Deck Image
                                             </Button>
@@ -510,7 +517,6 @@ export function ClientCreatePage() {
                                                         as="a"
                                                         href={generatedImage}
                                                         download="mtg-deck.png"
-                                                        target="_blank"
                                                         size="lg"
                                                         colorScheme="green"
                                                         leftIcon={

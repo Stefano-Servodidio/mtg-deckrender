@@ -1,8 +1,8 @@
 //serverless fetcher function
-export const serverlessFetcher = async <T = unknown>([url, options]: [
+export async function serverlessFetcher<T = unknown>([url, options]: [
     url: string,
     options: RequestInit
-]): Promise<T> => {
+]): Promise<T> {
     const res = await fetch(url, { ...options })
     return await res.json()
 }
