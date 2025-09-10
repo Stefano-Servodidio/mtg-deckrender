@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Simple in-memory cache for card data
+const cardCache = new Map<string, { data: any; expires: number }>()
+
 export async function POST(request: NextRequest) {
     try {
         // decklist is a string with one card name per line
@@ -40,8 +43,18 @@ export async function POST(request: NextRequest) {
 
         const cards = []
         const errors = []
-        // Fetch card data from Scryfall for each unique card
+        const now = Date.now()
+        const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in ms
+
+        // Fetch card data from Scryfall for each unique card, with cache
         for (const { name, quantity } of uniqueCards) {
+            const cacheKey = name.toLowerCase()
+            const cached = cardCache.get(cacheKey)
+            if (cached && cached.expires > now) {
+                cards.push({ card: cached.data, quantity })
+                continue
+            }
+
             const response = await fetch(
                 process.env.NEXT_PUBLIC_API_URL_SCRYFALL +
                     `cards/named?fuzzy=${encodeURIComponent(name)}`,
@@ -60,7 +73,12 @@ export async function POST(request: NextRequest) {
             }
             const cardData = await response.json()
             cards.push({ card: cardData, quantity })
-            await sleep(60) // Sleep for 100ms to respect rate limits
+            // Cache the card data for 24 hours
+            cardCache.set(cacheKey, {
+                data: cardData,
+                expires: now + CACHE_DURATION
+            })
+            await sleep(60) // Sleep for 60ms to respect rate limits
         }
 
         return NextResponse.json({ cards, errors })

@@ -1,18 +1,22 @@
 import { serverlessFetcher } from '.'
 import useSWR, { SWRConfiguration } from 'swr'
-import { ScryfallCard } from '../scryfall/types'
+import { CardsResponse } from './types'
 
 export const useCards = (decklist: string, config?: SWRConfiguration) => {
-    const { data, error, isLoading } = useSWR(
+    const swr = useSWR(
         decklist?.trim()
             ? [
                   '/api/cards',
                   { method: 'POST', body: JSON.stringify({ decklist }) }
               ]
             : null,
-        serverlessFetcher<{ cards: ScryfallCard[] }>,
+        serverlessFetcher<CardsResponse>,
         config
     )
-
-    return { data, error, isLoading }
+    console.log('useCards - decklist:', decklist)
+    console.log('useCards - swr:', swr)
+    console.log('useCards - data:', swr.data)
+    console.log('useCards - error:', swr.error)
+    console.log('useCards - isLoading:', swr.isLoading)
+    return swr
 }

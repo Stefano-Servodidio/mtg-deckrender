@@ -1,199 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ScryfallCard } from '@/app/services/scryfall/types'
 
 interface DeckCard {
+    card: ScryfallCard
     quantity: number
+}
+
+interface DeckPngRequest {
+    cards: DeckCard[]
+    options?: {
+        format?: 'PNG' | 'JPEG'
+        width?: number
+        height?: number
+        backgroundColor?: string
+        textColor?: string
+    }
+}
+
+interface CardImageData {
     name: string
-    category?:
-        | 'creature'
-        | 'instant'
-        | 'sorcery'
-        | 'enchantment'
-        | 'artifact'
-        | 'planeswalker'
-        | 'land'
-        | 'other'
-}
-
-interface ParsedDeck {
-    mainboard: DeckCard[]
-    sideboard: DeckCard[]
-    deckName?: string
-}
-
-function parseDeckList(decklistText: string): ParsedDeck {
-    const lines = decklistText
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0)
-    const mainboard: DeckCard[] = []
-    const sideboard: DeckCard[] = []
-    let currentSection = 'mainboard'
-    let deckName = ''
-
-    for (const line of lines) {
-        // Check for section headers
-        if (line.toLowerCase().includes('sideboard')) {
-            currentSection = 'sideboard'
-            continue
-        }
-
-        if (
-            line.toLowerCase().includes('deck name') ||
-            line.toLowerCase().includes('title')
-        ) {
-            deckName = line.replace(/deck name:?|title:?/i, '').trim()
-            continue
-        }
-
-        // Parse card lines (format: "4x Card Name" or "4 Card Name")
-        const cardMatch = line.match(/^(\d+)x?\s+(.+)$/)
-        if (cardMatch) {
-            const quantity = parseInt(cardMatch[1])
-            const name = cardMatch[2].trim()
-
-            // Simple categorization based on card name patterns
-            let category: DeckCard['category'] = 'other'
-            const lowerName = name.toLowerCase()
-
-            if (
-                lowerName.includes('island') ||
-                lowerName.includes('mountain') ||
-                lowerName.includes('forest') ||
-                lowerName.includes('plains') ||
-                lowerName.includes('swamp') ||
-                lowerName.includes('land')
-            ) {
-                category = 'land'
-            } else if (
-                lowerName.includes('jace') ||
-                lowerName.includes('planeswalker')
-            ) {
-                category = 'planeswalker'
-            } else if (
-                lowerName.includes('bolt') ||
-                lowerName.includes('counterspell')
-            ) {
-                category = 'instant'
-            }
-
-            const card: DeckCard = { quantity, name, category }
-
-            if (currentSection === 'sideboard') {
-                sideboard.push(card)
-            } else {
-                mainboard.push(card)
-            }
-        }
-    }
-
-    return { mainboard, sideboard, deckName }
-}
-
-function generateDeckImageData(parsedDeck: ParsedDeck) {
-    // This would normally generate an actual PNG image
-    // For now, we'll return structured data that could be used to generate an image
-
-    const totalMainboard = parsedDeck.mainboard.reduce(
-        (sum, card) => sum + card.quantity,
-        0
-    )
-    const totalSideboard = parsedDeck.sideboard.reduce(
-        (sum, card) => sum + card.quantity,
-        0
-    )
-
-    // Group cards by category
-    const categorizedCards = parsedDeck.mainboard.reduce(
-        (acc, card) => {
-            const category = card.category || 'other'
-            if (!acc[category]) acc[category] = []
-            acc[category].push(card)
-            return acc
-        },
-        {} as Record<string, DeckCard[]>
-    )
-
-    return {
-        deckName: parsedDeck.deckName || 'Untitled Deck',
-        totalCards: {
-            mainboard: totalMainboard,
-            sideboard: totalSideboard
-        },
-        categories: categorizedCards,
-        sideboard: parsedDeck.sideboard,
-        imageData: {
-            width: 800,
-            height: 1000,
-            format: 'PNG',
-            backgroundColor: '#ffffff',
-            textColor: '#000000',
-            sections: [
-                {
-                    type: 'header',
-                    content: parsedDeck.deckName || 'Magic: The Gathering Deck',
-                    fontSize: 24,
-                    y: 50
-                },
-                {
-                    type: 'mainboard',
-                    content: parsedDeck.mainboard,
-                    y: 100
-                },
-                {
-                    type: 'sideboard',
-                    content: parsedDeck.sideboard,
-                    y: 600
-                }
-            ]
-        }
-    }
+    quantity: number
+    imageUri: string
+    manaCost?: string
+    typeLine?: string
+    rarity?: string
 }
 
 export async function POST(request: NextRequest) {
     try {
-        const { decklistText, options = {} } = await request.json()
+        const { cards, options = {} }: DeckPngRequest = await request.json()
 
-        if (!decklistText || typeof decklistText !== 'string') {
+        if (!cards || !Array.isArray(cards)) {
             return NextResponse.json(
-                { error: 'Invalid request. Expected decklistText as string.' },
+                { error: 'Invalid request. Expected cards array.' },
                 { status: 400 }
             )
         }
 
-        // Parse the decklist
-        const parsedDeck = parseDeckList(decklistText)
-
-        if (parsedDeck.mainboard.length === 0) {
+        if (cards.length === 0) {
             return NextResponse.json(
-                { error: 'No valid cards found in decklist.' },
+                { error: 'No cards provided.' },
                 { status: 400 }
             )
         }
 
-        // Generate image data (in a real implementation, this would create an actual PNG)
-        const imageData = generateDeckImageData(parsedDeck)
+        // Extract image URIs and card data
+        const cardImages: CardImageData[] = cards.map(({ card, quantity }) => ({
+            name: card.name,
+            quantity,
+            imageUri: card.image_uris?.small || '',
+            manaCost: card.mana_cost || '',
+            typeLine: card.type_line || '',
+            rarity: card.rarity || 'common'
+        }))
 
-        // In a real implementation, you would:
-        // 1. Use a library like canvas or sharp to create an actual PNG
-        // 2. Layout the cards in a visually appealing format
-        // 3. Add card images, mana symbols, etc.
-        // 4. Return the actual image buffer or base64 data
+        // Filter out cards without image URIs
+        const validCardImages = cardImages.filter(card => card.imageUri)
+        const invalidCards = cardImages.filter(card => !card.imageUri)
+
+        if (validCardImages.length === 0) {
+            return NextResponse.json(
+                { error: 'No valid card images found.' },
+                { status: 400 }
+            )
+        }
+
+        // Calculate totals
+        const totalCards = validCardImages.reduce((sum, card) => sum + card.quantity, 0)
+        
+        // Group cards by type for better organization
+        const groupedCards = {
+            creatures: validCardImages.filter(card => 
+                card.typeLine.toLowerCase().includes('creature')
+            ),
+            spells: validCardImages.filter(card => 
+                card.typeLine.toLowerCase().includes('instant') ||
+                card.typeLine.toLowerCase().includes('sorcery')
+            ),
+            artifacts: validCardImages.filter(card => 
+                card.typeLine.toLowerCase().includes('artifact')
+            ),
+            enchantments: validCardImages.filter(card => 
+                card.typeLine.toLowerCase().includes('enchantment')
+            ),
+            planeswalkers: validCardImages.filter(card => 
+                card.typeLine.toLowerCase().includes('planeswalker')
+            ),
+            lands: validCardImages.filter(card => 
+                card.typeLine.toLowerCase().includes('land')
+            ),
+            other: validCardImages.filter(card => {
+                const type = card.typeLine.toLowerCase()
+                return !type.includes('creature') &&
+                       !type.includes('instant') &&
+                       !type.includes('sorcery') &&
+                       !type.includes('artifact') &&
+                       !type.includes('enchantment') &&
+                       !type.includes('planeswalker') &&
+                       !type.includes('land')
+            })
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'Deck PNG generated successfully',
-            data: imageData,
-            // In a real implementation, you'd include:
-            // imageUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...',
-            // or a URL to the generated image
-            mockImageUrl:
-                'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg?auto=compress&cs=tinysrgb&w=800&h=1000',
-            downloadReady: true
+            message: 'Card images processed successfully',
+            data: {
+                cardImages: validCardImages,
+                groupedCards,
+                totalCards,
+                totalUniqueCards: validCardImages.length,
+                invalidCards: invalidCards.map(card => card.name),
+                options: {
+                    format: options.format || 'PNG',
+                    width: options.width || 800,
+                    height: options.height || 1000,
+                    backgroundColor: options.backgroundColor || '#ffffff',
+                    textColor: options.textColor || '#000000'
+                }
+            }
         })
     } catch (error) {
-        console.error('Error generating deck PNG:', error)
+        console.error('Error processing deck PNG request:', error)
         return NextResponse.json(
-            { error: 'Internal server error while generating PNG' },
+            { error: 'Internal server error while processing cards' },
             { status: 500 }
         )
     }
@@ -202,14 +131,29 @@ export async function POST(request: NextRequest) {
 export async function GET() {
     return NextResponse.json({
         message: 'Deck PNG Generator API',
-        usage: 'POST with { "decklistText": "4x Lightning Bolt\\n4x Counterspell\\n...", "options": {} }',
-        description:
-            'Converts a Magic: The Gathering decklist into a PNG image',
-        supportedFormats: [
-            '4x Card Name',
-            '4 Card Name',
-            'Sideboard section support',
-            'Deck name/title recognition'
-        ]
+        usage: 'POST with { "cards": [{ "card": ScryfallCard, "quantity": number }], "options": {} }',
+        description: 'Processes Magic: The Gathering cards and returns their image URIs organized for deck visualization',
+        expectedFormat: {
+            cards: [
+                {
+                    card: 'ScryfallCard object with image_uris',
+                    quantity: 'number'
+                }
+            ],
+            options: {
+                format: 'PNG | JPEG (optional)',
+                width: 'number (optional, default: 800)',
+                height: 'number (optional, default: 1000)',
+                backgroundColor: 'string (optional, default: #ffffff)',
+                textColor: 'string (optional, default: #000000)'
+            }
+        },
+        returns: {
+            cardImages: 'Array of card data with image URIs',
+            groupedCards: 'Cards organized by type',
+            totalCards: 'Total number of cards including quantities',
+            totalUniqueCards: 'Number of unique cards',
+            invalidCards: 'Array of card names without valid images'
+        }
     })
 }
