@@ -165,13 +165,7 @@ export function ClientCreatePage() {
                 isClosable: true
             })
         }
-    }, [
-        generatedImage,
-        imageError,
-        isGenerating,
-        cardsData?.cards?.length,
-        toast
-    ])
+    }, [generatedImage, imageError, isGenerating, toast])
 
     return (
         <Box
@@ -252,9 +246,16 @@ export function ClientCreatePage() {
                                                     color="gray.500"
                                                     mb={2}
                                                 >
-                                                    Paste a list one card per
-                                                    line, with the quantity and
-                                                    cardname.
+                                                    Paste the decklist list one
+                                                    card per line, with the
+                                                    quantity and cardname (e.g.
+                                                    "2x Llanowar Elves", "1
+                                                    Black Lotus").
+                                                    <br /> You can add a
+                                                    sideboard by including an
+                                                    empty line. Works with or
+                                                    without the keyword
+                                                    "SIDEBOARD".
                                                 </Text>
                                                 <Textarea
                                                     value={decklistText}

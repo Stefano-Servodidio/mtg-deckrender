@@ -130,11 +130,18 @@ export async function POST(request: NextRequest) {
             (img) => img!.type === 'sideboard'
         )
 
-        const totalRows = Math.ceil(successfulImages.length / cardsPerRow)
         const totalMainRows = Math.ceil(
             successfulImages.filter((img) => img!.type === 'main').length /
                 cardsPerRow
         )
+        const totalSideboardRows = hasSideboard
+            ? Math.ceil(
+                  successfulImages.filter((img) => img!.type === 'sideboard')
+                      .length / cardsPerRow
+              )
+            : 0
+        const totalRows =
+            totalMainRows + (hasSideboard ? totalSideboardRows : 0)
         const canvasWidth =
             cardWidth * cardsPerRow + spacing * (cardsPerRow - 1) + spacing * 2 // Add padding
         const canvasHeight =

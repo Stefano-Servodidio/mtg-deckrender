@@ -7,11 +7,14 @@ import {
     Heading,
     Button,
     useColorModeValue,
-    HStack
+    HStack,
+    MenuButton
 } from '@chakra-ui/react'
 import { FaHome, FaPlus } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
+import { FaBars } from 'react-icons/fa'
 
 export function Navbar() {
     const bg = useColorModeValue('white', 'gray.800')
@@ -59,13 +62,14 @@ export function Navbar() {
                                 size="lg"
                                 bgGradient="linear(to-r, purple.400, blue.400)"
                                 bgClip="text"
+                                whiteSpace={'nowrap'}
                             >
                                 MTG Deck to PNG
                             </Heading>
                         </HStack>
                     </Link>
 
-                    <HStack spacing={4}>
+                    <HStack spacing={4} display={{ base: 'none', md: 'flex' }}>
                         <Link href="/" style={{ textDecoration: 'none' }}>
                             <Button
                                 variant="ghost"
@@ -95,6 +99,26 @@ export function Navbar() {
                             </Button>
                         </Link>
                     </HStack>
+                    <Box display={{ base: 'block', md: 'none' }}>
+                        <Menu>
+                            <MenuButton
+                                as={IconButton}
+                                icon={<FaBars />}
+                                variant="outline"
+                                aria-label="Open menu"
+                            />
+                            <MenuList>
+                                <Link href="/" passHref>
+                                    <MenuItem icon={<FaHome />}>Home</MenuItem>
+                                </Link>
+                                <Link href="/create" passHref>
+                                    <MenuItem icon={<FaPlus />}>
+                                        Create
+                                    </MenuItem>
+                                </Link>
+                            </MenuList>
+                        </Menu>
+                    </Box>
                 </Flex>
             </Container>
         </Box>

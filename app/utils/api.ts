@@ -44,7 +44,7 @@ export const prepareCardOperations = (
     cardHeight: number,
     spacing: number,
     sideboardSpacing: number,
-    totalMainRows: number = 0
+    mainHeight: number = 0
 ) => {
     return images.map((imageData, index) => {
         const row = Math.floor(index / cardsPerRow)
@@ -54,9 +54,7 @@ export const prepareCardOperations = (
         const top =
             spacing +
             row * (cardHeight + spacing) +
-            (imageData.type === 'sideboard'
-                ? totalMainRows + sideboardSpacing
-                : 0)
+            (imageData.type === 'sideboard' ? mainHeight + sideboardSpacing : 0)
 
         return {
             input: imageData.buffer,
@@ -75,7 +73,7 @@ export const prepareCountOperations = (
     spacing: number,
     sideboardSpacing: number,
     countIconBuffers: { [key: number]: Buffer },
-    totalMainRows: number = 0
+    mainHeight: number = 0
 ) => {
     return images
         .map((imageData, index) => {
@@ -89,7 +87,9 @@ export const prepareCountOperations = (
                 spacing +
                 row * (cardHeight + spacing) +
                 28 +
-                (imageData.type === 'sideboard' ? sideboardSpacing : 0)
+                (imageData.type === 'sideboard'
+                    ? mainHeight + sideboardSpacing
+                    : 0)
 
             let countImage = null
             return {
