@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
 import chalk from 'chalk'
 import { CardItem } from '@/app/services/serverless/types'
+import { getAssetBuffer } from '@/app/utils/api'
 
 interface DeckPngRequest {
     cards: CardItem[]
     options?: {
         rowSize?: number
-        // format?: 'PNG' | 'JPEG'
-        // width?: number
-        // height?: number
-        // backgroundColor?: string
-        // textColor?: string
     }
 }
 
@@ -27,15 +23,7 @@ interface CardImageData {
 
 const defaultOptions = {
     rowSize: 7
-    // format: 'PNG' as 'PNG' | 'JPEG',
-    // width: 800,
-    // height: 1000,
-    // backgroundColor: 'transparent',
-    // textColor: 'black'
 }
-
-const svgCount =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 35 35" role="img" aria-label="x1 box"><rect x="0" y="0" width="35" height="35" rx="4" ry="4" fill="#000000"/><text x="50%" y="50%" fill="#FFFFFF" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">x_count</text></svg>'
 
 export async function POST(request: NextRequest) {
     try {
@@ -70,12 +58,14 @@ export async function POST(request: NextRequest) {
             })
         )
 
-        // Filter out cards without image URIs
-        const validCardImages = cardImages.filter((card) => card.imageUri)
+        // Filter out cards without image URIs or invalid quantities
+        const validCardImages = cardImages.filter(
+            (card) => card.imageUri && card.quantity > 0 && card.quantity <= 4
+        )
 
         if (validCardImages.length === 0) {
             return NextResponse.json(
-                { error: 'No valid card images found.' },
+                { error: 'No valid images found.' },
                 { status: 400 }
             )
         }
@@ -170,6 +160,18 @@ export async function POST(request: NextRequest) {
             }
         })
 
+        const x1Buffer = await getAssetBuffer('x1.png')
+        const x2Buffer = await getAssetBuffer('x2.png')
+        const x3Buffer = await getAssetBuffer('x3.png')
+        const x4Buffer = await getAssetBuffer('x4.png')
+
+        const countMap: { [key: number]: Buffer } = {
+            1: x1Buffer,
+            2: x2Buffer,
+            3: x3Buffer,
+            4: x4Buffer
+        }
+
         // Prepare quantity overlay operations
         const countOperations = successfulImages
             .map((imageData, index) => {
@@ -186,13 +188,9 @@ export async function POST(request: NextRequest) {
                     28 +
                     (imageData.type === 'sideboard' ? sideboardSpacing : 0)
 
-                let svgOverlay = svgCount.replace(
-                    '_count',
-                    imageData.quantity.toString()
-                )
-
+                let countImage = null
                 return {
-                    input: Buffer.from(svgOverlay),
+                    input: countMap[imageData.quantity] || x1Buffer,
                     left,
                     top
                 }
@@ -252,10 +250,6 @@ export async function GET() {
             ],
             options: {
                 rowSize: 'number of cards per row (optional, default: 7)'
-                // format: 'PNG | JPEG (optional)'
-                // width: 'number (optional, default: calculated)',
-                // height: 'number (optional, default: calculated)',
-                // backgroundColor: 'string (optional, default: transparent)'
             }
         },
         returns: 'PNG image buffer with all unique cards arranged in rows of 7'

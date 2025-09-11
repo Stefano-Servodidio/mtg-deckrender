@@ -1,3 +1,6 @@
+import path from 'path'
+import fs from 'fs/promises'
+
 // Utility function to parse a decklist string and return unique cards with their quantities
 export const getUniqueCards = (
     decklist: string,
@@ -25,3 +28,9 @@ export const getUniqueCards = (
 // Utility function to pause execution for a given number of milliseconds
 export const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms))
+
+// Utility function to load an asset file as a buffer
+export const getAssetBuffer = async (filename: string) => {
+    const assetPath = path.join(process.cwd(), 'assets', filename)
+    return await fs.readFile(assetPath)
+}
