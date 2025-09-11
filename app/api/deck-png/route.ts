@@ -20,7 +20,7 @@ interface CardImageData {
     quantity: number
     type: 'main' | 'sideboard'
     imageUri: string
-    manaCost?: string
+    cmc?: number
     typeLine?: string
     rarity?: string
 }
@@ -62,17 +62,28 @@ export async function POST(request: NextRequest) {
                 name: card.name,
                 quantity,
                 type,
-                imageUri: card.image_uris?.small || '',
-                manaCost: card.mana_cost || '',
+                imageUri: card.image_uris?.png || '',
+                cmc: card.cmc || 0,
                 typeLine: card.type_line || '',
                 rarity: card.rarity || 'common'
             })
         )
 
         // Filter out cards without image URIs or invalid quantities
-        const validCardImages = cardImages.filter(
-            (card) => card.imageUri && card.quantity > 0 && card.quantity <= 4
-        )
+        const validCardImages = cardImages
+            .filter(
+                (card) =>
+                    card.imageUri && card.quantity > 0 && card.quantity <= 4
+            )
+            .sort((a, b) => {
+                //sort by cmc then by name
+                const aCmc = a.cmc ?? 0
+                const bCmc = b.cmc ?? 0
+                if (aCmc === bCmc) {
+                    return a.name.localeCompare(b.name)
+                }
+                return aCmc - bCmc
+            })
 
         if (validCardImages.length === 0) {
             return NextResponse.json(
@@ -80,6 +91,14 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             )
         }
+
+        // Create composite image using Sharp
+        const cardsPerRow = options?.rowSize || 7
+        const cardWidth = 146 // Small image width from Scryfall
+        const cardHeight = 204 // Small image height from Scryfall
+        const spacing = 4 // Space between cards
+        const rowHeight = cardHeight * 0.5 // Adjust row height to change visualization style
+        const sideboardSpacing = 70 // Extra space before main sideboard
 
         // Download all card images
         const cardImageBuffers = await Promise.all(
@@ -92,10 +111,16 @@ export async function POST(request: NextRequest) {
                         )
                     }
                     const buffer = await response.arrayBuffer()
+                    const resizedBuffer = await sharp(Buffer.from(buffer))
+                        .resize({
+                            width: cardWidth,
+                            height: cardHeight
+                        })
+                        .toBuffer()
                     return {
                         name: card.name,
                         type: card.type,
-                        buffer: Buffer.from(buffer),
+                        buffer: resizedBuffer,
                         quantity: card.quantity
                     }
                 } catch (error) {
@@ -120,12 +145,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Create composite image using Sharp
-        const cardsPerRow = options?.rowSize || 7
-        const cardWidth = 146 // Small image width from Scryfall
-        const cardHeight = 204 // Small image height from Scryfall
-        const spacing = 4 // Space between cards
-        const sideboardSpacing = 70 // Extra space before main sideboard
         const hasSideboard = successfulImages.some(
             (img) => img!.type === 'sideboard'
         )
@@ -145,10 +164,10 @@ export async function POST(request: NextRequest) {
         const canvasWidth =
             cardWidth * cardsPerRow + spacing * (cardsPerRow - 1) + spacing * 2 // Add padding
         const canvasHeight =
-            cardHeight * totalRows +
+            rowHeight * totalRows +
             spacing * (totalRows - 1) +
             spacing * 2 +
-            (hasSideboard ? sideboardSpacing : 0) // Add padding
+            (hasSideboard ? sideboardSpacing + 2 * rowHeight : 0) // Add padding
 
         // Create base canvas
         const canvas = sharp({
@@ -172,7 +191,7 @@ export async function POST(request: NextRequest) {
             mainImages,
             cardsPerRow,
             cardWidth,
-            cardHeight,
+            rowHeight,
             spacing,
             sideboardSpacing
         )
@@ -181,10 +200,10 @@ export async function POST(request: NextRequest) {
             sideboardImages,
             cardsPerRow,
             cardWidth,
-            cardHeight,
+            rowHeight,
             spacing,
             sideboardSpacing,
-            cardHeight * totalMainRows
+            rowHeight * totalMainRows
         )
 
         const x1Buffer = await getAssetBuffer('x1.png')
@@ -204,7 +223,7 @@ export async function POST(request: NextRequest) {
             mainImages,
             cardsPerRow,
             cardWidth,
-            cardHeight,
+            rowHeight,
             spacing,
             sideboardSpacing,
             countMap
@@ -214,11 +233,11 @@ export async function POST(request: NextRequest) {
             sideboardImages,
             cardsPerRow,
             cardWidth,
-            cardHeight,
+            rowHeight,
             spacing,
             sideboardSpacing,
             countMap,
-            cardHeight * totalMainRows
+            rowHeight * totalMainRows
         )
 
         // Create the composite image
