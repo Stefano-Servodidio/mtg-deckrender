@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ScryfallCard } from '@/app/services/scryfall/types'
 import sharp from 'sharp'
 import chalk from 'chalk'
-
-interface DeckCard {
-    card: ScryfallCard
-    quantity: number
-}
+import { CardItem } from '@/app/services/serverless/types'
 
 interface DeckPngRequest {
-    cards: DeckCard[]
+    cards: CardItem[]
     options?: {
         rowSize?: number
         // format?: 'PNG' | 'JPEG'
@@ -23,6 +18,7 @@ interface DeckPngRequest {
 interface CardImageData {
     name: string
     quantity: number
+    type: 'main' | 'sideboard'
     imageUri: string
     manaCost?: string
     typeLine?: string
@@ -62,14 +58,17 @@ export async function POST(request: NextRequest) {
         }
 
         // Extract image URIs and card data
-        const cardImages: CardImageData[] = cards.map(({ card, quantity }) => ({
-            name: card.name,
-            quantity,
-            imageUri: card.image_uris?.small || '',
-            manaCost: card.mana_cost || '',
-            typeLine: card.type_line || '',
-            rarity: card.rarity || 'common'
-        }))
+        const cardImages: CardImageData[] = cards.map(
+            ({ card, type, quantity }) => ({
+                name: card.name,
+                quantity,
+                type,
+                imageUri: card.image_uris?.small || '',
+                manaCost: card.mana_cost || '',
+                typeLine: card.type_line || '',
+                rarity: card.rarity || 'common'
+            })
+        )
 
         // Filter out cards without image URIs
         const validCardImages = cardImages.filter((card) => card.imageUri)
@@ -94,6 +93,7 @@ export async function POST(request: NextRequest) {
                     const buffer = await response.arrayBuffer()
                     return {
                         name: card.name,
+                        type: card.type,
                         buffer: Buffer.from(buffer),
                         quantity: card.quantity
                     }
@@ -107,8 +107,14 @@ export async function POST(request: NextRequest) {
             })
         )
 
-        // Filter out failed downloads
-        const successfulImages = cardImageBuffers.filter((img) => img !== null)
+        // Filter out failed downloads and sort by type (main deck first)
+        const successfulImages = [
+            ...cardImageBuffers.filter((img) => img !== null)
+        ].sort((a, b) => {
+            if (a!.type === 'main' && b!.type === 'sideboard') return -1
+            if (a!.type === 'sideboard' && b!.type === 'main') return 1
+            return 0
+        })
 
         if (successfulImages.length === 0) {
             return NextResponse.json(
@@ -122,12 +128,19 @@ export async function POST(request: NextRequest) {
         const cardWidth = 146 // Small image width from Scryfall
         const cardHeight = 204 // Small image height from Scryfall
         const spacing = 4 // Space between cards
+        const sideboardSpacing = 70 // Extra space before main sideboard
+        const hasSideboard = successfulImages.some(
+            (img) => img!.type === 'sideboard'
+        )
 
         const totalRows = Math.ceil(successfulImages.length / cardsPerRow)
         const canvasWidth =
             cardWidth * cardsPerRow + spacing * (cardsPerRow - 1) + spacing * 2 // Add padding
         const canvasHeight =
-            cardHeight * totalRows + spacing * (totalRows - 1) + spacing * 2 // Add padding
+            cardHeight * totalRows +
+            spacing * (totalRows - 1) +
+            spacing * 2 +
+            (hasSideboard ? sideboardSpacing : 0) // Add padding
 
         // Create base canvas
         const canvas = sharp({
@@ -145,7 +158,10 @@ export async function POST(request: NextRequest) {
             const col = index % cardsPerRow
 
             const left = spacing + col * (cardWidth + spacing)
-            const top = spacing + row * (cardHeight + spacing)
+            const top =
+                spacing +
+                row * (cardHeight + spacing) +
+                (imageData.type === 'sideboard' ? sideboardSpacing : 0)
 
             return {
                 input: imageData.buffer,
@@ -162,8 +178,13 @@ export async function POST(request: NextRequest) {
                 const row = Math.floor(index / cardsPerRow)
                 const col = index % cardsPerRow
 
-                const left = spacing + col * (cardWidth + spacing) + 15
-                const top = spacing + row * (cardHeight + spacing) + 25
+                const left =
+                    spacing + col * (cardWidth + spacing) + cardWidth - 50
+                const top =
+                    spacing +
+                    row * (cardHeight + spacing) +
+                    28 +
+                    (imageData.type === 'sideboard' ? sideboardSpacing : 0)
 
                 let svgOverlay = svgCount.replace(
                     '_count',

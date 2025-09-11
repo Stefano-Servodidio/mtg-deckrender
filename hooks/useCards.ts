@@ -1,10 +1,6 @@
 import { useState, useCallback } from 'react'
 import { ScryfallCard } from '@/app/services/scryfall/types'
-
-interface CardsResponse {
-    cards: { card: ScryfallCard; quantity: number }[]
-    errors: string[]
-}
+import { CardsResponse } from '@/app/services/serverless/types'
 
 interface UseCardsReturn {
     data: CardsResponse | null
@@ -40,13 +36,17 @@ export function useCards(): UseCardsReturn {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}))
-                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+                throw new Error(
+                    errorData.error ||
+                        `HTTP ${response.status}: ${response.statusText}`
+                )
             }
 
             const result = await response.json()
             setData(result)
         } catch (err) {
-            const error = err instanceof Error ? err : new Error('Failed to fetch cards')
+            const error =
+                err instanceof Error ? err : new Error('Failed to fetch cards')
             setError(error)
             console.error('Error fetching cards:', error)
         } finally {

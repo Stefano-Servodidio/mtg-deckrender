@@ -210,7 +210,6 @@ export function ClientCreatePage() {
                                     )
                                 }
                                 allowMultiple
-                                allowToggle
                                 defaultIndex={0}
                             >
                                 {/* Upload List Section */}
@@ -255,10 +254,7 @@ export function ClientCreatePage() {
                                                 >
                                                     Paste a list one card per
                                                     line, with the quantity and
-                                                    cardname. An empty line
-                                                    should separate your main
-                                                    deck and sideboard, when
-                                                    applicable.
+                                                    cardname.
                                                 </Text>
                                                 <Textarea
                                                     value={decklistText}
