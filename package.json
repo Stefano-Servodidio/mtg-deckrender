@@ -7,7 +7,10 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "bump:patch": "npm version patch && git push && git push --tags",
+        "bump:minor": "npm version minor && git push && git push --tags",
+        "bump:major": "npm version major && git push && git push --tags"
     },
     "dependencies": {
         "@chakra-ui/react": "^2.10.9",
