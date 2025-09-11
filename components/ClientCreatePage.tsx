@@ -30,6 +30,7 @@ import { DropZone } from '@/components/DropZone'
 import { Footer } from '@/components/Footer'
 import { useCards } from '@/hooks/useCards'
 import { useDeckPng } from '@/hooks/useDeckPng'
+import Image from 'next/image'
 
 export function ClientCreatePage() {
     const [decklistText, setDecklistText] = useState('')
@@ -41,16 +42,14 @@ export function ClientCreatePage() {
         data: cardsData,
         error: cardsError,
         isLoading: isLoadingCards,
-        fetchCards,
-        reset: resetCards
+        fetchCards
     } = useCards()
 
     const {
         data: generatedImage,
         error: imageError,
         isLoading: isGenerating,
-        generateImage,
-        reset: resetImage
+        generateImage
     } = useDeckPng()
 
     const bgGradient = useColorModeValue(
@@ -211,6 +210,8 @@ export function ClientCreatePage() {
                                     )
                                 }
                                 allowMultiple
+                                allowToggle
+                                defaultIndex={0}
                             >
                                 {/* Upload List Section */}
                                 <AccordionItem>
@@ -341,17 +342,17 @@ export function ClientCreatePage() {
                                             </Button>
 
                                             {/* Loading indicator */}
-                                            {isLoadingCards && (
+                                            {/* {isLoadingCards && (
                                                 <Text
                                                     color="blue.500"
                                                     textAlign="center"
                                                 >
                                                     Fetching card data...
                                                 </Text>
-                                            )}
+                                            )} */}
 
                                             {/* Success indicator */}
-                                            {cardsData?.cards && (
+                                            {/* {cardsData?.cards && (
                                                 <Text
                                                     color="green.500"
                                                     textAlign="center"
@@ -360,14 +361,18 @@ export function ClientCreatePage() {
                                                     {cardsData.cards.length}{' '}
                                                     unique cards!
                                                 </Text>
-                                            )}
+                                            )} */}
                                         </VStack>
                                     </AccordionPanel>
                                 </AccordionItem>
 
                                 {/* Configure Section */}
                                 <AccordionItem>
-                                    <AccordionButton py={6} px={8}>
+                                    <AccordionButton
+                                        py={6}
+                                        px={8}
+                                        disabled={!cardsData?.cards?.length}
+                                    >
                                         <HStack
                                             flex="1"
                                             textAlign="left"
@@ -403,7 +408,7 @@ export function ClientCreatePage() {
                                             </Text>
 
                                             {/* Preview Section */}
-                                            {decklistText && (
+                                            {/* {decklistText && (
                                                 <Box w="full">
                                                     <Text
                                                         fontWeight="semibold"
@@ -430,7 +435,7 @@ export function ClientCreatePage() {
                                                         </Text>
                                                     </Box>
                                                 </Box>
-                                            )}
+                                            )} */}
 
                                             {/* Generate Button */}
                                             <Button
@@ -461,7 +466,11 @@ export function ClientCreatePage() {
 
                                 {/* Download Section */}
                                 <AccordionItem>
-                                    <AccordionButton py={6} px={8}>
+                                    <AccordionButton
+                                        py={6}
+                                        px={8}
+                                        disabled={!generatedImage}
+                                    >
                                         <HStack
                                             flex="1"
                                             textAlign="left"
@@ -503,13 +512,14 @@ export function ClientCreatePage() {
                                                         borderColor="gray.200"
                                                         maxW="400px"
                                                     >
-                                                        <img
+                                                        <Image
                                                             src={generatedImage}
                                                             alt="Generated deck image"
+                                                            width={400}
+                                                            height={500}
                                                             style={{
-                                                                width: '100%',
-                                                                height: 'auto',
-                                                                display: 'block'
+                                                                objectFit:
+                                                                    'scale-down'
                                                             }}
                                                         />
                                                     </Box>

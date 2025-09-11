@@ -38,14 +38,23 @@ export function Navbar() {
                             _hover={{
                                 transform: 'scale(1.05)'
                             }}
+                            minH="60px"
                         >
-                            <Image
-                                src="/icon.png"
-                                alt="logo"
-                                width={100}
-                                height={100}
-                                objectFit="scale-down"
-                            />
+                            <Box
+                                position="relative"
+                                width="60px"
+                                height="60px"
+                                flexShrink={0}
+                            >
+                                <Image
+                                    src="/icon.png"
+                                    alt="logo"
+                                    fill
+                                    sizes="60px"
+                                    style={{ objectFit: 'scale-down' }}
+                                    priority
+                                />
+                            </Box>
                             <Heading
                                 size="lg"
                                 bgGradient="linear(to-r, purple.400, blue.400)"
