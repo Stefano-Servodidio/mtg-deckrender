@@ -165,6 +165,7 @@ export function ClientCreatePage() {
                 isClosable: true
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [generatedImage, imageError, isGenerating, toast])
 
     return (
@@ -249,13 +250,14 @@ export function ClientCreatePage() {
                                                     Paste the decklist list one
                                                     card per line, with the
                                                     quantity and cardname (e.g.
-                                                    "2x Llanowar Elves", "1
-                                                    Black Lotus").
+                                                    &quot;2x Llanowar
+                                                    Elves&quot;, &quot;1 Black
+                                                    Lotus&quot;).
                                                     <br /> You can add a
                                                     sideboard by including an
                                                     empty line. Works with or
                                                     without the keyword
-                                                    "SIDEBOARD".
+                                                    &quot;SIDEBOARD&quot;.
                                                 </Text>
                                                 <Textarea
                                                     value={decklistText}
@@ -403,36 +405,6 @@ export function ClientCreatePage() {
                                                 generate your deck image with
                                                 default settings.
                                             </Text>
-
-                                            {/* Preview Section */}
-                                            {/* {decklistText && (
-                                                <Box w="full">
-                                                    <Text
-                                                        fontWeight="semibold"
-                                                        mb={3}
-                                                        color="gray.700"
-                                                    >
-                                                        Decklist Preview
-                                                    </Text>
-                                                    <Box
-                                                        bg={previewBg}
-                                                        p={6}
-                                                        borderRadius="md"
-                                                        border="1px solid"
-                                                        borderColor="gray.200"
-                                                        maxH="300px"
-                                                        overflowY="auto"
-                                                    >
-                                                        <Text
-                                                            fontFamily="mono"
-                                                            fontSize="sm"
-                                                            whiteSpace="pre-line"
-                                                        >
-                                                            {decklistText}
-                                                        </Text>
-                                                    </Box>
-                                                </Box>
-                                            )} */}
 
                                             {/* Generate Button */}
                                             <Button

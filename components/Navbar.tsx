@@ -10,15 +10,18 @@ import {
     HStack,
     MenuButton
 } from '@chakra-ui/react'
-import { FaHome, FaPlus } from 'react-icons/fa'
+import { FaHome, FaImage, FaPlus } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
+import { usePathname } from 'next/navigation'
 
 export function Navbar() {
+    const pathname = usePathname()
     const bg = useColorModeValue('white', 'gray.800')
     const borderColor = useColorModeValue('gray.200', 'gray.700')
+    const menuHighlightBg = useColorModeValue('purple.50', 'purple.900')
 
     return (
         <Box
@@ -87,7 +90,7 @@ export function Navbar() {
                             <Button
                                 variant="solid"
                                 colorScheme="purple"
-                                leftIcon={<FaPlus />}
+                                leftIcon={<FaImage />}
                                 size="md"
                                 _hover={{
                                     transform: 'translateY(-1px)',
@@ -100,19 +103,36 @@ export function Navbar() {
                         </Link>
                     </HStack>
                     <Box display={{ base: 'block', md: 'none' }}>
-                        <Menu>
+                        <Menu autoSelect={false}>
                             <MenuButton
                                 as={IconButton}
                                 icon={<FaBars />}
                                 variant="outline"
                                 aria-label="Open menu"
+                                border={'none'}
                             />
                             <MenuList>
                                 <Link href="/" passHref>
-                                    <MenuItem icon={<FaHome />}>Home</MenuItem>
+                                    <MenuItem
+                                        icon={<FaHome />}
+                                        {...(pathname === '/' && {
+                                            fontWeight: 'bold',
+                                            color: 'purple.600',
+                                            backgroundColor: menuHighlightBg
+                                        })}
+                                    >
+                                        Home
+                                    </MenuItem>
                                 </Link>
                                 <Link href="/create" passHref>
-                                    <MenuItem icon={<FaPlus />}>
+                                    <MenuItem
+                                        icon={<FaImage />}
+                                        {...(pathname === '/create' && {
+                                            fontWeight: 'bold',
+                                            color: 'purple.600',
+                                            backgroundColor: menuHighlightBg
+                                        })}
+                                    >
                                         Create
                                     </MenuItem>
                                 </Link>
