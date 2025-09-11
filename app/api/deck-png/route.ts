@@ -35,7 +35,7 @@ const defaultOptions = {
 }
 
 const svgCount =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 35 35" role="img" aria-label="x1 box"><rect x="0" y="0" width="35" height="35" rx="4" ry="4" fill="#000000"/><text x="50%" y="50%" fill="#FFFFFF" font-size="16" font-family="Arial, Helvetica, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">x_count</text></svg>'
+    '<svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 35 35" role="img" aria-label="x1 box"><rect x="0" y="0" width="35" height="35" rx="4" ry="4" fill="#000000"/><text x="50%" y="50%" fill="#FFFFFF" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">x_count</text></svg>'
 
 export async function POST(request: NextRequest) {
     try {
