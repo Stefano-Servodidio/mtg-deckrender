@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react'
 import { FaHome, FaPlus } from 'react-icons/fa'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export function Navbar() {
     const bg = useColorModeValue('white', 'gray.800')
@@ -29,18 +30,30 @@ export function Navbar() {
             <Container maxW="7xl" py={4}>
                 <Flex justify="space-between" align="center">
                     <Link href="/" style={{ textDecoration: 'none' }}>
-                        <Heading
-                            size="lg"
-                            bgGradient="linear(to-r, purple.400, blue.400)"
-                            bgClip="text"
+                        <HStack
+                            spacing={3}
+                            align="center"
                             cursor="pointer"
+                            transition="transform 0.2s"
                             _hover={{
                                 transform: 'scale(1.05)'
                             }}
-                            transition="transform 0.2s"
                         >
-                            MTG Deck to PNG
-                        </Heading>
+                            <Image
+                                src="/icon.png"
+                                alt="logo"
+                                width={100}
+                                height={100}
+                                objectFit="scale-down"
+                            />
+                            <Heading
+                                size="lg"
+                                bgGradient="linear(to-r, purple.400, blue.400)"
+                                bgClip="text"
+                            >
+                                MTG Deck to PNG
+                            </Heading>
+                        </HStack>
                     </Link>
 
                     <HStack spacing={4}>
