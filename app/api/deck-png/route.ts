@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
 import chalk from 'chalk'
 import { CardItem } from '@/app/services/serverless/types'
-import { getAssetBuffer } from '@/app/utils/api'
+import {
+    getAssetBuffer,
+    prepareCardOperations,
+    prepareCountOperations
+} from '@/app/utils/api'
 
 interface DeckPngRequest {
     cards: CardItem[]
@@ -19,6 +23,13 @@ interface CardImageData {
     manaCost?: string
     typeLine?: string
     rarity?: string
+}
+
+export interface CardImageBuffer {
+    name: string
+    type: 'main' | 'sideboard'
+    buffer: Buffer
+    quantity: number
 }
 
 const defaultOptions = {
@@ -97,14 +108,10 @@ export async function POST(request: NextRequest) {
             })
         )
 
-        // Filter out failed downloads and sort by type (main deck first)
+        // Filter out failed downloads
         const successfulImages = [
             ...cardImageBuffers.filter((img) => img !== null)
-        ].sort((a, b) => {
-            if (a!.type === 'main' && b!.type === 'sideboard') return -1
-            if (a!.type === 'sideboard' && b!.type === 'main') return 1
-            return 0
-        })
+        ]
 
         if (successfulImages.length === 0) {
             return NextResponse.json(
@@ -124,6 +131,10 @@ export async function POST(request: NextRequest) {
         )
 
         const totalRows = Math.ceil(successfulImages.length / cardsPerRow)
+        const totalMainRows = Math.ceil(
+            successfulImages.filter((img) => img!.type === 'main').length /
+                cardsPerRow
+        )
         const canvasWidth =
             cardWidth * cardsPerRow + spacing * (cardsPerRow - 1) + spacing * 2 // Add padding
         const canvasHeight =
@@ -142,23 +153,32 @@ export async function POST(request: NextRequest) {
             }
         })
 
+        const mainImages = successfulImages.filter(
+            (img) => img!.type === 'main'
+        )
+        const sideboardImages = successfulImages.filter(
+            (img) => img!.type === 'sideboard'
+        )
+
         // Prepare card composite operations
-        const cardOperations = successfulImages.map((imageData, index) => {
-            const row = Math.floor(index / cardsPerRow)
-            const col = index % cardsPerRow
+        const mainOperations = prepareCardOperations(
+            mainImages,
+            cardsPerRow,
+            cardWidth,
+            cardHeight,
+            spacing,
+            sideboardSpacing
+        )
 
-            const left = spacing + col * (cardWidth + spacing)
-            const top =
-                spacing +
-                row * (cardHeight + spacing) +
-                (imageData.type === 'sideboard' ? sideboardSpacing : 0)
-
-            return {
-                input: imageData.buffer,
-                left,
-                top
-            }
-        })
+        const sideboardOperations = prepareCardOperations(
+            sideboardImages,
+            cardsPerRow,
+            cardWidth,
+            cardHeight,
+            spacing,
+            sideboardSpacing,
+            cardHeight * totalMainRows
+        )
 
         const x1Buffer = await getAssetBuffer('x1.png')
         const x2Buffer = await getAssetBuffer('x2.png')
@@ -173,34 +193,33 @@ export async function POST(request: NextRequest) {
         }
 
         // Prepare quantity overlay operations
-        const countOperations = successfulImages
-            .map((imageData, index) => {
-                if (imageData.quantity < 2) return null // No overlay for single cards
+        const mainCountOperations = prepareCountOperations(
+            mainImages,
+            cardsPerRow,
+            cardWidth,
+            cardHeight,
+            spacing,
+            sideboardSpacing,
+            countMap
+        )
 
-                const row = Math.floor(index / cardsPerRow)
-                const col = index % cardsPerRow
-
-                const left =
-                    spacing + col * (cardWidth + spacing) + cardWidth - 50
-                const top =
-                    spacing +
-                    row * (cardHeight + spacing) +
-                    28 +
-                    (imageData.type === 'sideboard' ? sideboardSpacing : 0)
-
-                let countImage = null
-                return {
-                    input: countMap[imageData.quantity] || x1Buffer,
-                    left,
-                    top
-                }
-            })
-            .filter((op) => op !== null)
+        const sideboardCountOperations = prepareCountOperations(
+            sideboardImages,
+            cardsPerRow,
+            cardWidth,
+            cardHeight,
+            spacing,
+            sideboardSpacing,
+            countMap,
+            cardHeight * totalMainRows
+        )
 
         // Create the composite image
         const compositeImage = canvas.composite([
-            ...cardOperations,
-            ...countOperations
+            ...mainOperations,
+            ...sideboardOperations,
+            ...mainCountOperations,
+            ...sideboardCountOperations
         ])
         const outputBuffer = await compositeImage.png().toBuffer()
 

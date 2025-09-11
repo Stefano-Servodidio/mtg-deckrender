@@ -1,5 +1,6 @@
 import path from 'path'
 import fs from 'fs/promises'
+import { CardImageBuffer } from '../api/deck-png/route'
 
 // Utility function to parse a decklist string and return unique cards with their quantities
 export const getUniqueCards = (
@@ -33,4 +34,70 @@ export const sleep = (ms: number) =>
 export const getAssetBuffer = async (filename: string) => {
     const assetPath = path.join(process.cwd(), 'assets', filename)
     return await fs.readFile(assetPath)
+}
+
+// Prepare card composite operations
+export const prepareCardOperations = (
+    images: CardImageBuffer[],
+    cardsPerRow: number,
+    cardWidth: number,
+    cardHeight: number,
+    spacing: number,
+    sideboardSpacing: number,
+    totalMainRows: number = 0
+) => {
+    return images.map((imageData, index) => {
+        const row = Math.floor(index / cardsPerRow)
+        const col = index % cardsPerRow
+
+        const left = spacing + col * (cardWidth + spacing)
+        const top =
+            spacing +
+            row * (cardHeight + spacing) +
+            (imageData.type === 'sideboard'
+                ? totalMainRows + sideboardSpacing
+                : 0)
+
+        return {
+            input: imageData.buffer,
+            left,
+            top
+        }
+    })
+}
+
+//prepare quantity overlay operations
+export const prepareCountOperations = (
+    images: CardImageBuffer[],
+    cardsPerRow: number,
+    cardWidth: number,
+    cardHeight: number,
+    spacing: number,
+    sideboardSpacing: number,
+    countIconBuffers: { [key: number]: Buffer },
+    totalMainRows: number = 0
+) => {
+    return images
+        .map((imageData, index) => {
+            if (imageData.quantity < 2) return null // No overlay for single cards
+
+            const row = Math.floor(index / cardsPerRow)
+            const col = index % cardsPerRow
+
+            const left = spacing + col * (cardWidth + spacing) + cardWidth - 50
+            const top =
+                spacing +
+                row * (cardHeight + spacing) +
+                28 +
+                (imageData.type === 'sideboard' ? sideboardSpacing : 0)
+
+            let countImage = null
+            return {
+                input:
+                    countIconBuffers[imageData.quantity] || countIconBuffers[1],
+                left,
+                top
+            }
+        })
+        .filter((op) => op !== null)
 }
