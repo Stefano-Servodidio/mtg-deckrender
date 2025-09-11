@@ -28,28 +28,30 @@ import { FaUpload, FaImage, FaDownload, FaCog, FaList } from 'react-icons/fa'
 import { Navbar } from '@/components/Navbar'
 import { DropZone } from '@/components/DropZone'
 import { Footer } from '@/components/Footer'
-import { useCards, useDeckPng } from '@/app/services/serverless/api'
+import { useCards } from '@/hooks/useCards'
+import { useDeckPng } from '@/hooks/useDeckPng'
 
 export function ClientCreatePage() {
     const [decklistText, setDecklistText] = useState('')
-    const [decklistToFetch, setDecklistToFetch] = useState<string | null>(null)
-    const [shouldGenerateImage, setShouldGenerateImage] = useState(false)
     const [accordionIndex, setAccordionIndex] = useState<number[]>([0])
     const toast = useToast()
 
-    // Use the useCards hook
+    // Use the custom hooks
     const {
         data: cardsData,
         error: cardsError,
-        isLoading: isLoadingCards
-    } = useCards(decklistToFetch)
+        isLoading: isLoadingCards,
+        fetchCards,
+        reset: resetCards
+    } = useCards()
 
-    // Use the useDeckPng hook
     const {
         data: generatedImage,
         error: imageError,
-        isLoading: isGenerating
-    } = useDeckPng(cardsData?.cards || null, shouldGenerateImage)
+        isLoading: isGenerating,
+        generateImage,
+        reset: resetImage
+    } = useDeckPng()
 
     const bgGradient = useColorModeValue(
         'linear(to-br, purple.50, blue.50)',
@@ -70,7 +72,7 @@ export function ClientCreatePage() {
             return
         }
 
-        setDecklistToFetch(decklistText.trim())
+        await fetchCards(decklistText.trim())
     }
 
     // Handle cards fetch completion
@@ -138,7 +140,7 @@ export function ClientCreatePage() {
             return
         }
 
-        setShouldGenerateImage(true)
+        await generateImage(cardsData.cards)
     }
 
     // Handle image generation completion
