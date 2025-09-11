@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
             )
         )
         // Return the image as a response
-        return new NextResponse(outputBuffer, {
+        return new NextResponse(new Uint8Array(outputBuffer), {
             status: 200,
             headers: {
                 'Content-Type': 'image/png',
