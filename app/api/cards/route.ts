@@ -1,5 +1,5 @@
 import { CardItem, CardsResponse } from '@/app/services/serverless/types'
-import { getUniqueCards, sleep } from '@/app/utils/api'
+import { getUniqueCards, sleep } from '@/utils/api'
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
 

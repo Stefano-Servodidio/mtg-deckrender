@@ -6,7 +6,7 @@ import {
     getAssetBuffer,
     prepareCardOperations,
     prepareCountOperations
-} from '@/app/utils/api'
+} from '@/utils/api'
 
 interface DeckPngRequest {
     cards: CardItem[]

@@ -1,6 +1,6 @@
 import path from 'path'
 import fs from 'fs/promises'
-import { CardImageBuffer } from '../api/deck-png/route'
+import { CardImageBuffer } from '../app/api/deck-png/route'
 
 // Utility function to parse a decklist string and return unique cards with their quantities
 export const getUniqueCards = (
