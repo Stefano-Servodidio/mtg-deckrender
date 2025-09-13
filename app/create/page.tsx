@@ -6,7 +6,6 @@ import {
     Heading,
     Text,
     VStack,
-    HStack,
     useColorModeValue,
     Card,
     CardBody,
@@ -31,7 +30,7 @@ import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
-import AccordionItemHeader from '@/components/accordionItemHeader'
+import AccordionItemHeader from '@/components/AccordionItemHeader'
 
 export default function Create() {
     const [decklistText, setDecklistText] = useState('')
@@ -55,20 +54,7 @@ export default function Create() {
 
     const cardBg = useColorModeValue('white', 'gray.800')
 
-    const handleUpload = async () => {
-        if (!decklistText.trim()) {
-            toast({
-                title: 'No decklist provided',
-                description: 'Please paste or upload a decklist first.',
-                status: 'warning',
-                duration: 3000,
-                isClosable: true
-            })
-            return
-        }
-
-        await fetchCards(decklistText.trim())
-    }
+    /* lifecycle hooks */
 
     // Handle cards fetch completion
     React.useEffect(() => {
@@ -92,6 +78,48 @@ export default function Create() {
             })
         }
     }, [cardsData, cardsError, isLoadingCards, toast])
+
+    // Handle image generation completion
+    React.useEffect(() => {
+        if (generatedImage && !isGenerating && !imageError) {
+            toast({
+                title: 'Image generated successfully!',
+                description: `Generated deck image with ${cardsData?.cards?.length || 0} unique cards.`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true
+            })
+            // Move to download section after successful generation
+            setAccordionIndex([2])
+        } else if (imageError && !isGenerating) {
+            toast({
+                title: 'Generation failed',
+                description:
+                    imageError.message ||
+                    'An error occurred while generating the image.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true
+            })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [generatedImage, imageError, isGenerating, toast])
+
+    /* Handlers */
+    const handleUpload = async () => {
+        if (!decklistText.trim()) {
+            toast({
+                title: 'No decklist provided',
+                description: 'Please paste or upload a decklist first.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true
+            })
+            return
+        }
+
+        await fetchCards(decklistText.trim())
+    }
 
     const handleFileUpload = useCallback(
         (files: File[]) => {
@@ -137,32 +165,6 @@ export default function Create() {
 
         await generateImage(cardsData.cards)
     }
-
-    // Handle image generation completion
-    React.useEffect(() => {
-        if (generatedImage && !isGenerating && !imageError) {
-            toast({
-                title: 'Image generated successfully!',
-                description: `Generated deck image with ${cardsData?.cards?.length || 0} unique cards.`,
-                status: 'success',
-                duration: 3000,
-                isClosable: true
-            })
-            // Move to download section after successful generation
-            setAccordionIndex([2])
-        } else if (imageError && !isGenerating) {
-            toast({
-                title: 'Generation failed',
-                description:
-                    imageError.message ||
-                    'An error occurred while generating the image.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true
-            })
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [generatedImage, imageError, isGenerating, toast])
 
     return (
         <Box

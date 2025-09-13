@@ -1,7 +1,7 @@
-import { CardItem, CardsResponse } from '@/app/services/serverless/types'
 import { getUniqueCards, sleep } from '@/utils/api'
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
+import { CardItem } from './_types'
 
 // Simple in-memory cache for card data
 const cardCache = new Map<string, { data: any; expires: number }>()
@@ -9,6 +9,7 @@ const cardCache = new Map<string, { data: any; expires: number }>()
 export async function POST(request: NextRequest) {
     try {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/cards')))
+
         // decklist is a string with one card name per line
         const { decklist } = await request.json()
 
@@ -48,10 +49,9 @@ export async function POST(request: NextRequest) {
             const cached = cardCache.get(cacheKey)
             if (cached && cached.expires > now) {
                 cards.push({
-                    card: cached.data,
+                    ...cached.data,
                     quantity,
-                    type,
-                    id: cached.data.id
+                    type
                 })
                 console.log(chalk.cyan(`Cache hit for card: ${name}`))
                 continue
@@ -75,8 +75,20 @@ export async function POST(request: NextRequest) {
             if (!response.ok) {
                 errors.push(name)
             }
-            const cardData = await response.json()
-            cards.push({ card: cardData, quantity, type, id: cardData.id })
+            const scryfallData = await response.json()
+            const cardData: CardItem = {
+                id: scryfallData.id,
+                name: scryfallData.name,
+                cmc: scryfallData.cmc,
+                type_line: scryfallData.type_line,
+                rarity: scryfallData.rarity,
+                image_uri: scryfallData.image_uris?.png || null,
+                colors: scryfallData.colors,
+                legalities: scryfallData.legalities,
+                quantity,
+                type
+            }
+            cards.push(cardData)
             // Cache the card data for 24 hours
             cardCache.set(cacheKey, {
                 data: cardData,

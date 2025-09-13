@@ -1,5 +1,5 @@
 'use client'
-import { CardsResponse } from '@/app/services/serverless/types'
+import { CardsResponse } from '@/app/api/cards/_types'
 import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react'
 import React from 'react'
 import { FaCogs, FaImage } from 'react-icons/fa'

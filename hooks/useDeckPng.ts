@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react'
-import { ScryfallCard } from '@/app/services/scryfall/types'
+import { CardItem, ScryfallCard } from '@/app/api/cards/_types'
+import React, { useState, useCallback } from 'react'
+import { useFetchState } from './useFetchState'
 
 interface DeckPngOptions {
     rowSize?: number
@@ -10,22 +11,26 @@ interface UseDeckPngReturn {
     error: Error | null
     isLoading: boolean
     generateImage: (
-        cards: { card: ScryfallCard; quantity: number }[],
+        cards: CardItem[],
         options?: DeckPngOptions
     ) => Promise<void>
     reset: () => void
 }
 
+// Hook to generate a deck PNG image from card data
 export function useDeckPng(): UseDeckPngReturn {
-    const [data, setData] = useState<string | null>(null)
-    const [error, setError] = useState<Error | null>(null)
-    const [isLoading, setIsLoading] = useState(false)
+    const {
+        data,
+        setData,
+        error,
+        setError,
+        isLoading,
+        setIsLoading,
+        reset: resetState
+    } = useFetchState<string>()
 
     const generateImage = useCallback(
-        async (
-            cards: { card: ScryfallCard; quantity: number }[],
-            options: DeckPngOptions = { rowSize: 7 }
-        ) => {
+        async (cards: CardItem[], options: DeckPngOptions = { rowSize: 7 }) => {
             if (!cards || cards.length === 0) {
                 setError(new Error('Cards are required'))
                 return
@@ -36,6 +41,9 @@ export function useDeckPng(): UseDeckPngReturn {
             setData(null)
 
             try {
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('POST /api/deck-png - Generating image')
+                }
                 const response = await fetch('/api/deck-png', {
                     method: 'POST',
                     headers: {
@@ -71,7 +79,7 @@ export function useDeckPng(): UseDeckPngReturn {
                 setIsLoading(false)
             }
         },
-        []
+        [setData, setError, setIsLoading]
     )
 
     const reset = useCallback(() => {
@@ -79,10 +87,19 @@ export function useDeckPng(): UseDeckPngReturn {
         if (data) {
             URL.revokeObjectURL(data)
         }
-        setData(null)
-        setError(null)
-        setIsLoading(false)
+        resetState()
+    }, [data, resetState])
+
+    const revokeUrl = useCallback(() => {
+        if (data) {
+            URL.revokeObjectURL(data)
+        }
     }, [data])
+
+    React.useEffect(() => {
+        return () => revokeUrl()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return {
         data,

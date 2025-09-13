@@ -1,36 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
 import chalk from 'chalk'
-import { CardItem } from '@/app/services/serverless/types'
 import {
     getAssetBuffer,
     prepareCardOperations,
     prepareCountOperations
 } from '@/utils/api'
-
-interface DeckPngRequest {
-    cards: CardItem[]
-    options?: {
-        rowSize?: number
-    }
-}
-
-interface CardImageData {
-    name: string
-    quantity: number
-    type: 'main' | 'sideboard'
-    imageUri: string
-    cmc?: number
-    typeLine?: string
-    rarity?: string
-}
-
-export interface CardImageBuffer {
-    name: string
-    type: 'main' | 'sideboard'
-    buffer: Buffer
-    quantity: number
-}
+import { DeckPngRequest } from './_types'
 
 const defaultOptions = {
     rowSize: 7
@@ -56,24 +32,11 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Extract image URIs and card data
-        const cardImages: CardImageData[] = cards.map(
-            ({ card, type, quantity }) => ({
-                name: card.name,
-                quantity,
-                type,
-                imageUri: card.image_uris?.png || '',
-                cmc: card.cmc || 0,
-                typeLine: card.type_line || '',
-                rarity: card.rarity || 'common'
-            })
-        )
-
         // Filter out cards without image URIs or invalid quantities
-        const validCardImages = cardImages
+        const validCardImages = cards
             .filter(
                 (card) =>
-                    card.imageUri && card.quantity > 0 && card.quantity <= 4
+                    card.image_uri && card.quantity > 0 && card.quantity <= 4
             )
             .sort((a, b) => {
                 //sort by cmc then by name
@@ -104,7 +67,7 @@ export async function POST(request: NextRequest) {
         const cardImageBuffers = await Promise.all(
             validCardImages.map(async (card) => {
                 try {
-                    const response = await fetch(card.imageUri)
+                    const response = await fetch(card.image_uri as string)
                     if (!response.ok) {
                         throw new Error(
                             `Failed to fetch image for ${card.name}`
