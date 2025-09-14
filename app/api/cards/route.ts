@@ -1,7 +1,7 @@
 import { getUniqueCards, sleep } from '@/utils/api'
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
-import { CardItem } from './_types'
+import { CardItem, CardsResponse } from './_types'
 
 // Simple in-memory cache for card data
 const cardCache = new Map<string, { data: any; expires: number }>()

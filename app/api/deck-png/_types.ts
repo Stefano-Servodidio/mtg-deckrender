@@ -9,7 +9,7 @@ export interface DeckPngRequest {
 
 export interface CardImageBuffer {
     name: string
-    type: 'main' | 'sideboard'
+    type: 'main' | 'sideboard' | 'commander'
     buffer: Buffer
     quantity: number
 }
