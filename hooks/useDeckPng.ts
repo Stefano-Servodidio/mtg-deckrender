@@ -1,4 +1,4 @@
-import { CardItem, ScryfallCard } from '@/app/api/cards/_types'
+import { CardItem } from '@/app/api/cards/_types'
 import React, { useState, useCallback } from 'react'
 import { useFetchState } from './useFetchState'
 
@@ -6,10 +6,18 @@ interface DeckPngOptions {
     rowSize?: number
 }
 
+interface ProgressInfo {
+    current: number
+    total: number
+    message: string
+    percentage: number
+}
+
 interface UseDeckPngReturn {
     data: string | null
     error: Error | null
     isLoading: boolean
+    progress: ProgressInfo | null
     generateImage: (
         cards: CardItem[],
         options?: DeckPngOptions
@@ -28,6 +36,7 @@ export function useDeckPng(): UseDeckPngReturn {
         setIsLoading,
         reset: resetState
     } = useFetchState<string>()
+    const [progress, setProgress] = useState<ProgressInfo | null>(null)
 
     const generateImage = useCallback(
         async (cards: CardItem[], options: DeckPngOptions = { rowSize: 7 }) => {
@@ -39,11 +48,13 @@ export function useDeckPng(): UseDeckPngReturn {
             setIsLoading(true)
             setError(null)
             setData(null)
+            setProgress(null)
 
             try {
                 if (process.env.NODE_ENV === 'development') {
-                    console.log('POST /api/deck-png - Generating image')
+                    console.log('POST /api/deck-png - Generating image (streaming)')
                 }
+                
                 const response = await fetch('/api/deck-png', {
                     method: 'POST',
                     headers: {
@@ -63,11 +74,73 @@ export function useDeckPng(): UseDeckPngReturn {
                     )
                 }
 
-                const arrayBuffer = await response.arrayBuffer()
-                const uint8Array = new Uint8Array(arrayBuffer)
-                const blob = new Blob([uint8Array], { type: 'image/png' })
-                const imageUrl = URL.createObjectURL(blob)
-                setData(imageUrl)
+                // Handle streaming response
+                if (response.body) {
+                    const reader = response.body.getReader()
+                    const decoder = new TextDecoder()
+                    let buffer = ''
+
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read()
+                            if (done) break
+
+                            buffer += decoder.decode(value, { stream: true })
+                            const lines = buffer.split('\n\n')
+                            
+                            // Keep the last incomplete line in the buffer
+                            buffer = lines.pop() || ''
+
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.slice(6))
+                                        
+                                        if (data.type === 'progress') {
+                                            const progressInfo: ProgressInfo = {
+                                                current: data.current,
+                                                total: data.total,
+                                                message: data.message,
+                                                percentage: data.current // current is already a percentage for deck-png
+                                            }
+                                            setProgress(progressInfo)
+                                        } else if (data.type === 'complete') {
+                                            // Convert base64 image to blob URL
+                                            const base64Data = data.result.imageData
+                                            const binaryString = atob(base64Data)
+                                            const bytes = new Uint8Array(binaryString.length)
+                                            for (let i = 0; i < binaryString.length; i++) {
+                                                bytes[i] = binaryString.charCodeAt(i)
+                                            }
+                                            const blob = new Blob([bytes], { type: 'image/png' })
+                                            const imageUrl = URL.createObjectURL(blob)
+                                            setData(imageUrl)
+                                            setProgress({
+                                                current: 100,
+                                                total: 100,
+                                                message: data.message,
+                                                percentage: 100
+                                            })
+                                        } else if (data.type === 'error') {
+                                            throw new Error(data.error || 'Stream error')
+                                        }
+                                    } catch (parseError) {
+                                        console.error('Error parsing stream data:', parseError, line)
+                                    }
+                                }
+                            }
+                        }
+                    } finally {
+                        reader.releaseLock()
+                    }
+                } else {
+                    // Fallback for non-streaming response (shouldn't happen with new implementation)
+                    const arrayBuffer = await response.arrayBuffer()
+                    const uint8Array = new Uint8Array(arrayBuffer)
+                    const blob = new Blob([uint8Array], { type: 'image/png' })
+                    const imageUrl = URL.createObjectURL(blob)
+                    setData(imageUrl)
+                }
             } catch (err) {
                 const error =
                     err instanceof Error
@@ -88,6 +161,7 @@ export function useDeckPng(): UseDeckPngReturn {
             URL.revokeObjectURL(data)
         }
         resetState()
+        setProgress(null)
     }, [data, resetState])
 
     const revokeUrl = useCallback(() => {
@@ -105,6 +179,7 @@ export function useDeckPng(): UseDeckPngReturn {
         data,
         error,
         isLoading,
+        progress,
         generateImage,
         reset
     }

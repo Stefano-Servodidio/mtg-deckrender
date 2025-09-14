@@ -8,9 +8,17 @@ import {
     Text,
     Textarea,
     useColorModeValue,
-    VStack
+    VStack,
+    Progress
 } from '@chakra-ui/react'
 import { FaUpload } from 'react-icons/fa'
+
+interface ProgressInfo {
+    current: number
+    total: number
+    message: string
+    percentage: number
+}
 
 export interface UploadSectionProps {
     decklistText: string
@@ -18,6 +26,7 @@ export interface UploadSectionProps {
     handleUpload: () => void
     isLoadingCards: boolean
     handleFileUpload: (files: File[]) => void
+    progress?: ProgressInfo | null
 }
 
 const UploadSection: React.FC<UploadSectionProps> = ({
@@ -25,7 +34,8 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     setDecklistText,
     handleUpload,
     isLoadingCards,
-    handleFileUpload
+    handleFileUpload,
+    progress
 }) => {
     return (
         <VStack spacing={6}>
@@ -74,6 +84,31 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 </Text>
                 <DropZone onFileUpload={handleFileUpload} />
             </Box>
+
+            {/* Progress Section */}
+            {isLoadingCards && progress && (
+                <Box w="full">
+                    <VStack spacing={3}>
+                        <Box w="full">
+                            <HStack justify="space-between" mb={2}>
+                                <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                                    {progress.message}
+                                </Text>
+                                <Text fontSize="sm" fontWeight="medium" color="purple.600">
+                                    {progress.current}/{progress.total} ({progress.percentage}%)
+                                </Text>
+                            </HStack>
+                            <Progress
+                                value={progress.percentage}
+                                colorScheme="purple"
+                                size="md"
+                                borderRadius="md"
+                                bg="gray.100"
+                            />
+                        </Box>
+                    </VStack>
+                </Box>
+            )}
 
             {/* Upload Button */}
             <Button
