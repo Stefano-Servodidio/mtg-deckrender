@@ -42,6 +42,7 @@ export default function Create() {
         data: cardsData,
         error: cardsError,
         isLoading: isLoadingCards,
+        progress: cardsProgress,
         fetchCards
     } = useCards()
 
@@ -49,6 +50,7 @@ export default function Create() {
         data: generatedImage,
         error: imageError,
         isLoading: isGenerating,
+        progress: imageProgress,
         generateImage
     } = useDeckPng()
 
@@ -222,6 +224,7 @@ export default function Create() {
                                             handleUpload={handleUpload}
                                             isLoadingCards={isLoadingCards}
                                             handleFileUpload={handleFileUpload}
+                                            progress={cardsProgress}
                                         />
                                     </AccordionPanel>
                                 </AccordionItem>
@@ -247,6 +250,7 @@ export default function Create() {
                                             }
                                             isGenerating={isGenerating}
                                             cardsData={cardsData}
+                                            progress={imageProgress}
                                         />
                                     </AccordionPanel>
                                 </AccordionItem>
