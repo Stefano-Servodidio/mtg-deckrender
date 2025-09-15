@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
-import { DropZone } from '../components/DropZone'
+import { DropZone } from '../DropZone'
+import { DropzoneState } from 'react-dropzone'
 
 // Mock react-dropzone
 vi.mock('react-dropzone', () => ({
@@ -21,18 +22,21 @@ describe('DropZone', () => {
         // Setup default mock implementation
         const { useDropzone } = await import('react-dropzone')
         vi.mocked(useDropzone).mockReturnValue({
-            getRootProps: () => ({
-                onClick: vi.fn(),
-                onKeyDown: vi.fn(),
-                onFocus: vi.fn(),
-                onBlur: vi.fn(),
-                'data-testid': 'dropzone'
-            }),
-            getInputProps: () => ({
-                type: 'file',
-                'data-testid': 'dropzone-input'
-            }),
+            getRootProps: () =>
+                ({
+                    onClick: vi.fn(),
+                    onKeyDown: vi.fn(),
+                    onFocus: vi.fn(),
+                    onBlur: vi.fn(),
+                    'data-testid': 'dropzone'
+                }) as any,
+            getInputProps: () =>
+                ({
+                    type: 'file',
+                    'data-testid': 'dropzone-input'
+                }) as any,
             isDragActive: false,
+            isFileDialogActive: false,
             open: vi.fn(),
             acceptedFiles: [],
             fileRejections: [],
@@ -51,7 +55,9 @@ describe('DropZone', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('Drag & drop a text file here')).toBeInTheDocument()
+        expect(
+            screen.getByText('Drag & drop a text file here')
+        ).toBeInTheDocument()
         expect(screen.getByText('or click to browse files')).toBeInTheDocument()
         expect(screen.getByText('Supports .txt files only')).toBeInTheDocument()
     })
@@ -59,18 +65,21 @@ describe('DropZone', () => {
     it('should render drag active state', async () => {
         const { useDropzone } = await import('react-dropzone')
         vi.mocked(useDropzone).mockReturnValue({
-            getRootProps: () => ({
-                onClick: vi.fn(),
-                onKeyDown: vi.fn(),
-                onFocus: vi.fn(),
-                onBlur: vi.fn(),
-                'data-testid': 'dropzone'
-            }),
-            getInputProps: () => ({
-                type: 'file',
-                'data-testid': 'dropzone-input'
-            }),
+            getRootProps: () =>
+                ({
+                    onClick: vi.fn(),
+                    onKeyDown: vi.fn(),
+                    onFocus: vi.fn(),
+                    onBlur: vi.fn(),
+                    'data-testid': 'dropzone'
+                }) as any,
+            getInputProps: () =>
+                ({
+                    type: 'file',
+                    'data-testid': 'dropzone-input'
+                }) as any,
             isDragActive: true,
+            isFileDialogActive: false,
             open: vi.fn(),
             acceptedFiles: [],
             fileRejections: [],
@@ -91,15 +100,17 @@ describe('DropZone', () => {
     })
 
     it('should call onFileUpload when files are dropped', async () => {
-        const mockFiles = [new File(['test content'], 'test.txt', { type: 'text/plain' })]
-        
+        const mockFiles = [
+            new File(['test content'], 'test.txt', { type: 'text/plain' })
+        ]
+
         const { useDropzone } = await import('react-dropzone')
         vi.mocked(useDropzone).mockImplementation((options) => {
             // Simulate file drop
             if (options?.onDrop) {
                 options.onDrop(mockFiles, [], {} as any)
             }
-            
+
             return {
                 getRootProps: () => ({
                     onClick: vi.fn(),
@@ -113,6 +124,7 @@ describe('DropZone', () => {
                     'data-testid': 'dropzone-input'
                 }),
                 isDragActive: false,
+                isFileDialogActive: false,
                 open: vi.fn(),
                 acceptedFiles: mockFiles,
                 fileRejections: [],
@@ -121,7 +133,7 @@ describe('DropZone', () => {
                 isDragReject: false,
                 rootRef: { current: null },
                 inputRef: { current: null }
-            }
+            } as DropzoneState
         })
 
         render(

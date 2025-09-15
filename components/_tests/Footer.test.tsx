@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
-import { Footer } from '../components/Footer'
+import { Footer } from '../Footer'
 
 // Wrapper component to provide Chakra context
 const ChakraWrapper = ({ children }: { children: React.ReactNode }) => (
