@@ -2,41 +2,11 @@ import path from 'path'
 import fs from 'fs/promises'
 import { CardImageBuffer } from '../app/api/deck-png/_types'
 
-// Utility function to parse a decklist string and return unique cards with their quantities
-export const getUniqueCards = (
-    decklist: string,
-    type: 'main' | 'sideboard'
-) => {
-    const cardStrings = decklist
-        .split('\n')
-        .map((line) => line.replace(' ', '#').trim())
+// Re-export functions from new utility files for backward compatibility
+export { getUniqueCards, sleep } from '../app/api/cards/_utils/decklist'
+export { getAssetBuffer } from '../app/api/deck-png/_utils/compositing'
 
-    return cardStrings.reduce<
-        { name: string; quantity: number; type: 'main' | 'sideboard' }[]
-    >((acc, line) => {
-        if (!line) {
-            return acc
-        }
-        const [quantityStr, name] = line.split('#')
-        const quantity = parseInt(quantityStr.replace('x', ''), 10)
-        if (!isNaN(quantity) && quantity > 0 && name) {
-            acc.push({ name, quantity, type })
-        }
-        return acc
-    }, [])
-}
-
-// Utility function to pause execution for a given number of milliseconds
-export const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms))
-
-// Utility function to load an asset file as a buffer
-export const getAssetBuffer = async (filename: string) => {
-    const assetPath = path.join(process.cwd(), 'assets', filename)
-    return await fs.readFile(assetPath)
-}
-
-// Prepare card composite operations
+// Legacy function - use prepareCardOperations from deck-png compositing utils instead
 export const prepareCardOperations = (
     images: CardImageBuffer[],
     cardsPerRow: number,
@@ -66,7 +36,7 @@ export const prepareCardOperations = (
     })
 }
 
-//prepare quantity overlay operations
+// Legacy function - use prepareQuantityOverlayOperations from deck-png compositing utils instead
 export const prepareCountOperations = (
     images: CardImageBuffer[],
     cardsPerRow: number,
