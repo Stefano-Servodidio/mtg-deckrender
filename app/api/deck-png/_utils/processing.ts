@@ -14,8 +14,7 @@ import { DECK_LAYOUT_CONFIG } from './config'
 export function filterAndSortCards(cards: CardItem[]): CardItem[] {
     return cards
         .filter(
-            (card) =>
-                card.image_uri && card.quantity > 0 && card.quantity <= 4
+            (card) => card.image_uri && card.quantity > 0 && card.quantity <= 4
         )
         .sort((a, b) => {
             // Sort by CMC then by name
@@ -31,15 +30,17 @@ export function filterAndSortCards(cards: CardItem[]): CardItem[] {
 /**
  * Download and resize a single card image
  */
-export async function downloadAndResizeCardImage(card: CardItem): Promise<CardImageBuffer | null> {
+export async function downloadAndResizeCardImage(
+    card: CardItem
+): Promise<CardImageBuffer | null> {
     const { card: cardConfig } = DECK_LAYOUT_CONFIG
-    
+
     try {
         const response = await fetch(card.image_uri as string)
         if (!response.ok) {
             throw new Error(`Failed to fetch image for ${card.name}`)
         }
-        
+
         const buffer = await response.arrayBuffer()
         const resizedBuffer = await sharp(Buffer.from(buffer))
             .resize({
@@ -47,7 +48,7 @@ export async function downloadAndResizeCardImage(card: CardItem): Promise<CardIm
                 height: cardConfig.height
             })
             .toBuffer()
-            
+
         return {
             name: card.name,
             type: card.type,
@@ -68,24 +69,30 @@ export async function downloadAndResizeCardImage(card: CardItem): Promise<CardIm
  */
 export async function downloadAllCardImages(
     cards: CardItem[],
-    progressCallback?: (current: number, total: number, cardName: string) => void
+    progressCallback?: (
+        current: number,
+        total: number,
+        cardName: string
+    ) => void
 ): Promise<CardImageBuffer[]> {
     const cardImageBuffers: (CardImageBuffer | null)[] = []
     const totalImages = cards.length
-    
+
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i]
-        
+
         if (progressCallback) {
             progressCallback(i + 1, totalImages, card.name)
         }
-        
+
         const cardBuffer = await downloadAndResizeCardImage(card)
         cardImageBuffers.push(cardBuffer)
     }
-    
+
     // Filter out failed downloads
-    return cardImageBuffers.filter((img): img is CardImageBuffer => img !== null)
+    return cardImageBuffers.filter(
+        (img): img is CardImageBuffer => img !== null
+    )
 }
 
 /**
@@ -101,15 +108,17 @@ export function calculateLayoutMetrics(
     totalSideboardRows: number
     hasSideboard: boolean
 } {
-    const mainImages = successfulImages.filter(img => img.type === 'main')
-    const sideboardImages = successfulImages.filter(img => img.type === 'sideboard')
-    
+    const mainImages = successfulImages.filter((img) => img.type === 'main')
+    const sideboardImages = successfulImages.filter(
+        (img) => img.type === 'sideboard'
+    )
+
     const hasSideboard = sideboardImages.length > 0
     const totalMainRows = Math.ceil(mainImages.length / cardsPerRow)
-    const totalSideboardRows = hasSideboard 
+    const totalSideboardRows = hasSideboard
         ? Math.ceil(sideboardImages.length / cardsPerRow)
         : 0
-    
+
     return {
         mainImages,
         sideboardImages,

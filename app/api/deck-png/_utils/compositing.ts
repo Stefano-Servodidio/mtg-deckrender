@@ -18,7 +18,9 @@ export async function getAssetBuffer(filename: string): Promise<Buffer> {
 /**
  * Load quantity overlay assets
  */
-export async function loadQuantityOverlayAssets(): Promise<{ [key: number]: Buffer }> {
+export async function loadQuantityOverlayAssets(): Promise<{
+    [key: number]: Buffer
+}> {
     const x1Buffer = await getAssetBuffer('x1.png')
     const x2Buffer = await getAssetBuffer('x2.png')
     const x3Buffer = await getAssetBuffer('x3.png')
@@ -43,18 +45,21 @@ function calculateCardPosition(
 ): { left: number; top: number } {
     const { card, spacing } = DECK_LAYOUT_CONFIG
     const rowHeight = calculateRowHeight()
-    
+
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
-    
-    const leftPosition = spacing.canvasPadding + col * (card.width + spacing.betweenCards)
-    const baseTopPosition = spacing.canvasPadding + row * (rowHeight + spacing.betweenCards)
-    
+
+    const leftPosition =
+        spacing.canvasPadding + col * (card.width + spacing.betweenCards)
+    const baseTopPosition =
+        spacing.canvasPadding + row * (rowHeight + spacing.betweenCards)
+
     // Add extra spacing for sideboard
-    const sideboardOffset = !isMainDeck && mainDeckRowHeight !== undefined
-        ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
-        : 0
-    
+    const sideboardOffset =
+        !isMainDeck && mainDeckRowHeight !== undefined
+            ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
+            : 0
+
     return {
         left: leftPosition,
         top: baseTopPosition + sideboardOffset
@@ -71,7 +76,12 @@ export function prepareCardOperations(
 ): any[] {
     return images.map((imageData, index) => {
         const isMainDeck = imageData.type === 'main'
-        const { left, top } = calculateCardPosition(index, cardsPerRow, isMainDeck, mainDeckRowHeight)
+        const { left, top } = calculateCardPosition(
+            index,
+            cardsPerRow,
+            isMainDeck,
+            mainDeckRowHeight
+        )
 
         return {
             input: imageData.buffer,
@@ -92,23 +102,27 @@ function calculateOverlayPosition(
 ): { left: number; top: number } {
     const { card, spacing, overlay } = DECK_LAYOUT_CONFIG
     const rowHeight = calculateRowHeight()
-    
+
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
-    
-    const leftPosition = spacing.canvasPadding + 
-                        col * (card.width + spacing.betweenCards) + 
-                        card.width - overlay.offsetFromRight
-                        
-    const baseTopPosition = spacing.canvasPadding + 
-                           row * (rowHeight + spacing.betweenCards) + 
-                           overlay.offsetFromTop
-    
+
+    const leftPosition =
+        spacing.canvasPadding +
+        col * (card.width + spacing.betweenCards) +
+        card.width -
+        overlay.offsetFromRight
+
+    const baseTopPosition =
+        spacing.canvasPadding +
+        row * (rowHeight + spacing.betweenCards) +
+        overlay.offsetFromTop
+
     // Add extra spacing for sideboard
-    const sideboardOffset = !isMainDeck && mainDeckRowHeight !== undefined
-        ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
-        : 0
-    
+    const sideboardOffset =
+        !isMainDeck && mainDeckRowHeight !== undefined
+            ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
+            : 0
+
     return {
         left: leftPosition,
         top: baseTopPosition + sideboardOffset
@@ -129,7 +143,12 @@ export function prepareQuantityOverlayOperations(
             if (imageData.quantity < 2) return null // No overlay for single cards
 
             const isMainDeck = imageData.type === 'main'
-            const { left, top } = calculateOverlayPosition(index, cardsPerRow, isMainDeck, mainDeckRowHeight)
+            const { left, top } = calculateOverlayPosition(
+                index,
+                cardsPerRow,
+                isMainDeck,
+                mainDeckRowHeight
+            )
 
             return {
                 input: quantityAssets[imageData.quantity] || quantityAssets[1],
@@ -166,6 +185,6 @@ export async function createCompositeImage(
         ...cardOperations,
         ...overlayOperations
     ])
-    
+
     return await compositeImage.png().toBuffer()
 }

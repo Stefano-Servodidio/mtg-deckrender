@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
-import FeatureCard from '../components/FeatureCard'
+import FeatureCard from '../FeatureCard'
 import React from 'react'
 
 // Mock icon component for testing

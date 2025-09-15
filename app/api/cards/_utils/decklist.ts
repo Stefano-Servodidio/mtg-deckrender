@@ -82,7 +82,8 @@ export function createMockCardItem(
         cmc: Math.floor(Math.random() * 8),
         type_line: 'Instant',
         rarity: 'common',
-        image_uri: 'https://cards.scryfall.io/png/front/4/5/4506713a-6a58-4e44-a514-09555ad3cd96.png',
+        image_uri:
+            'https://cards.scryfall.io/png/front/4/5/4506713a-6a58-4e44-a514-09555ad3cd96.png',
         colors: ['U', 'R'],
         legalities: {
             standard: 'legal',
