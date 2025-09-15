@@ -4,7 +4,7 @@ export enum SORT_OPTION {
     name = 'name',
     cmc = 'cmc',
     typeLine = 'typeLine',
-    color = 'color',
+    colors = 'colors',
     rarity = 'rarity'
 }
 

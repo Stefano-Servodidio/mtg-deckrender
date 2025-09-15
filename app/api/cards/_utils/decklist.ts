@@ -58,7 +58,7 @@ export function createCardItem(
         id: scryfallData.id,
         name: scryfallData.name,
         cmc: scryfallData.cmc,
-        type_line: scryfallData.type_line,
+        typeLine: scryfallData.type_line,
         rarity: scryfallData.rarity,
         image_uri: scryfallData.image_uris?.png || null,
         colors: scryfallData.colors,
@@ -80,7 +80,7 @@ export function createMockCardItem(
         id: `mock-${name.toLowerCase().replace(/\s+/g, '-')}`,
         name: 'name',
         cmc: Math.floor(Math.random() * 8),
-        type_line: 'Instant',
+        typeLine: 'Instant',
         rarity: 'common',
         image_uri:
             'https://cards.scryfall.io/large/front/c/4/c41933b2-a91f-4c43-8734-08fc3a392ac2.jpg?1675456210',

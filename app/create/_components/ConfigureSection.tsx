@@ -15,7 +15,6 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import { FaCogs, FaImage } from 'react-icons/fa'
-import { useForm } from 'react-hook-form'
 
 interface ProgressInfo {
     current: number
@@ -25,7 +24,10 @@ interface ProgressInfo {
 }
 
 export interface ConfigureSectionProps {
-    handleGenerateImage: () => void
+    handleGenerateImage: (form: {
+        sortBy: string
+        sortDirection: string
+    }) => void
     isGenerating: boolean
     cardsData: CardsResponse | null
     progress?: ProgressInfo | null
@@ -37,7 +39,10 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
     cardsData,
     progress
 }) => {
-    const { register, handleSubmit, watch } = useForm()
+    const [form, setForm] = React.useState({
+        sortBy: 'name',
+        sortDirection: 'asc'
+    })
 
     return (
         <VStack spacing={6}>
@@ -53,49 +58,22 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                     <FaCogs /> Configure Deck Image
                 </Heading>
                 <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
-                    <FilterItem.Radio
-                        label="Card Size"
-                        name="cardSize"
-                        options={[
-                            { label: 'Small', value: 'small' },
-                            { label: 'Medium', value: 'medium' },
-                            { label: 'Large', value: 'large' }
-                        ]}
-                        value="medium"
-                        onChange={() => {}}
-                    />
-                    <FilterItem.Radio
-                        label="Layout"
-                        name="layout"
-                        options={[
-                            { label: 'Grid', value: 'grid' },
-                            { label: 'Row', value: 'row' },
-                            { label: 'Column', value: 'column' }
-                        ]}
-                        value="grid"
-                        onChange={() => {}}
-                    />
-                    <FilterItem.Radio
-                        label="Include Card Names"
-                        name="includeCardNames"
-                        options={[
-                            { label: 'Yes', value: 'yes' },
-                            { label: 'No', value: 'no' }
-                        ]}
-                        value="yes"
-                        onChange={() => {}}
-                    />
-                    <FilterItem.Radio
-                        label="Background Color"
-                        name="backgroundColor"
-                        options={[
-                            { label: 'White', value: 'white' },
-                            { label: 'Black', value: 'black' },
-                            { label: 'Transparent', value: 'transparent' }
-                        ]}
-                        value="white"
-                        onChange={() => {}}
-                    />
+                    <FilterItem.Wrapper label="Sort by">
+                        <FilterItem.Radio
+                            name="sortBy"
+                            options={[
+                                { label: 'Name', value: 'name' },
+                                { label: 'Mana value', value: 'cmc' },
+                                { label: 'Type', value: 'typeLine' },
+                                { label: 'Color', value: 'colors' },
+                                { label: 'Rarity', value: 'rarity' }
+                            ]}
+                            value={form.sortBy}
+                            onChange={(val) =>
+                                setForm((prev) => ({ ...prev, sortBy: val }))
+                            }
+                        />
+                    </FilterItem.Wrapper>
                     {/* Add more options as supported by api/deck-png */}
                 </SimpleGrid>
             </Box>
@@ -137,7 +115,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                 size="lg"
                 colorScheme="blue"
                 leftIcon={<FaImage />}
-                onClick={handleGenerateImage}
+                onClick={() => handleGenerateImage(form)}
                 isLoading={isGenerating}
                 loadingText="Generating..."
                 w={{ base: 'full', md: 'auto' }}

@@ -117,7 +117,7 @@ export interface CardItem {
     id: ScryfallCard['id']
     name: ScryfallCard['name']
     cmc: ScryfallCard['cmc']
-    type_line: ScryfallCard['type_line']
+    typeLine: ScryfallCard['type_line']
     rarity: ScryfallCard['rarity']
     image_uri: ScryfallCard['image_uris']['png'] | null
     colors: ScryfallCard['colors']

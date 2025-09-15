@@ -35,9 +35,11 @@ const defaultOptions = {
 export async function POST(request: NextRequest) {
     try {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/deck-png')))
-        const { cards, options = defaultOptions }: DeckPngRequest =
+        const { cards, options: requestOptions }: DeckPngRequest =
             await request.json()
 
+        const options = { ...defaultOptions, ...(requestOptions || {}) }
+        console.log('Options:', options)
         if (!cards || !Array.isArray(cards)) {
             return NextResponse.json(
                 { error: 'Invalid request. Expected cards array.' },
@@ -67,9 +69,14 @@ export async function POST(request: NextRequest) {
                             })}\n\n`
                         )
                     )
+                    console.log(cards)
 
                     // Filter and sort cards for processing
-                    const validCardImages = filterAndSortCards(cards)
+                    const validCardImages = filterAndSortCards(
+                        cards,
+                        options.sortBy,
+                        options.sortDirection
+                    )
 
                     if (validCardImages.length === 0) {
                         controller.enqueue(

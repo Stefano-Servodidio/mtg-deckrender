@@ -91,16 +91,24 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                     <VStack spacing={3}>
                         <Box w="full">
                             <HStack justify="space-between" mb={2}>
-                                <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                                <Text
+                                    fontSize="sm"
+                                    fontWeight="medium"
+                                    color="gray.700"
+                                >
                                     {progress.message}
                                 </Text>
-                                <Text fontSize="sm" fontWeight="medium" color="purple.600">
-                                    {progress.current}/{progress.total} ({progress.percentage}%)
+                                <Text
+                                    fontSize="sm"
+                                    fontWeight="medium"
+                                    color="purple.600"
+                                >
+                                    {progress.current}/{progress.total} (
+                                    {progress.percentage}%)
                                 </Text>
                             </HStack>
                             <Progress
                                 value={progress.percentage}
-                                colorScheme="purple"
                                 size="md"
                                 borderRadius="md"
                                 bg="gray.100"
@@ -113,7 +121,6 @@ const UploadSection: React.FC<UploadSectionProps> = ({
             {/* Upload Button */}
             <Button
                 size="lg"
-                colorScheme="purple"
                 leftIcon={<FaUpload />}
                 onClick={handleUpload}
                 isLoading={isLoadingCards}
@@ -129,28 +136,6 @@ const UploadSection: React.FC<UploadSectionProps> = ({
             >
                 Upload Decklist
             </Button>
-
-            {/* Loading indicator */}
-            {/* {isLoadingCards && (
-                                                <Text
-                                                    color="blue.500"
-                                                    textAlign="center"
-                                                >
-                                                    Fetching card data...
-                                                </Text>
-                                            )} */}
-
-            {/* Success indicator */}
-            {/* {cardsData?.cards && (
-                                                <Text
-                                                    color="green.500"
-                                                    textAlign="center"
-                                                >
-                                                    Successfully loaded{' '}
-                                                    {cardsData.cards.length}{' '}
-                                                    unique cards!
-                                                </Text>
-                                            )} */}
         </VStack>
     )
 }

@@ -31,6 +31,7 @@ import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
 import AccordionItemHeader from '@/components/AccordionItemHeader'
+import type { DeckPngOptions } from '@/hooks/useDeckPng'
 
 export default function Create() {
     const [decklistText, setDecklistText] = useState('')
@@ -153,7 +154,10 @@ export default function Create() {
         [toast]
     )
 
-    const handleGenerateImage = async () => {
+    const handleGenerateImage = async ({
+        sortBy,
+        sortDirection
+    }: DeckPngOptions) => {
         if (!cardsData?.cards || cardsData.cards.length === 0) {
             toast({
                 title: 'No cards available',
@@ -165,7 +169,7 @@ export default function Create() {
             return
         }
 
-        await generateImage(cardsData.cards)
+        await generateImage(cardsData.cards, { sortBy, sortDirection })
     }
 
     return (

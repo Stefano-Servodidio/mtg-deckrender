@@ -4,26 +4,69 @@
 import sharp from 'sharp'
 import chalk from 'chalk'
 import { CardItem } from '../../cards/_types'
-import { CardImageBuffer } from '../_types'
+import {
+    CardImageBuffer,
+    SORT_OPTION,
+    SortDirection,
+    SortOption
+} from '../_types'
 import { DECK_LAYOUT_CONFIG } from './config'
+import { DeckPngOptions } from '@/hooks/useDeckPng'
 
 /**
  * Filter and sort cards for image processing
  * Removes invalid cards and sorts by CMC then by name
  */
-export function filterAndSortCards(cards: CardItem[]): CardItem[] {
+export function filterAndSortCards(
+    cards: CardItem[],
+    sortBy: SortOption,
+    sortDirection: SortDirection
+): CardItem[] {
     return cards
         .filter(
             (card) => card.image_uri && card.quantity > 0 && card.quantity <= 4
         )
         .sort((a, b) => {
-            // Sort by CMC then by name
-            const aCmc = a.cmc ?? 0
-            const bCmc = b.cmc ?? 0
-            if (aCmc === bCmc) {
-                return a.name.localeCompare(b.name)
+            const key = SORT_OPTION[sortBy] ? SORT_OPTION[sortBy] : 'name'
+            const direction = sortDirection === 'desc' ? -1 : 1
+            if (sortBy === 'rarity') {
+                const rarityOrder = ['common', 'uncommon', 'rare', 'mythic']
+                return (
+                    (rarityOrder.indexOf(a.rarity) -
+                        rarityOrder.indexOf(b.rarity)) *
+                    direction
+                )
+            } else if (sortBy === 'colors') {
+                const colorOrder = [
+                    'W',
+                    'U',
+                    'B',
+                    'R',
+                    'G',
+                    'multi',
+                    'colorless'
+                ]
+                const aColor = a.colors?.length
+                    ? a.colors.length > 1
+                        ? 'multi'
+                        : a.colors[0]
+                    : 'colorless'
+                const bColor = b.colors?.length
+                    ? b.colors.length > 1
+                        ? 'multi'
+                        : b.colors[0]
+                    : 'colorless'
+                return (
+                    (colorOrder.indexOf(aColor) - colorOrder.indexOf(bColor)) *
+                    direction
+                )
+            } else {
+                const sortKeyA = a[key]
+                const sortKeyB = b[key]
+                if (sortKeyA < sortKeyB) return -1 * direction
+                if (sortKeyA > sortKeyB) return 1 * direction
+                return 0
             }
-            return aCmc - bCmc
         })
 }
 
