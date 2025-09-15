@@ -1,35 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sharp from 'sharp'
 import chalk from 'chalk'
 import { CardItem } from '@/app/services/serverless/types'
 import {
-    getAssetBuffer,
-    prepareCardOperations,
-    prepareCountOperations
-} from '@/app/utils/api'
+    extractCardImageData,
+    filterValidImages,
+    downloadAndResizeImages,
+    calculateLayoutDimensions,
+    splitImagesByType
+} from './_utils/processing'
+import {
+    createCanvas,
+    loadCountAssets,
+    prepareCompositeOperations
+} from './_utils/compositing'
 
 interface DeckPngRequest {
     cards: CardItem[]
     options?: {
         rowSize?: number
     }
-}
-
-interface CardImageData {
-    name: string
-    quantity: number
-    type: 'main' | 'sideboard'
-    imageUri: string
-    cmc?: number
-    typeLine?: string
-    rarity?: string
-}
-
-export interface CardImageBuffer {
-    name: string
-    type: 'main' | 'sideboard'
-    buffer: Buffer
-    quantity: number
 }
 
 const defaultOptions = {
@@ -56,34 +45,9 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Extract image URIs and card data
-        const cardImages: CardImageData[] = cards.map(
-            ({ card, type, quantity }) => ({
-                name: card.name,
-                quantity,
-                type,
-                imageUri: card.image_uris?.png || '',
-                cmc: card.cmc || 0,
-                typeLine: card.type_line || '',
-                rarity: card.rarity || 'common'
-            })
-        )
-
-        // Filter out cards without image URIs or invalid quantities
-        const validCardImages = cardImages
-            .filter(
-                (card) =>
-                    card.imageUri && card.quantity > 0 && card.quantity <= 4
-            )
-            .sort((a, b) => {
-                //sort by cmc then by name
-                const aCmc = a.cmc ?? 0
-                const bCmc = b.cmc ?? 0
-                if (aCmc === bCmc) {
-                    return a.name.localeCompare(b.name)
-                }
-                return aCmc - bCmc
-            })
+        // Extract and filter card image data
+        const cardImages = extractCardImageData(cards)
+        const validCardImages = filterValidImages(cardImages)
 
         if (validCardImages.length === 0) {
             return NextResponse.json(
@@ -92,7 +56,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Create composite image using Sharp
+        // Set up image dimensions and layout
         const cardsPerRow = options?.rowSize || 7
         const cardWidth = 146 // Small image width from Scryfall
         const cardHeight = 204 // Small image height from Scryfall
@@ -100,43 +64,12 @@ export async function POST(request: NextRequest) {
         const rowHeight = cardHeight * 0.5 // Adjust row height to change visualization style
         const sideboardSpacing = 70 // Extra space before main sideboard
 
-        // Download all card images
-        const cardImageBuffers = await Promise.all(
-            validCardImages.map(async (card) => {
-                try {
-                    const response = await fetch(card.imageUri)
-                    if (!response.ok) {
-                        throw new Error(
-                            `Failed to fetch image for ${card.name}`
-                        )
-                    }
-                    const buffer = await response.arrayBuffer()
-                    const resizedBuffer = await sharp(Buffer.from(buffer))
-                        .resize({
-                            width: cardWidth,
-                            height: cardHeight
-                        })
-                        .toBuffer()
-                    return {
-                        name: card.name,
-                        type: card.type,
-                        buffer: resizedBuffer,
-                        quantity: card.quantity
-                    }
-                } catch (error) {
-                    console.error(
-                        `Error fetching image for ${card.name}:`,
-                        error
-                    )
-                    return null
-                }
-            })
+        // Download and resize all card images
+        const successfulImages = await downloadAndResizeImages(
+            validCardImages,
+            cardWidth,
+            cardHeight
         )
-
-        // Filter out failed downloads
-        const successfulImages = [
-            ...cardImageBuffers.filter((img) => img !== null)
-        ]
 
         if (successfulImages.length === 0) {
             return NextResponse.json(
@@ -145,50 +78,16 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const hasSideboard = successfulImages.some(
-            (img) => img!.type === 'sideboard'
-        )
-
-        const totalMainRows = Math.ceil(
-            successfulImages.filter((img) => img!.type === 'main').length /
-                cardsPerRow
-        )
-        const totalSideboardRows = hasSideboard
-            ? Math.ceil(
-                  successfulImages.filter((img) => img!.type === 'sideboard')
-                      .length / cardsPerRow
-              )
-            : 0
-        const totalRows =
-            totalMainRows + (hasSideboard ? totalSideboardRows : 0)
-        const canvasWidth =
-            cardWidth * cardsPerRow + spacing * (cardsPerRow - 1) + spacing * 2 // Add padding
-        const canvasHeight =
-            rowHeight * totalRows +
-            spacing * (totalRows - 1) +
-            spacing * 2 +
-            (hasSideboard ? sideboardSpacing + 2 * rowHeight : 0) // Add padding
-
-        // Create base canvas
-        const canvas = sharp({
-            create: {
-                width: canvasWidth,
-                height: canvasHeight,
-                channels: 4,
-                background: { r: 0, g: 0, b: 0, alpha: 0 }
-            }
-        })
-
-        const mainImages = successfulImages.filter(
-            (img) => img!.type === 'main'
-        )
-        const sideboardImages = successfulImages.filter(
-            (img) => img!.type === 'sideboard'
-        )
-
-        // Prepare card composite operations
-        const mainOperations = prepareCardOperations(
-            mainImages,
+        // Calculate layout dimensions
+        const {
+            hasSideboard,
+            totalMainRows,
+            totalSideboardRows,
+            totalRows,
+            canvasWidth,
+            canvasHeight
+        } = calculateLayoutDimensions(
+            successfulImages,
             cardsPerRow,
             cardWidth,
             rowHeight,
@@ -196,60 +95,32 @@ export async function POST(request: NextRequest) {
             sideboardSpacing
         )
 
-        const sideboardOperations = prepareCardOperations(
-            sideboardImages,
-            cardsPerRow,
-            cardWidth,
-            rowHeight,
-            spacing,
-            sideboardSpacing,
-            rowHeight * totalMainRows
-        )
+        // Create base canvas
+        const canvas = createCanvas(canvasWidth, canvasHeight)
 
-        const x1Buffer = await getAssetBuffer('x1.png')
-        const x2Buffer = await getAssetBuffer('x2.png')
-        const x3Buffer = await getAssetBuffer('x3.png')
-        const x4Buffer = await getAssetBuffer('x4.png')
+        // Split images by type
+        const { mainImages, sideboardImages } = splitImagesByType(successfulImages)
 
-        const countMap: { [key: number]: Buffer } = {
-            1: x1Buffer,
-            2: x2Buffer,
-            3: x3Buffer,
-            4: x4Buffer
-        }
+        // Load count overlay assets
+        const countIconBuffers = await loadCountAssets()
 
-        // Prepare quantity overlay operations
-        const mainCountOperations = prepareCountOperations(
+        // Prepare all composite operations
+        const operations = prepareCompositeOperations(
             mainImages,
-            cardsPerRow,
-            cardWidth,
-            rowHeight,
-            spacing,
-            sideboardSpacing,
-            countMap
-        )
-
-        const sideboardCountOperations = prepareCountOperations(
             sideboardImages,
             cardsPerRow,
             cardWidth,
             rowHeight,
             spacing,
             sideboardSpacing,
-            countMap,
-            rowHeight * totalMainRows
+            totalMainRows,
+            countIconBuffers
         )
 
         // Create the composite image
-        const compositeImage = canvas.composite([
-            ...mainOperations,
-            ...sideboardOperations,
-            ...mainCountOperations,
-            ...sideboardCountOperations
-        ])
+        const compositeImage = canvas.composite(operations)
         const outputBuffer = await compositeImage.png().toBuffer()
 
-        chalk
         console.log(
             chalk.cyan(
                 `Generated deck image with ${successfulImages.length} cards.`
@@ -261,6 +132,7 @@ export async function POST(request: NextRequest) {
                 `outputBuffer size: ${+(outputBuffer.length / (1024 * 1024)).toFixed(2)} MB`
             )
         )
+        
         // Return the image as a response
         return new NextResponse(new Uint8Array(outputBuffer), {
             status: 200,

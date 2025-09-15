@@ -1,10 +1,6 @@
-import { CardItem, CardsResponse } from '@/app/services/serverless/types'
-import { getUniqueCards, sleep } from '@/app/utils/api'
-import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
-
-// Simple in-memory cache for card data
-const cardCache = new Map<string, { data: any; expires: number }>()
+import chalk from 'chalk'
+import { parseDecklist, getUniqueCards, fetchCardData } from './_utils/decklist'
 
 export async function POST(request: NextRequest) {
     try {
@@ -19,17 +15,15 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const [mainString, sideboardString] = decklist.includes('\n\n')
-            ? decklist.split('\n\n')
-            : decklist.includes('\n\nSIDEBOARD\n')
-              ? decklist.split('\n\nSIDEBOARD\n')
-              : [decklist, '']
+        // Parse the decklist to separate main and sideboard sections
+        const { mainString, sideboardString } = parseDecklist(decklist)
 
         // Parse the decklist to get unique cards and their quantities
         const uniqueCards = [
             ...getUniqueCards(mainString, 'main'),
             ...getUniqueCards(sideboardString, 'sideboard')
         ]
+        
         if (!uniqueCards.length) {
             return NextResponse.json(
                 { error: 'No valid cards found in the decklist.' },
@@ -37,53 +31,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const cards: CardItem[] = []
-        const errors = []
-        const now = Date.now()
-        const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in ms
-
-        // Fetch card data from Scryfall for each unique card, with cache
-        for (const { name, quantity, type } of uniqueCards) {
-            const cacheKey = name.toLowerCase()
-            const cached = cardCache.get(cacheKey)
-            if (cached && cached.expires > now) {
-                cards.push({
-                    card: cached.data,
-                    quantity,
-                    type,
-                    id: cached.data.id
-                })
-                console.log(chalk.cyan(`Cache hit for card: ${name}`))
-                continue
-            }
-
-            const response = await fetch(
-                process.env.NEXT_PUBLIC_API_URL_SCRYFALL +
-                    `cards/named?fuzzy=${encodeURIComponent(name)}`,
-                {
-                    method: 'GET',
-                    headers: {
-                        'User-Agent':
-                            process.env.NEXT_PUBLIC_API_USER_AGENT ||
-                            'mtg-deck-to-png/1.0'
-                    }
-                }
-            )
-            console.log(
-                chalk.cyan(`Fetching card: ${name}, Status: ${response.status}`)
-            )
-            if (!response.ok) {
-                errors.push(name)
-            }
-            const cardData = await response.json()
-            cards.push({ card: cardData, quantity, type, id: cardData.id })
-            // Cache the card data for 24 hours
-            cardCache.set(cacheKey, {
-                data: cardData,
-                expires: now + CACHE_DURATION
-            })
-            await sleep(50) // Sleep for 50ms to respect Scryfall rate limits
-        }
+        // Fetch card data from Scryfall API
+        const { cards, errors } = await fetchCardData(uniqueCards)
 
         return NextResponse.json({ cards, errors })
     } catch (error) {
