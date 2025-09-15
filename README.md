@@ -22,6 +22,17 @@ Run the development server:
 npm run dev
 ```
 
+## Contributing
+
+**Important**: All pull requests must target the `develop` branch. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
+
+Quick start for contributors:
+1. Fork the repository
+2. Create a feature branch from `develop`
+3. Make your changes
+4. Ensure tests pass with `npm run lint` and `npm run build`
+5. Submit a PR to the `develop` branch
+
 ## Available Scripts
 
 - `npm run dev` — Start the development server
