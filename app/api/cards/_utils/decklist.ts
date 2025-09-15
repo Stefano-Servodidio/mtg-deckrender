@@ -95,7 +95,7 @@ export async function fetchCardData(uniqueCards: UniqueCard[]): Promise<{
 
         try {
             const response = await fetch(
-                process.env.NEXT_PUBLIC_API_URL_SCRYFALL +
+                (process.env.NEXT_PUBLIC_API_URL_SCRYFALL || 'https://api.scryfall.com/') +
                     `cards/named?fuzzy=${encodeURIComponent(name)}`,
                 {
                     method: 'GET',
