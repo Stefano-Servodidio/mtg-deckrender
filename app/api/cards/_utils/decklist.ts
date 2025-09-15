@@ -1,7 +1,7 @@
 // Utility functions for processing decklists
 // This file contains logic moved from the cards API route to separate data processing concerns
 
-import { CardItem } from '../_types'
+import { CardItem, CardType } from '../_types'
 
 /**
  * Parse a decklist string and split it into main deck and sideboard sections
@@ -52,7 +52,7 @@ export function getUniqueCards(
 export function createCardItem(
     scryfallData: any,
     quantity: number,
-    type: 'main' | 'sideboard'
+    type: CardType
 ): CardItem {
     return {
         id: scryfallData.id,
@@ -74,16 +74,16 @@ export function createCardItem(
 export function createMockCardItem(
     name: string,
     quantity: number,
-    type: 'main' | 'sideboard'
+    type: CardType
 ): CardItem {
     return {
         id: `mock-${name.toLowerCase().replace(/\s+/g, '-')}`,
-        name: name,
+        name: 'name',
         cmc: Math.floor(Math.random() * 8),
         type_line: 'Instant',
         rarity: 'common',
         image_uri:
-            'https://cards.scryfall.io/png/front/4/5/4506713a-6a58-4e44-a514-09555ad3cd96.png',
+            'https://cards.scryfall.io/large/front/c/4/c41933b2-a91f-4c43-8734-08fc3a392ac2.jpg?1675456210',
         colors: ['U', 'R'],
         legalities: {
             standard: 'legal',

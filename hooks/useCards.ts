@@ -23,7 +23,6 @@ interface UseCardsReturn {
 export function useCards(): UseCardsReturn {
     const { data, setData, error, setError, isLoading, setIsLoading, reset } =
         useFetchState<CardsResponse>()
-    const cache = useFetchCache<CardsResponse>(2)
     const [progress, setProgress] = useState<ProgressInfo | null>(null)
 
     const fetchCards = useCallback(
@@ -38,24 +37,13 @@ export function useCards(): UseCardsReturn {
             setData(null)
             setProgress(null)
 
-            // TODO: store cache for every single card, not just full decklist
-            //  so that if user fetches multiple times with overlapping cards
-            //  we don't re-fetch the same cards again
-            const cached = cache.get(decklist.trim())
-            if (cached) {
-                if (process.env.NODE_ENV === 'development') {
-                    console.log('POST /api/cards - Cache hit')
-                }
-                setData(cached)
-                setIsLoading(false)
-                return
-            }
-            
             try {
                 if (process.env.NODE_ENV === 'development') {
-                    console.log('POST /api/cards - Fetching from API (streaming)')
+                    console.log(
+                        'POST /api/cards - Fetching from API (streaming)'
+                    )
                 }
-                
+
                 const response = await fetch('/api/cards', {
                     method: 'POST',
                     headers: {
@@ -86,8 +74,11 @@ export function useCards(): UseCardsReturn {
                             if (done) break
 
                             buffer += decoder.decode(value, { stream: true })
+                            console.log('Value:', value)
+                            console.log('Buffer:', buffer)
+
                             const lines = buffer.split('\n\n')
-                            
+
                             // Keep the last incomplete line in the buffer
                             buffer = lines.pop() || ''
 
@@ -95,21 +86,25 @@ export function useCards(): UseCardsReturn {
                                 if (line.startsWith('data: ')) {
                                     try {
                                         const data = JSON.parse(line.slice(6))
-                                        
+
                                         if (data.type === 'progress') {
                                             const progressInfo: ProgressInfo = {
                                                 current: data.current,
                                                 total: data.total,
                                                 message: data.message,
-                                                percentage: Math.round((data.current / data.total) * 100)
+                                                percentage: Math.round(
+                                                    (data.current /
+                                                        data.total) *
+                                                        100
+                                                )
                                             }
                                             setProgress(progressInfo)
-                                            
+
                                             // Add card to our accumulating list if provided
                                             if (data.card) {
                                                 cards.push(data.card)
                                             }
-                                            
+
                                             // Add error to our list if provided
                                             if (data.error) {
                                                 errors.push(data.error)
@@ -118,7 +113,6 @@ export function useCards(): UseCardsReturn {
                                             // Final result
                                             const result = data.result
                                             setData(result)
-                                            cache.set(decklist.trim(), result)
                                             setProgress({
                                                 current: result.cards.length,
                                                 total: result.cards.length,
@@ -126,10 +120,16 @@ export function useCards(): UseCardsReturn {
                                                 percentage: 100
                                             })
                                         } else if (data.type === 'error') {
-                                            throw new Error(data.error || 'Stream error')
+                                            throw new Error(
+                                                data.error || 'Stream error'
+                                            )
                                         }
                                     } catch (parseError) {
-                                        console.error('Error parsing stream data:', parseError, line)
+                                        console.error(
+                                            'Error parsing stream data:',
+                                            parseError,
+                                            line
+                                        )
                                     }
                                 }
                             }
@@ -141,7 +141,6 @@ export function useCards(): UseCardsReturn {
                     // Fallback to regular JSON response
                     const result = await response.json()
                     setData(result)
-                    cache.set(decklist.trim(), result)
                 }
             } catch (err) {
                 const error =
@@ -154,7 +153,7 @@ export function useCards(): UseCardsReturn {
                 setIsLoading(false)
             }
         },
-        [setData, setError, setIsLoading, cache]
+        [setData, setError, setIsLoading]
     )
 
     const resetWithProgress = useCallback(() => {

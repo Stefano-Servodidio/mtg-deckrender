@@ -106,6 +106,13 @@ export type ScryfallCard = {
     }
 }
 
+export enum CARD_TYPE {
+    main = 'main',
+    sideboard = 'sideboard',
+    commander = 'commander'
+}
+
+export type CardType = keyof typeof CARD_TYPE
 export interface CardItem {
     id: ScryfallCard['id']
     name: ScryfallCard['name']
@@ -116,7 +123,7 @@ export interface CardItem {
     colors: ScryfallCard['colors']
     legalities: ScryfallCard['legalities']
     quantity: number
-    type: 'main' | 'sideboard' | 'commander'
+    type: CardType
 }
 
 export interface CardsResponse {

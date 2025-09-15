@@ -43,21 +43,22 @@ function calculateCardPosition(
     isMainDeck: boolean,
     mainDeckRowHeight?: number
 ): { left: number; top: number } {
-    const { card, spacing } = DECK_LAYOUT_CONFIG
+    const {
+        card,
+        spacing: { betweenCards, canvasPadding, sideboardSeparator }
+    } = DECK_LAYOUT_CONFIG
     const rowHeight = calculateRowHeight()
 
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
 
-    const leftPosition =
-        spacing.canvasPadding + col * (card.width + spacing.betweenCards)
-    const baseTopPosition =
-        spacing.canvasPadding + row * (rowHeight + spacing.betweenCards)
+    const leftPosition = canvasPadding + col * (card.width + betweenCards)
+    const baseTopPosition = canvasPadding + row * (rowHeight + betweenCards)
 
     // Add extra spacing for sideboard
     const sideboardOffset =
         !isMainDeck && mainDeckRowHeight !== undefined
-            ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
+            ? mainDeckRowHeight + rowHeight + sideboardSeparator
             : 0
 
     return {
