@@ -1,7 +1,13 @@
-import { getUniqueCards, sleep } from '@/utils/api'
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
 import { CardItem, CardsResponse } from './_types'
+import { 
+    parseDecklist,
+    getUniqueCards,
+    createCardItem,
+    createMockCardItem,
+    sleep
+} from './_utils/decklist'
 
 // Simple in-memory cache for card data
 const cardCache = new Map<string, { data: any; expires: number }>()
@@ -20,11 +26,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const [mainString, sideboardString] = decklist.includes('\n\n')
-            ? decklist.split('\n\n')
-            : decklist.includes('\n\nSIDEBOARD\n')
-              ? decklist.split('\n\nSIDEBOARD\n')
-              : [decklist, '']
+        const [mainString, sideboardString] = parseDecklist(decklist)
 
         // Parse the decklist to get unique cards and their quantities
         const uniqueCards = [
@@ -129,18 +131,7 @@ export async function POST(request: NextRequest) {
                             }
                             
                             const scryfallData = await response.json()
-                            const cardData: CardItem = {
-                                id: scryfallData.id,
-                                name: scryfallData.name,
-                                cmc: scryfallData.cmc,
-                                type_line: scryfallData.type_line,
-                                rarity: scryfallData.rarity,
-                                image_uri: scryfallData.image_uris?.png || null,
-                                colors: scryfallData.colors,
-                                legalities: scryfallData.legalities,
-                                quantity,
-                                type
-                            }
+                            const cardData = createCardItem(scryfallData, quantity, type)
                             cards.push(cardData)
                             
                             // Cache the card data for 24 hours
@@ -163,40 +154,7 @@ export async function POST(request: NextRequest) {
                             // Fallback to mock data for demonstration
                             console.log(chalk.yellow(`API unavailable, using mock data for ${name}`))
                             
-                            const mockCardData: CardItem = {
-                                id: `mock-${name.toLowerCase().replace(/\s+/g, '-')}`,
-                                name: name,
-                                cmc: Math.floor(Math.random() * 8),
-                                type_line: 'Instant',
-                                rarity: 'common',
-                                image_uri: 'https://cards.scryfall.io/png/front/4/5/4506713a-6a58-4e44-a514-09555ad3cd96.png',
-                                colors: ['U', 'R'],
-                                legalities: {
-                                    standard: 'legal',
-                                    modern: 'legal',
-                                    legacy: 'legal',
-                                    commander: 'legal',
-                                    vintage: 'legal',
-                                    pioneer: 'legal',
-                                    historic: 'legal',
-                                    pauper: 'not_legal',
-                                    penny: 'legal',
-                                    duel: 'legal',
-                                    oldschool: 'not_legal',
-                                    premodern: 'legal',
-                                    predh: 'legal',
-                                    alchemy: 'not_legal',
-                                    future: 'not_legal',
-                                    timeless: 'legal',
-                                    gladiator: 'legal',
-                                    oathbreaker: 'legal',
-                                    standardbrawl: 'not_legal',
-                                    brawl: 'legal',
-                                    paupercommander: 'not_legal'
-                                },
-                                quantity,
-                                type
-                            }
+                            const mockCardData = createMockCardItem(name, quantity, type)
                             cards.push(mockCardData)
                             
                             // Cache the mock data
