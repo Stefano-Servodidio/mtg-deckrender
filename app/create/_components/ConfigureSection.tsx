@@ -1,8 +1,21 @@
 'use client'
 import { CardsResponse } from '@/app/api/cards/_types'
-import { Box, Button, Heading, Text, VStack, Progress, HStack } from '@chakra-ui/react'
+import FilterItem from '@/components/FilterItem'
+import {
+    Box,
+    Button,
+    Heading,
+    Text,
+    VStack,
+    Progress,
+    HStack,
+    RadioGroup,
+    Radio,
+    SimpleGrid
+} from '@chakra-ui/react'
 import React from 'react'
 import { FaCogs, FaImage } from 'react-icons/fa'
+import { useForm } from 'react-hook-form'
 
 interface ProgressInfo {
     current: number
@@ -24,23 +37,86 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
     cardsData,
     progress
 }) => {
+    const { register, handleSubmit, watch } = useForm()
+
     return (
         <VStack spacing={6}>
-            <Text color="gray.600" textAlign="center">
-                Configuration options will be available here in future updates.
-                For now, you can generate your deck image with default settings.
-            </Text>
-
+            {/* Configuration Form */}
+            <Box w="full" p={6} borderWidth={1} borderRadius="lg" bg="gray.50">
+                <Heading
+                    size="md"
+                    mb={4}
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                >
+                    <FaCogs /> Configure Deck Image
+                </Heading>
+                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                    <FilterItem.Radio
+                        label="Card Size"
+                        name="cardSize"
+                        options={[
+                            { label: 'Small', value: 'small' },
+                            { label: 'Medium', value: 'medium' },
+                            { label: 'Large', value: 'large' }
+                        ]}
+                        value="medium"
+                        onChange={() => {}}
+                    />
+                    <FilterItem.Radio
+                        label="Layout"
+                        name="layout"
+                        options={[
+                            { label: 'Grid', value: 'grid' },
+                            { label: 'Row', value: 'row' },
+                            { label: 'Column', value: 'column' }
+                        ]}
+                        value="grid"
+                        onChange={() => {}}
+                    />
+                    <FilterItem.Radio
+                        label="Include Card Names"
+                        name="includeCardNames"
+                        options={[
+                            { label: 'Yes', value: 'yes' },
+                            { label: 'No', value: 'no' }
+                        ]}
+                        value="yes"
+                        onChange={() => {}}
+                    />
+                    <FilterItem.Radio
+                        label="Background Color"
+                        name="backgroundColor"
+                        options={[
+                            { label: 'White', value: 'white' },
+                            { label: 'Black', value: 'black' },
+                            { label: 'Transparent', value: 'transparent' }
+                        ]}
+                        value="white"
+                        onChange={() => {}}
+                    />
+                    {/* Add more options as supported by api/deck-png */}
+                </SimpleGrid>
+            </Box>
             {/* Progress Section */}
             {isGenerating && progress && (
                 <Box w="full">
                     <VStack spacing={3}>
                         <Box w="full">
                             <HStack justify="space-between" mb={2}>
-                                <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                                <Text
+                                    fontSize="sm"
+                                    fontWeight="medium"
+                                    color="gray.700"
+                                >
                                     {progress.message}
                                 </Text>
-                                <Text fontSize="sm" fontWeight="medium" color="blue.600">
+                                <Text
+                                    fontSize="sm"
+                                    fontWeight="medium"
+                                    color="blue.600"
+                                >
                                     {progress.percentage}%
                                 </Text>
                             </HStack>

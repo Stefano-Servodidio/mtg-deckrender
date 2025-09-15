@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import chalk from 'chalk'
 import { DeckPngRequest } from './_types'
-import { DECK_LAYOUT_CONFIG, calculateCanvasDimensions, calculateRowHeight } from './_utils/config'
-import { 
-    filterAndSortCards, 
-    downloadAllCardImages, 
-    calculateLayoutMetrics 
+import {
+    DECK_LAYOUT_CONFIG,
+    calculateCanvasDimensions,
+    calculateRowHeight
+} from './_utils/config'
+import {
+    filterAndSortCards,
+    downloadAllCardImages,
+    calculateLayoutMetrics
 } from './_utils/processing'
-import { 
+import {
     loadQuantityOverlayAssets,
     prepareCardOperations,
     prepareQuantityOverlayOperations,
@@ -16,7 +20,16 @@ import {
 } from './_utils/compositing'
 
 const defaultOptions = {
-    rowSize: DECK_LAYOUT_CONFIG.row.defaultCardsPerRow
+    rowSize: DECK_LAYOUT_CONFIG.row.defaultCardsPerRow,
+    imageSize: 'medium' as const,
+    imageVariant: 'grid' as const,
+    imageOrientation: 'vertical' as const,
+    backgroundStyle: 'transparent' as const,
+    sortBy: 'cmc' as const,
+    sortDirection: 'asc' as const,
+    fileType: 'png' as const,
+    mtgFormat: null,
+    includeCardCount: true as const
 }
 
 export async function POST(request: NextRequest) {
@@ -44,78 +57,92 @@ export async function POST(request: NextRequest) {
             async start(controller) {
                 try {
                     // Send initial progress
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'progress',
-                            current: 0,
-                            total: 100,
-                            message: 'Starting deck image generation...'
-                        })}\n\n`
-                    ))
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'progress',
+                                current: 0,
+                                total: 100,
+                                message: 'Starting deck image generation...'
+                            })}\n\n`
+                        )
+                    )
 
                     // Filter and sort cards for processing
                     const validCardImages = filterAndSortCards(cards)
 
                     if (validCardImages.length === 0) {
-                        controller.enqueue(new TextEncoder().encode(
-                            `data: ${JSON.stringify({
-                                type: 'error',
-                                error: 'No valid images found.',
-                                message: 'No valid card images found'
-                            })}\n\n`
-                        ))
+                        controller.enqueue(
+                            new TextEncoder().encode(
+                                `data: ${JSON.stringify({
+                                    type: 'error',
+                                    error: 'No valid images found.',
+                                    message: 'No valid card images found'
+                                })}\n\n`
+                            )
+                        )
                         controller.close()
                         return
                     }
 
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'progress',
-                            current: 10,
-                            total: 100,
-                            message: `Processing ${validCardImages.length} cards...`
-                        })}\n\n`
-                    ))
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'progress',
+                                current: 10,
+                                total: 100,
+                                message: `Processing ${validCardImages.length} cards...`
+                            })}\n\n`
+                        )
+                    )
 
                     // Create composite image using Sharp
-                    const cardsPerRow = options?.rowSize || defaultOptions.rowSize
+                    const cardsPerRow =
+                        options?.rowSize || defaultOptions.rowSize
 
                     // Download all card images with progress tracking
                     const successfulImages = await downloadAllCardImages(
                         validCardImages,
                         (current, total, cardName) => {
-                            const progressPercentage = 10 + Math.round((current / total) * 50) // 10-60%
-                            controller.enqueue(new TextEncoder().encode(
-                                `data: ${JSON.stringify({
-                                    type: 'progress',
-                                    current: progressPercentage,
-                                    total: 100,
-                                    message: `Downloading image for ${cardName}...`
-                                })}\n\n`
-                            ))
+                            const progressPercentage =
+                                10 + Math.round((current / total) * 50) // 10-60%
+                            controller.enqueue(
+                                new TextEncoder().encode(
+                                    `data: ${JSON.stringify({
+                                        type: 'progress',
+                                        current: progressPercentage,
+                                        total: 100,
+                                        message: `Downloading image for ${cardName}...`
+                                    })}\n\n`
+                                )
+                            )
                         }
                     )
 
                     if (successfulImages.length === 0) {
-                        controller.enqueue(new TextEncoder().encode(
-                            `data: ${JSON.stringify({
-                                type: 'error',
-                                error: 'Failed to download any card images.',
-                                message: 'Failed to download card images'
-                            })}\n\n`
-                        ))
+                        controller.enqueue(
+                            new TextEncoder().encode(
+                                `data: ${JSON.stringify({
+                                    type: 'error',
+                                    error: 'Failed to download any card images.',
+                                    message: 'Failed to download card images'
+                                })}\n\n`
+                            )
+                        )
                         controller.close()
                         return
                     }
 
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'progress',
-                            current: 60,
-                            total: 100,
-                            message: 'Calculating layout...'
-                        })}\n\n`
-                    ))
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'progress',
+                                current: 60,
+                                total: 100,
+                                message: 'Calculating layout...'
+                            })}\n\n`
+                        )
+                    )
 
                     // Calculate layout metrics
                     const {
@@ -126,33 +153,39 @@ export async function POST(request: NextRequest) {
                         hasSideboard
                     } = calculateLayoutMetrics(successfulImages, cardsPerRow)
 
-                    const totalRows = totalMainRows + (hasSideboard ? totalSideboardRows : 0)
-                    const { width: canvasWidth, height: canvasHeight } = calculateCanvasDimensions(
-                        cardsPerRow,
-                        totalRows,
-                        hasSideboard
-                    )
+                    const totalRows =
+                        totalMainRows + (hasSideboard ? totalSideboardRows : 0)
+                    const { width: canvasWidth, height: canvasHeight } =
+                        calculateCanvasDimensions(
+                            cardsPerRow,
+                            totalRows,
+                            hasSideboard
+                        )
 
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'progress',
-                            current: 70,
-                            total: 100,
-                            message: 'Creating canvas...'
-                        })}\n\n`
-                    ))
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'progress',
+                                current: 70,
+                                total: 100,
+                                message: 'Creating canvas...'
+                            })}\n\n`
+                        )
+                    )
 
                     // Create base canvas
                     const canvas = createCanvas(canvasWidth, canvasHeight)
 
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'progress',
-                            current: 80,
-                            total: 100,
-                            message: 'Arranging cards...'
-                        })}\n\n`
-                    ))
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'progress',
+                                current: 80,
+                                total: 100,
+                                message: 'Arranging cards...'
+                            })}\n\n`
+                        )
+                    )
 
                     // Load quantity overlay assets
                     const quantityAssets = await loadQuantityOverlayAssets()
@@ -162,43 +195,68 @@ export async function POST(request: NextRequest) {
                     const mainDeckRowHeight = rowHeight * totalMainRows
 
                     // Prepare card composite operations
-                    const mainOperations = prepareCardOperations(mainImages, cardsPerRow)
-                    const sideboardOperations = prepareCardOperations(sideboardImages, cardsPerRow, mainDeckRowHeight)
-
-                    // Prepare quantity overlay operations
-                    const mainOverlayOperations = prepareQuantityOverlayOperations(
+                    const mainOperations = prepareCardOperations(
                         mainImages,
-                        cardsPerRow,
-                        quantityAssets
+                        cardsPerRow
                     )
-
-                    const sideboardOverlayOperations = prepareQuantityOverlayOperations(
+                    const sideboardOperations = prepareCardOperations(
                         sideboardImages,
                         cardsPerRow,
-                        quantityAssets,
                         mainDeckRowHeight
                     )
 
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'progress',
-                            current: 90,
-                            total: 100,
-                            message: 'Generating final image...'
-                        })}\n\n`
-                    ))
+                    // Prepare quantity overlay operations
+                    const mainOverlayOperations =
+                        prepareQuantityOverlayOperations(
+                            mainImages,
+                            cardsPerRow,
+                            quantityAssets
+                        )
+
+                    const sideboardOverlayOperations =
+                        prepareQuantityOverlayOperations(
+                            sideboardImages,
+                            cardsPerRow,
+                            quantityAssets,
+                            mainDeckRowHeight
+                        )
+
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'progress',
+                                current: 90,
+                                total: 100,
+                                message: 'Generating final image...'
+                            })}\n\n`
+                        )
+                    )
 
                     // Create the composite image
-                    const allCardOperations = [...mainOperations, ...sideboardOperations]
-                    const allOverlayOperations = [...mainOverlayOperations, ...sideboardOverlayOperations]
-                    const outputBuffer = await createCompositeImage(canvas, allCardOperations, allOverlayOperations)
+                    const allCardOperations = [
+                        ...mainOperations,
+                        ...sideboardOperations
+                    ]
+                    const allOverlayOperations = [
+                        ...mainOverlayOperations,
+                        ...sideboardOverlayOperations
+                    ]
+                    const outputBuffer = await createCompositeImage(
+                        canvas,
+                        allCardOperations,
+                        allOverlayOperations
+                    )
 
                     console.log(
                         chalk.cyan(
                             `Generated deck image with ${successfulImages.length} cards.`
                         )
                     )
-                    console.log(chalk.cyan(`Canvas size: ${canvasWidth}x${canvasHeight}`))
+                    console.log(
+                        chalk.cyan(
+                            `Canvas size: ${canvasWidth}x${canvasHeight}`
+                        )
+                    )
                     console.log(
                         chalk.cyan(
                             `outputBuffer size: ${+(outputBuffer.length / (1024 * 1024)).toFixed(2)} MB`
@@ -207,30 +265,33 @@ export async function POST(request: NextRequest) {
 
                     // Convert buffer to base64 for transmission
                     const base64Image = outputBuffer.toString('base64')
-                    
-                    // Send final result
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'complete',
-                            result: {
-                                imageData: base64Image,
-                                width: canvasWidth,
-                                height: canvasHeight,
-                                cardCount: successfulImages.length
-                            },
-                            message: `Generated deck image with ${successfulImages.length} cards`
-                        })}\n\n`
-                    ))
 
+                    // Send final result
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'complete',
+                                result: {
+                                    imageData: base64Image,
+                                    width: canvasWidth,
+                                    height: canvasHeight,
+                                    cardCount: successfulImages.length
+                                },
+                                message: `Generated deck image with ${successfulImages.length} cards`
+                            })}\n\n`
+                        )
+                    )
                 } catch (error) {
                     console.error('Error in deck PNG stream:', error)
-                    controller.enqueue(new TextEncoder().encode(
-                        `data: ${JSON.stringify({
-                            type: 'error',
-                            error: 'Internal server error while processing cards',
-                            message: 'Failed to generate deck image'
-                        })}\n\n`
-                    ))
+                    controller.enqueue(
+                        new TextEncoder().encode(
+                            `data: ${JSON.stringify({
+                                type: 'error',
+                                error: 'Internal server error while processing cards',
+                                message: 'Failed to generate deck image'
+                            })}\n\n`
+                        )
+                    )
                 } finally {
                     controller.close()
                 }
@@ -241,7 +302,7 @@ export async function POST(request: NextRequest) {
             headers: {
                 'Content-Type': 'text/plain; charset=utf-8',
                 'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
+                Connection: 'keep-alive',
                 'X-Accel-Buffering': 'no' // Disable nginx buffering
             }
         })

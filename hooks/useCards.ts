@@ -74,9 +74,6 @@ export function useCards(): UseCardsReturn {
                             if (done) break
 
                             buffer += decoder.decode(value, { stream: true })
-                            console.log('Value:', value)
-                            console.log('Buffer:', buffer)
-
                             const lines = buffer.split('\n\n')
 
                             // Keep the last incomplete line in the buffer
