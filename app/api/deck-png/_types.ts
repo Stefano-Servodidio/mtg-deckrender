@@ -21,8 +21,7 @@ export enum FILE_TYPE {
 
 export enum IMAGE_SIZE {
     small = 'small',
-    medium = 'medium',
-    large = 'large'
+    medium = 'medium'
 }
 
 export enum IMAGE_VARIANT {

@@ -7,7 +7,7 @@ export interface DeckPngOptions {
     sortBy?: string
     sortDirection?: string
     fileType?: 'png' | 'jpeg' | 'webp'
-    imageSize?: 'small' | 'medium' | 'large'
+    imageSize?: 'small' | 'medium'
     imageVariant?: 'grid' | 'spoiler' | 'stacks'
     imageOrientation?: 'vertical' | 'horizontal'
     backgroundStyle?: 'transparent' | 'white' | 'custom'

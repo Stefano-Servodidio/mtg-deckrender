@@ -48,7 +48,6 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
         rowSize: 7,
         fileType: 'png',
         imageSize: 'medium',
-        imageVariant: 'grid',
         imageOrientation: 'vertical',
         backgroundStyle: 'transparent',
         mtgFormat: null,
@@ -70,8 +69,9 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                 </Heading>
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
                     <FilterItem.Wrapper label="Sort by">
-                        <FilterItem.Radio
+                        <FilterItem.Select
                             name="sortBy"
+                            placeholder="Select sort field"
                             options={[
                                 { label: 'Name', value: 'name' },
                                 { label: 'Mana value', value: 'cmc' },
@@ -79,9 +79,9 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                                 { label: 'Color', value: 'colors' },
                                 { label: 'Rarity', value: 'rarity' }
                             ]}
-                            value={form.sortBy}
-                            onChange={(val) =>
-                                setForm((prev) => ({ ...prev, sortBy: val }))
+                            value={form.sortBy || ''}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, sortBy: e.target.value }))
                             }
                         />
                     </FilterItem.Wrapper>
@@ -137,13 +137,12 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                         <FilterItem.Radio
                             name="imageSize"
                             options={[
-                                { label: 'Small', value: 'small' },
-                                { label: 'Medium', value: 'medium' },
-                                { label: 'Large', value: 'large' }
+                                { label: 'Small (1080px)', value: 'small' },
+                                { label: 'Medium (1440px)', value: 'medium' }
                             ]}
                             value={form.imageSize}
                             onChange={(val) =>
-                                setForm((prev) => ({ ...prev, imageSize: val as 'small' | 'medium' | 'large' }))
+                                setForm((prev) => ({ ...prev, imageSize: val as 'small' | 'medium' }))
                             }
                         />
                     </FilterItem.Wrapper>
@@ -173,21 +172,6 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                             value={form.backgroundStyle}
                             onChange={(val) =>
                                 setForm((prev) => ({ ...prev, backgroundStyle: val as 'transparent' | 'white' | 'custom' }))
-                            }
-                        />
-                    </FilterItem.Wrapper>
-
-                    <FilterItem.Wrapper label="Image variant">
-                        <FilterItem.Radio
-                            name="imageVariant"
-                            options={[
-                                { label: 'Grid', value: 'grid' },
-                                { label: 'Spoiler', value: 'spoiler' },
-                                { label: 'Stacks', value: 'stacks' }
-                            ]}
-                            value={form.imageVariant}
-                            onChange={(val) =>
-                                setForm((prev) => ({ ...prev, imageVariant: val as 'grid' | 'spoiler' | 'stacks' }))
                             }
                         />
                     </FilterItem.Wrapper>

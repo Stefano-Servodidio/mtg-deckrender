@@ -5,7 +5,14 @@ import path from 'path'
 import fs from 'fs/promises'
 import sharp from 'sharp'
 import { CardImageBuffer } from '../_types'
-import { DECK_LAYOUT_CONFIG, calculateRowHeight } from './config'
+import { DECK_LAYOUT_CONFIG } from './config'
+
+export interface CardDimensions {
+    cardWidth: number;
+    cardHeight: number;
+    spacing: number;
+    canvasPadding: number;
+}
 
 /**
  * Load an asset file as a buffer
@@ -41,19 +48,17 @@ function calculateCardPosition(
     index: number,
     cardsPerRow: number,
     isMainDeck: boolean,
+    cardDimensions: CardDimensions,
+    rowHeight: number,
     mainDeckRowHeight?: number
 ): { left: number; top: number } {
-    const {
-        card,
-        spacing: { betweenCards, canvasPadding, sideboardSeparator }
-    } = DECK_LAYOUT_CONFIG
-    const rowHeight = calculateRowHeight()
+    const { spacing: { sideboardSeparator } } = DECK_LAYOUT_CONFIG
 
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
 
-    const leftPosition = canvasPadding + col * (card.width + betweenCards)
-    const baseTopPosition = canvasPadding + row * (rowHeight + betweenCards)
+    const leftPosition = cardDimensions.canvasPadding + col * (cardDimensions.cardWidth + cardDimensions.spacing)
+    const baseTopPosition = cardDimensions.canvasPadding + row * (rowHeight + cardDimensions.spacing)
 
     // Add extra spacing for sideboard
     const sideboardOffset =
@@ -73,6 +78,8 @@ function calculateCardPosition(
 export function prepareCardOperations(
     images: CardImageBuffer[],
     cardsPerRow: number,
+    cardDimensions: CardDimensions,
+    rowHeight: number,
     mainDeckRowHeight?: number
 ): any[] {
     return images.map((imageData, index) => {
@@ -81,6 +88,8 @@ export function prepareCardOperations(
             index,
             cardsPerRow,
             isMainDeck,
+            cardDimensions,
+            rowHeight,
             mainDeckRowHeight
         )
 
@@ -99,23 +108,24 @@ function calculateOverlayPosition(
     index: number,
     cardsPerRow: number,
     isMainDeck: boolean,
+    cardDimensions: CardDimensions,
+    rowHeight: number,
     mainDeckRowHeight?: number
 ): { left: number; top: number } {
-    const { card, spacing, overlay } = DECK_LAYOUT_CONFIG
-    const rowHeight = calculateRowHeight()
+    const { spacing, overlay } = DECK_LAYOUT_CONFIG
 
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
 
     const leftPosition =
-        spacing.canvasPadding +
-        col * (card.width + spacing.betweenCards) +
-        card.width -
+        cardDimensions.canvasPadding +
+        col * (cardDimensions.cardWidth + cardDimensions.spacing) +
+        cardDimensions.cardWidth -
         overlay.offsetFromRight
 
     const baseTopPosition =
-        spacing.canvasPadding +
-        row * (rowHeight + spacing.betweenCards) +
+        cardDimensions.canvasPadding +
+        row * (rowHeight + cardDimensions.spacing) +
         overlay.offsetFromTop
 
     // Add extra spacing for sideboard
@@ -137,6 +147,8 @@ export function prepareQuantityOverlayOperations(
     images: CardImageBuffer[],
     cardsPerRow: number,
     quantityAssets: { [key: number]: Buffer },
+    cardDimensions: CardDimensions,
+    rowHeight: number,
     mainDeckRowHeight?: number
 ): any[] {
     return images
@@ -148,6 +160,8 @@ export function prepareQuantityOverlayOperations(
                 index,
                 cardsPerRow,
                 isMainDeck,
+                cardDimensions,
+                rowHeight,
                 mainDeckRowHeight
             )
 

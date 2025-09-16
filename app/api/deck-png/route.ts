@@ -162,11 +162,12 @@ export async function POST(request: NextRequest) {
 
                     const totalRows =
                         totalMainRows + (hasSideboard ? totalSideboardRows : 0)
-                    const { width: canvasWidth, height: canvasHeight } =
+                    const { width: canvasWidth, height: canvasHeight, cardDimensions } =
                         calculateCanvasDimensions(
                             cardsPerRow,
                             totalRows,
-                            hasSideboard
+                            hasSideboard,
+                            options.imageSize
                         )
 
                     controller.enqueue(
@@ -198,17 +199,21 @@ export async function POST(request: NextRequest) {
                     const quantityAssets = await loadQuantityOverlayAssets()
 
                     // Calculate row height for sideboard positioning
-                    const rowHeight = calculateRowHeight()
+                    const rowHeight = calculateRowHeight(options.imageSize, cardsPerRow)
                     const mainDeckRowHeight = rowHeight * totalMainRows
 
                     // Prepare card composite operations
                     const mainOperations = prepareCardOperations(
                         mainImages,
-                        cardsPerRow
+                        cardsPerRow,
+                        cardDimensions,
+                        rowHeight
                     )
                     const sideboardOperations = prepareCardOperations(
                         sideboardImages,
                         cardsPerRow,
+                        cardDimensions,
+                        rowHeight,
                         mainDeckRowHeight
                     )
 
@@ -217,7 +222,9 @@ export async function POST(request: NextRequest) {
                         prepareQuantityOverlayOperations(
                             mainImages,
                             cardsPerRow,
-                            quantityAssets
+                            quantityAssets,
+                            cardDimensions,
+                            rowHeight
                         )
 
                     const sideboardOverlayOperations =
@@ -225,6 +232,8 @@ export async function POST(request: NextRequest) {
                             sideboardImages,
                             cardsPerRow,
                             quantityAssets,
+                            cardDimensions,
+                            rowHeight,
                             mainDeckRowHeight
                         )
 
