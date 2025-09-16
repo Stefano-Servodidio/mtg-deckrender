@@ -52,6 +52,16 @@ export const theme = extendTheme(
                     width: 8,
                     height: 8
                 }
+            },
+            AccordionButton: {
+                baseStyle: {
+                    p: { base: 4, md: 6 }
+                }
+            },
+            AccordionBody: {
+                baseStyle: {
+                    p: { base: 4, md: 6 }
+                }
             }
         }
     }

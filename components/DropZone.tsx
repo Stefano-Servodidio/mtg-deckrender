@@ -1,15 +1,21 @@
 'use client'
 
 import { Box, VStack, Text, Icon, useColorModeValue } from '@chakra-ui/react'
-import { useDropzone } from 'react-dropzone'
+import {
+    useDropzone,
+    DropzoneProps as ReactDropzoneProps
+} from 'react-dropzone'
 import { useCallback } from 'react'
 import { FaCloudUploadAlt, FaFileAlt } from 'react-icons/fa'
 
-interface DropZoneProps {
-    onFileUpload: (files: File[]) => void
+interface DropZoneProps extends Omit<ReactDropzoneProps, 'onDrop'> {
+    colorScheme?: string
 }
 
-export function DropZone({ onFileUpload }: DropZoneProps) {
+export function DropZone({
+    onFileUpload,
+    colorScheme = 'purple'
+}: DropZoneProps) {
     const onDrop = useCallback(
         (acceptedFiles: File[]) => {
             onFileUpload(acceptedFiles)
@@ -26,8 +32,8 @@ export function DropZone({ onFileUpload }: DropZoneProps) {
     })
 
     const bg = useColorModeValue('gray.50', 'gray.700')
-    const borderColor = isDragActive ? 'purple.400' : 'gray.300'
-    const hoverBg = useColorModeValue('purple.50', 'purple.900')
+    const borderColor = isDragActive ? `${colorScheme}.400` : 'gray.300'
+    const hoverBg = useColorModeValue(`${colorScheme}.50`, `${colorScheme}.900`)
 
     return (
         <Box
@@ -42,7 +48,7 @@ export function DropZone({ onFileUpload }: DropZoneProps) {
             transition="all 0.2s"
             _hover={{
                 bg: hoverBg,
-                borderColor: 'purple.300',
+                borderColor: `${colorScheme}.300`,
                 transform: 'scale(1.01)'
             }}
             textAlign="center"
@@ -53,11 +59,15 @@ export function DropZone({ onFileUpload }: DropZoneProps) {
                     as={isDragActive ? FaFileAlt : FaCloudUploadAlt}
                     w={12}
                     h={12}
-                    color={isDragActive ? 'purple.500' : 'gray.400'}
+                    color={isDragActive ? `${colorScheme}.500` : 'gray.400'}
                     transition="color 0.2s"
                 />
                 {isDragActive ? (
-                    <Text fontSize="lg" color="purple.500" fontWeight="medium">
+                    <Text
+                        fontSize="lg"
+                        color={`${colorScheme}.500`}
+                        fontWeight="medium"
+                    >
                         Drop your file here...
                     </Text>
                 ) : (

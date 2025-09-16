@@ -9,13 +9,7 @@ import {
     useColorModeValue,
     Card,
     CardBody,
-    CardHeader,
-    useToast,
-    Accordion,
-    AccordionItem,
-    AccordionButton,
-    AccordionPanel,
-    AccordionIcon
+    useToast
 } from '@chakra-ui/react'
 import { useState, useCallback } from 'react'
 import React from 'react'
@@ -30,8 +24,8 @@ import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
-import AccordionItemHeader from '@/components/AccordionItemHeader'
 import type { DeckPngOptions } from '@/hooks/useDeckPng'
+import Accordion, { AccordionSection } from '@/components/Accordion'
 
 export default function Create() {
     const [decklistText, setDecklistText] = useState('')
@@ -169,6 +163,46 @@ export default function Create() {
         await generateImage(cardsData.cards, options)
     }
 
+    const sections: AccordionSection[] = [
+        {
+            id: 'upload',
+            title: 'Upload Decklist',
+            description: 'Paste your decklist or upload a text file',
+            icon: <UploadIcon w={6} h={6} />,
+            content: (
+                <UploadSection
+                    decklistText={decklistText}
+                    setDecklistText={setDecklistText}
+                    handleUpload={handleUpload}
+                    isLoadingCards={isLoadingCards}
+                    handleFileUpload={handleFileUpload}
+                    progress={cardsProgress}
+                />
+            )
+        },
+        {
+            id: 'configure',
+            title: 'Configure Image',
+            description: 'Adjust the settings for your deck image',
+            icon: <ImageIcon w={6} h={6} />,
+            content: (
+                <ConfigureSection
+                    handleGenerateImage={handleGenerateImage}
+                    isGenerating={isGenerating}
+                    progress={imageProgress}
+                    cardsData={cardsData}
+                />
+            )
+        },
+        {
+            id: 'download',
+            title: 'Download Deck Image',
+            description: 'Download your generated deck image',
+            icon: <DownloadIcon w={6} h={6} />,
+            content: <DownloadSection generatedImage={generatedImage} />
+        }
+    ]
+
     return (
         <Box
             minH="100vh"
@@ -178,7 +212,7 @@ export default function Create() {
         >
             <Navbar />
 
-            <Container maxW="5xl" pt={20} pb={16}>
+            <Container maxW="5xl" pt={20} pb={16} px={{ base: 4, md: 16 }}>
                 <VStack spacing={8}>
                     <VStack spacing={4} textAlign="center">
                         <Heading
@@ -197,6 +231,7 @@ export default function Create() {
                     <Card w="full" bg={cardBg} shadow="lg">
                         <CardBody p={0}>
                             <Accordion
+                                sections={sections}
                                 index={accordionIndex}
                                 onChange={(expandedIndex) =>
                                     setAccordionIndex(
@@ -207,76 +242,7 @@ export default function Create() {
                                 }
                                 allowMultiple
                                 defaultIndex={0}
-                            >
-                                {/* Upload Section */}
-                                <AccordionItem>
-                                    <AccordionButton py={6} px={8}>
-                                        <AccordionItemHeader
-                                            title="Upload Decklist"
-                                            description="Paste your decklist or upload a text file"
-                                            icon={<UploadIcon w={6} h={6} />}
-                                        />
-                                        <AccordionIcon />
-                                    </AccordionButton>
-                                    <AccordionPanel pb={8} px={8}>
-                                        <UploadSection
-                                            decklistText={decklistText}
-                                            setDecklistText={setDecklistText}
-                                            handleUpload={handleUpload}
-                                            isLoadingCards={isLoadingCards}
-                                            handleFileUpload={handleFileUpload}
-                                            progress={cardsProgress}
-                                        />
-                                    </AccordionPanel>
-                                </AccordionItem>
-
-                                {/* Configure Section */}
-                                <AccordionItem>
-                                    <AccordionButton
-                                        py={6}
-                                        px={8}
-                                        disabled={!cardsData?.cards?.length}
-                                    >
-                                        <AccordionItemHeader
-                                            title="Configure Image"
-                                            description="Customize your deck image settings"
-                                            icon={<ImageIcon w={6} h={6} />}
-                                        />
-                                        <AccordionIcon />
-                                    </AccordionButton>
-                                    <AccordionPanel pb={8} px={8}>
-                                        <ConfigureSection
-                                            handleGenerateImage={
-                                                handleGenerateImage
-                                            }
-                                            isGenerating={isGenerating}
-                                            cardsData={cardsData}
-                                            progress={imageProgress}
-                                        />
-                                    </AccordionPanel>
-                                </AccordionItem>
-
-                                {/* Download Section */}
-                                <AccordionItem>
-                                    <AccordionButton
-                                        py={6}
-                                        px={8}
-                                        disabled={!generatedImage}
-                                    >
-                                        <AccordionItemHeader
-                                            title="Download Deck Image"
-                                            description="Download your generated deck image"
-                                            icon={<DownloadIcon w={6} h={6} />}
-                                        />
-                                        <AccordionIcon />
-                                    </AccordionButton>
-                                    <AccordionPanel pb={8} px={8}>
-                                        <DownloadSection
-                                            generatedImage={generatedImage}
-                                        />
-                                    </AccordionPanel>
-                                </AccordionItem>
-                            </Accordion>
+                            />
                         </CardBody>
                     </Card>
                 </VStack>

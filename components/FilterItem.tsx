@@ -3,19 +3,18 @@ import {
     Card,
     CardBody,
     HStack,
-    Radio as RadioInput,
+    Radio as ChakraRadio,
     RadioGroup,
-    Text,
-    VStack,
     CardHeader,
-    Select as SelectInput,
+    Select as ChakraSelect,
     Switch,
     FormControl,
     FormLabel,
     SelectProps,
     SwitchProps,
     RadioGroupProps,
-    Heading
+    Heading,
+    Box
 } from '@chakra-ui/react'
 import React from 'react'
 
@@ -28,19 +27,44 @@ export interface FilterItemProps {
 const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
     label,
     options,
+    colorScheme = 'purple',
     ...props
 }) => {
     return (
         <RadioGroup {...props}>
-            <HStack flexWrap={'wrap'} spacing={4}>
+            <HStack flexWrap={'wrap'} spacing={2}>
                 {options?.map((option) => (
-                    <RadioInput
+                    <Box
                         key={props.name + '-' + option.value}
-                        value={option.value}
-                        name={props.name + '-' + option.value}
+                        border={'1px solid'}
+                        borderRadius={'md'}
+                        borderColor={'gray.200'}
+                        {...(props.value === option.value && {
+                            bg: colorScheme + '.500',
+                            color: 'white'
+                        })}
+                        _hover={
+                            !(props.value === option.value)
+                                ? {
+                                      bg: colorScheme + '.50',
+                                      borderColor: colorScheme + '.500'
+                                  }
+                                : undefined
+                        }
                     >
-                        {option.label}
-                    </RadioInput>
+                        <ChakraRadio
+                            value={option.value}
+                            name={props.name + '-' + option.value}
+                            padding={2}
+                            colorScheme="white"
+                            _hover={{
+                                cursor: 'pointer',
+                                color: 'grey'
+                            }}
+                        >
+                            {option.label}
+                        </ChakraRadio>
+                    </Box>
                 ))}
             </HStack>
         </RadioGroup>
@@ -54,13 +78,13 @@ const Select: React.FC<FilterItemProps & SelectProps> = ({
     ...props
 }) => {
     return (
-        <SelectInput placeholder={placeholder || 'Select option'} {...props}>
+        <ChakraSelect placeholder={placeholder || 'Select option'} {...props}>
             {options?.map((option) => (
                 <option key={option.value} value={option.value}>
                     {option.label}
                 </option>
             ))}
-        </SelectInput>
+        </ChakraSelect>
     )
 }
 
@@ -88,7 +112,7 @@ const Wrapper: React.FC<{
                 <Heading size="sm">{label}</Heading>
             </CardHeader>
         )}
-        <CardBody>{children}</CardBody>
+        <CardBody paddingTop={0}>{children}</CardBody>
     </Card>
 )
 

@@ -4,8 +4,8 @@ import { useFetchState } from './useFetchState'
 
 export interface DeckPngOptions {
     rowSize?: number
-    sortBy?: string
-    sortDirection?: string
+    sortBy?: 'name' | 'cmc' | 'typeLine' | 'colors' | 'rarity'
+    sortDirection?: 'asc' | 'desc'
     fileType?: 'png' | 'jpeg' | 'webp'
     imageSize?: 'small' | 'medium' | 'large'
     imageVariant?: 'grid' | 'spoiler' | 'stacks'
