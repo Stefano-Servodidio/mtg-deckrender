@@ -16,6 +16,16 @@
         "bump:minor": "npm version minor && git push && git push --tags",
         "bump:major": "npm version major && git push && git push --tags"
     },
+    "lint-staged": {
+        "*.ts": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.tsx": [
+            "eslint --fix",
+            "prettier --write"
+        ]
+    },
     "dependencies": {
         "@chakra-ui/react": "^2.10.9",
         "@emotion/react": "^11.11.4",
@@ -61,6 +71,7 @@
         "@vitest/coverage-v8": "^3.2.4",
         "@vitest/ui": "^3.2.4",
         "jsdom": "^27.0.0",
+        "lint-staged": "^16.1.6",
         "prettier": "3.6.2"
     }
 }

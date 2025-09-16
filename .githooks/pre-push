@@ -1,0 +1,22 @@
+#!/bin/sh
+
+remote="$1"
+url="$2"
+
+# Only run checks if pushing to main branch
+while read local_ref local_oid remote_ref remote_oid
+do
+    # Check if the remote ref is refs/heads/main
+    if [ "$remote_ref" = "refs/heads/main" ]; then
+        # Run ESLint
+        npx eslint . || exit 1
+
+        # Run Prettier (check mode)
+        npx prettier --check . || exit 1
+
+        # Run Vitest (unit tests)
+        npx vitest run || exit 1
+    fi
+done
+
+exit 0

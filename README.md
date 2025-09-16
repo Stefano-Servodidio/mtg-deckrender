@@ -30,6 +30,12 @@ npm run dev
 - `npm run lint` — Run ESLint to check for code issues
 - `npm run format` — Format code using Prettier
 
+## GIT Hooks
+
+# To enable hooks, run:
+
+cp .githooks/\* .git/hooks/
+
 ## Tech Stack
 
 - Next.js
