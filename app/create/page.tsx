@@ -154,10 +154,7 @@ export default function Create() {
         [toast]
     )
 
-    const handleGenerateImage = async ({
-        sortBy,
-        sortDirection
-    }: DeckPngOptions) => {
+    const handleGenerateImage = async (options: DeckPngOptions) => {
         if (!cardsData?.cards || cardsData.cards.length === 0) {
             toast({
                 title: 'No cards available',
@@ -169,7 +166,7 @@ export default function Create() {
             return
         }
 
-        await generateImage(cardsData.cards, { sortBy, sortDirection })
+        await generateImage(cardsData.cards, options)
     }
 
     return (

@@ -7,10 +7,13 @@ export interface DeckPngOptions {
     sortBy?: string
     sortDirection?: string
     fileType?: 'png' | 'jpeg' | 'webp'
-    imageSize?: 'small' | 'normal' | 'large'
+    imageSize?: 'small' | 'medium' | 'large'
+    imageVariant?: 'grid' | 'spoiler' | 'stacks'
     imageOrientation?: 'vertical' | 'horizontal'
     backgroundStyle?: 'transparent' | 'white' | 'custom'
     customBackground?: string
+    mtgFormat?: string | null
+    includeCardCount?: boolean
 }
 
 interface ProgressInfo {
