@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import chalk from 'chalk'
 import { DeckPngRequest } from './_types'
 import {
-    DECK_LAYOUT_CONFIG,
     calculateCanvasDimensions,
-    calculateRowHeight
+    calculateRowHeight,
+    calculateCardDimensions
 } from './_utils/config'
 import {
     filterAndSortCards,
@@ -20,7 +20,7 @@ import {
 } from './_utils/compositing'
 
 const defaultOptions = {
-    rowSize: DECK_LAYOUT_CONFIG.row.defaultCardsPerRow,
+    rowSize: 7, // DECK_LAYOUT_CONFIG.row.defaultCardsPerRow,
     imageSize: 'medium' as const,
     imageVariant: 'grid' as const,
     imageOrientation: 'vertical' as const,
@@ -110,6 +110,8 @@ export async function POST(request: NextRequest) {
                     // Download all card images with progress tracking
                     const successfulImages = await downloadAllCardImages(
                         validCardImages,
+                        options.imageSize,
+                        options.imageOrientation,
                         (current, total, cardName) => {
                             const progressPercentage =
                                 10 + Math.round((current / total) * 50) // 10-60%
@@ -166,7 +168,10 @@ export async function POST(request: NextRequest) {
                         calculateCanvasDimensions(
                             cardsPerRow,
                             totalRows,
-                            hasSideboard
+                            hasSideboard,
+                            options.imageSize,
+                            options.imageOrientation,
+                            options.imageVariant
                         )
 
                     controller.enqueue(
@@ -180,8 +185,13 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Create base canvas
-                    const canvas = createCanvas(canvasWidth, canvasHeight)
+                    // Create base canvas with background style
+                    const canvas = createCanvas(
+                        canvasWidth, 
+                        canvasHeight, 
+                        options.backgroundStyle,
+                        options.customBackground
+                    )
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -194,39 +204,53 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Load quantity overlay assets
-                    const quantityAssets = await loadQuantityOverlayAssets()
+                    // Load quantity overlay assets (conditionally based on includeCardCount)
+                    const quantityAssets = options.includeCardCount ? 
+                        await loadQuantityOverlayAssets() : {}
 
                     // Calculate row height for sideboard positioning
-                    const rowHeight = calculateRowHeight()
+                    const cardDimensions = calculateCardDimensions(options.imageSize, options.imageOrientation)
+                    const rowHeight = calculateRowHeight(options.imageVariant, cardDimensions.height)
                     const mainDeckRowHeight = rowHeight * totalMainRows
 
                     // Prepare card composite operations
                     const mainOperations = prepareCardOperations(
                         mainImages,
-                        cardsPerRow
+                        cardsPerRow,
+                        options.imageSize,
+                        options.imageOrientation,
+                        options.imageVariant
                     )
                     const sideboardOperations = prepareCardOperations(
                         sideboardImages,
                         cardsPerRow,
+                        options.imageSize,
+                        options.imageOrientation,
+                        options.imageVariant,
                         mainDeckRowHeight
                     )
 
-                    // Prepare quantity overlay operations
-                    const mainOverlayOperations =
+                    // Prepare quantity overlay operations (only if includeCardCount is true)
+                    const mainOverlayOperations = options.includeCardCount ?
                         prepareQuantityOverlayOperations(
                             mainImages,
                             cardsPerRow,
-                            quantityAssets
-                        )
+                            quantityAssets,
+                            options.imageSize,
+                            options.imageOrientation,
+                            options.imageVariant
+                        ) : []
 
-                    const sideboardOverlayOperations =
+                    const sideboardOverlayOperations = options.includeCardCount ?
                         prepareQuantityOverlayOperations(
                             sideboardImages,
                             cardsPerRow,
                             quantityAssets,
+                            options.imageSize,
+                            options.imageOrientation,
+                            options.imageVariant,
                             mainDeckRowHeight
-                        )
+                        ) : []
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -251,7 +275,8 @@ export async function POST(request: NextRequest) {
                     const outputBuffer = await createCompositeImage(
                         canvas,
                         allCardOperations,
-                        allOverlayOperations
+                        allOverlayOperations,
+                        options.fileType
                     )
 
                     console.log(

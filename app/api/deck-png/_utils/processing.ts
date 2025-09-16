@@ -8,10 +8,11 @@ import {
     CardImageBuffer,
     SORT_OPTION,
     SortDirection,
-    SortOption
+    SortOption,
+    ImageSize,
+    ImageOrientation
 } from '../_types'
-import { DECK_LAYOUT_CONFIG } from './config'
-import { DeckPngOptions } from '@/hooks/useDeckPng'
+import { calculateCardDimensions } from './config'
 
 /**
  * Filter and sort cards for image processing
@@ -71,12 +72,14 @@ export function filterAndSortCards(
 }
 
 /**
- * Download and resize a single card image
+ * Download and resize a single card image based on size settings
  */
 export async function downloadAndResizeCardImage(
-    card: CardItem
+    card: CardItem,
+    imageSize: ImageSize,
+    imageOrientation: ImageOrientation
 ): Promise<CardImageBuffer | null> {
-    const { card: cardConfig } = DECK_LAYOUT_CONFIG
+    const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
 
     try {
         const response = await fetch(card.image_uri as string)
@@ -87,8 +90,8 @@ export async function downloadAndResizeCardImage(
         const buffer = await response.arrayBuffer()
         const resizedBuffer = await sharp(Buffer.from(buffer))
             .resize({
-                width: cardConfig.width,
-                height: cardConfig.height
+                width: Math.round(cardDimensions.width),
+                height: Math.round(cardDimensions.height)
             })
             .toBuffer()
 
@@ -112,6 +115,8 @@ export async function downloadAndResizeCardImage(
  */
 export async function downloadAllCardImages(
     cards: CardItem[],
+    imageSize: ImageSize,
+    imageOrientation: ImageOrientation,
     progressCallback?: (
         current: number,
         total: number,
@@ -128,7 +133,7 @@ export async function downloadAllCardImages(
             progressCallback(i + 1, totalImages, card.name)
         }
 
-        const cardBuffer = await downloadAndResizeCardImage(card)
+        const cardBuffer = await downloadAndResizeCardImage(card, imageSize, imageOrientation)
         cardImageBuffers.push(cardBuffer)
     }
 
