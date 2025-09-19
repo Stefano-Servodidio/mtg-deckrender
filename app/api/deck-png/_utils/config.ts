@@ -1,43 +1,36 @@
 // Configuration file for deck PNG generation dimensions and settings
 // This centralizes all layout calculations and makes them human-readable
 
-import { ImageSize, ImageOrientation, ImageVariant, BackgroundStyle } from '../_types'
-
-// Image size configurations
-export const IMAGE_SIZE_CONFIG = {
-    small: {
-        crossAxis: 1080, // Cross-axis size in pixels
-        cardScale: 0.6   // Scale factor for card images
-    },
-    medium: {
-        crossAxis: 1440, // Cross-axis size in pixels
-        cardScale: 0.8   // Scale factor for card images
-    },
-    large: {
-        crossAxis: 1920, // Cross-axis size in pixels
-        cardScale: 1.0   // Scale factor for card images
-    }
-} as const
+import {
+    CardItem,
+    ImageResolution,
+    ImageSize,
+    ImageVariant
+} from '@/app/types/api'
+import { Dimensions } from '../_types'
 
 export const DECK_LAYOUT_CONFIG = {
     // Base card dimensions (from Scryfall small images)
     card: {
-        baseWidth: 146, // Small image width from Scryfall
-        baseHeight: 204 // Small image height from Scryfall
+        baseWidth: 745, // PNG image width from Scryfall
+        baseHeight: 1040 // PNG image height from Scryfall
     },
 
     // Layout spacing
     spacing: {
-        betweenCards: 4, // Space between individual cards
+        betweenCards: 0, // Space between individual cards
         sideboardSeparator: 70, // Extra space before sideboard section
         canvasPadding: 4 // Padding around the entire canvas (using spacing value)
     },
 
     // Row configuration
     row: {
-        defaultCardsPerRow: 7, // Default number of cards per row
-        gridHeightMultiplier: 0.5, // For grid variant: row height = cardHeight * this (50% overlap)
-        spoilerHeightMultiplier: 1.0 // For visual spoiler: no overlap
+        heightMultiplier: {
+            default: 1.0,
+            grid: 0.4, // For grid variant: row height = cardHeight * this (50% overlap)
+            spoiler: 1.0, // For visual spoiler: no overlap
+            stacks: 1.0 // For stacks: no overlap
+        }
     },
 
     // Quantity overlay settings
@@ -47,34 +40,78 @@ export const DECK_LAYOUT_CONFIG = {
     }
 } as const
 
+export const CANVAS_SIZE: Record<ImageSize, Dimensions> = {
+    ig_square: { width: 1080, height: 1080 },
+    ig_story: { width: 1080, height: 1920 },
+    ig_portrait: { width: 1080, height: 1350 },
+    ig_landscape: { width: 1080, height: 566 },
+    facebook_post: { width: 1200, height: 630 },
+    facebook_cover: { width: 820, height: 312 },
+    twitter_post: { width: 1200, height: 675 },
+    twitter_header: { width: 1500, height: 500 },
+    tiktok_post: { width: 1080, height: 1920 }
+} as const
+
+const ROW_SIZE: Record<ImageSize, number> = {
+    ig_square: 7,
+    ig_story: 6,
+    ig_portrait: 7,
+    ig_landscape: 12,
+    facebook_post: 7,
+    facebook_cover: 7,
+    twitter_post: 7,
+    twitter_header: 12,
+    tiktok_post: 6
+}
+
 /**
  * Calculate card dimensions based on image size and orientation settings
  */
 export function calculateCardDimensions(
+    validImages: CardItem[],
+    canvasSize: Dimensions,
     imageSize: ImageSize,
-    imageOrientation: ImageOrientation
-): { width: number; height: number } {
-    const { card } = DECK_LAYOUT_CONFIG
-    const sizeConfig = IMAGE_SIZE_CONFIG[imageSize]
-    
-    // Calculate scaled card dimensions
-    const scaledWidth = card.baseWidth * sizeConfig.cardScale
-    const scaledHeight = card.baseHeight * sizeConfig.cardScale
-    
-    if (imageOrientation === 'horizontal') {
-        // For horizontal orientation, we want the height to fit within cross-axis
-        const scale = sizeConfig.crossAxis / scaledHeight
-        return {
-            width: scaledWidth * scale,
-            height: scaledHeight * scale
-        }
-    } else {
-        // For vertical orientation, we want the width to fit within cross-axis
-        const scale = sizeConfig.crossAxis / scaledWidth
-        return {
-            width: scaledWidth * scale,
-            height: scaledHeight * scale
-        }
+    imageVariant: ImageVariant
+): Dimensions {
+    const { width: canvasWidth, height: canvasHeight } = canvasSize
+
+    const baseWidth = DECK_LAYOUT_CONFIG.card.baseWidth
+    const baseHeight = DECK_LAYOUT_CONFIG.card.baseHeight
+
+    const availableWidth =
+        canvasWidth - 2 * DECK_LAYOUT_CONFIG.spacing.canvasPadding
+    const availableHeight =
+        canvasHeight - 2 * DECK_LAYOUT_CONFIG.spacing.canvasPadding
+
+    const totalRows = Math.min(
+        ROW_SIZE[imageSize || 'ig_square'],
+        validImages.length
+    )
+    const cardHeightMultiplier =
+        DECK_LAYOUT_CONFIG.row.heightMultiplier[imageVariant || 'default']
+
+    // Calculate max card dimensions to fit in the canvas
+    const maxCardWidth =
+        availableWidth / ROW_SIZE[imageSize || 'ig_square'] -
+        DECK_LAYOUT_CONFIG.spacing.betweenCards
+
+    const maxRawHeight = availableHeight / totalRows
+
+    const maxCardHeight =
+        maxRawHeight * cardHeightMultiplier -
+        DECK_LAYOUT_CONFIG.spacing.betweenCards
+
+    // Maintain aspect ratio based on base card dimensions
+    let scale = 1 // Default scale
+    if (maxCardWidth < baseWidth || maxCardHeight < baseHeight) {
+        scale = Math.min(maxCardWidth / baseWidth, maxCardHeight / baseHeight)
+    }
+
+    return {
+        width: baseWidth * scale,
+        height: baseHeight * scale,
+        original: { width: baseWidth, height: baseHeight },
+        scale
     }
 }
 
@@ -82,47 +119,21 @@ export function calculateCardDimensions(
  * Calculate canvas dimensions based on layout parameters
  */
 export function calculateCanvasDimensions(
-    cardsPerRow: number,
-    totalRows: number,
-    hasSideboard: boolean,
     imageSize: ImageSize,
-    imageOrientation: ImageOrientation,
-    imageVariant: ImageVariant
-): { width: number; height: number } {
-    const {
-        spacing: { betweenCards, sideboardSeparator, canvasPadding }
-    } = DECK_LAYOUT_CONFIG
+    imageResolution: ImageResolution
+): Dimensions {
+    if (!CANVAS_SIZE[imageSize]) {
+        throw new Error(`Invalid image size: ${imageSize}`)
+    }
+    const baseDimensions = CANVAS_SIZE[imageSize]
 
-    const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
-    const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
+    //default to IG Square if something goes wrong
+    let canvasWidth = baseDimensions?.width || 1080
+    let canvasHeight = baseDimensions?.height || 1080
 
-    let canvasWidth: number
-    let canvasHeight: number
-
-    if (imageOrientation === 'horizontal') {
-        // Horizontal orientation: cards arranged horizontally, main axis is width
-        canvasWidth =
-            cardDimensions.width * cardsPerRow +
-            betweenCards * (cardsPerRow - 1) +
-            canvasPadding * 2
-
-        canvasHeight =
-            rowHeight * totalRows +
-            betweenCards * (totalRows - 1) +
-            canvasPadding * 2 +
-            (hasSideboard ? sideboardSeparator + 2 * rowHeight : 0)
-    } else {
-        // Vertical orientation: cards arranged vertically, main axis is height
-        canvasWidth =
-            cardDimensions.width * cardsPerRow +
-            betweenCards * (cardsPerRow - 1) +
-            canvasPadding * 2
-
-        canvasHeight =
-            rowHeight * totalRows +
-            betweenCards * (totalRows - 1) +
-            canvasPadding * 2 +
-            (hasSideboard ? sideboardSeparator + 2 * rowHeight : 0)
+    if (imageResolution === 'high') {
+        canvasWidth = canvasWidth * 1.5
+        canvasHeight = canvasHeight * 1.5
     }
 
     return { width: canvasWidth, height: canvasHeight }
@@ -136,7 +147,7 @@ export function calculateRowHeight(
     cardHeight: number
 ): number {
     const { row } = DECK_LAYOUT_CONFIG
-    
+
     switch (imageVariant) {
         case 'grid':
             // Grid layout with 50% overlap

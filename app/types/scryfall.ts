@@ -105,28 +105,3 @@ export type ScryfallCard = {
         cardhoarder: string
     }
 }
-
-export enum CARD_TYPE {
-    main = 'main',
-    sideboard = 'sideboard',
-    commander = 'commander'
-}
-
-export type CardType = keyof typeof CARD_TYPE
-export interface CardItem {
-    id: ScryfallCard['id']
-    name: ScryfallCard['name']
-    cmc: ScryfallCard['cmc']
-    typeLine: ScryfallCard['type_line']
-    rarity: ScryfallCard['rarity']
-    image_uri: ScryfallCard['image_uris']['png'] | null
-    colors: ScryfallCard['colors']
-    legalities: ScryfallCard['legalities']
-    quantity: number
-    type: CardType
-}
-
-export interface CardsResponse {
-    cards: CardItem[]
-    errors: string[]
-}

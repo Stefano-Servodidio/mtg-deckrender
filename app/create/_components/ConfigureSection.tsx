@@ -1,5 +1,11 @@
 'use client'
-import { CardsResponse } from '@/app/api/cards/_types'
+import {
+    CardsResponse,
+    DeckPngOptions,
+    ImageResolution,
+    ImageSize,
+    SortOption
+} from '@/app/types/api'
 import FilterItem from '@/components/FilterItem'
 import {
     Box,
@@ -9,18 +15,10 @@ import {
     VStack,
     Progress,
     HStack,
-    RadioGroup,
-    Radio,
-    SimpleGrid,
-    NumberInput,
-    NumberInputField,
-    NumberInputStepper,
-    NumberIncrementStepper,
-    NumberDecrementStepper
+    SimpleGrid
 } from '@chakra-ui/react'
 import React from 'react'
 import { FaCogs, FaImage } from 'react-icons/fa'
-import { DeckPngOptions } from '@/hooks/useDeckPng'
 
 interface ProgressInfo {
     current: number
@@ -45,15 +43,17 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
     const [form, setForm] = React.useState<DeckPngOptions>({
         sortBy: 'name',
         sortDirection: 'asc',
-        rowSize: 7,
         fileType: 'png',
-        imageSize: 'medium',
+        imageSize: 'ig_square',
         imageVariant: 'grid',
-        imageOrientation: 'vertical',
+        imageResolution: 'standard' as ImageResolution,
         backgroundStyle: 'transparent',
-        mtgFormat: null,
         includeCardCount: true
     })
+
+    const isValid = React.useMemo(() => {
+        return !!form.imageSize
+    }, [form])
 
     return (
         <VStack spacing={6}>
@@ -81,41 +81,12 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                             ]}
                             value={form.sortBy}
                             onChange={(val) =>
-                                setForm((prev) => ({ ...prev, sortBy: val }))
+                                setForm((prev) => ({
+                                    ...prev,
+                                    sortBy: val as SortOption
+                                }))
                             }
                         />
-                    </FilterItem.Wrapper>
-
-                    <FilterItem.Wrapper label="Sort direction">
-                        <FilterItem.Radio
-                            name="sortDirection"
-                            options={[
-                                { label: 'Ascending', value: 'asc' },
-                                { label: 'Descending', value: 'desc' }
-                            ]}
-                            value={form.sortDirection}
-                            onChange={(val) =>
-                                setForm((prev) => ({ ...prev, sortDirection: val }))
-                            }
-                        />
-                    </FilterItem.Wrapper>
-
-                    <FilterItem.Wrapper label="Cards per row">
-                        <NumberInput
-                            value={form.rowSize}
-                            onChange={(val) =>
-                                setForm((prev) => ({ ...prev, rowSize: parseInt(val) || 7 }))
-                            }
-                            min={1}
-                            max={12}
-                            size="sm"
-                        >
-                            <NumberInputField />
-                            <NumberInputStepper>
-                                <NumberIncrementStepper />
-                                <NumberDecrementStepper />
-                            </NumberInputStepper>
-                        </NumberInput>
                     </FilterItem.Wrapper>
 
                     <FilterItem.Wrapper label="File type">
@@ -128,36 +99,85 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                             ]}
                             value={form.fileType}
                             onChange={(val) =>
-                                setForm((prev) => ({ ...prev, fileType: val as 'png' | 'jpeg' | 'webp' }))
+                                setForm((prev) => ({
+                                    ...prev,
+                                    fileType: val as 'png' | 'jpeg' | 'webp'
+                                }))
                             }
                         />
                     </FilterItem.Wrapper>
 
                     <FilterItem.Wrapper label="Image size">
-                        <FilterItem.Radio
+                        <FilterItem.Select
                             name="imageSize"
                             options={[
-                                { label: 'Small', value: 'small' },
-                                { label: 'Medium', value: 'medium' },
-                                { label: 'Large', value: 'large' }
+                                { label: 'IG Square', value: 'ig_square' },
+                                { label: 'IG Story', value: 'ig_story' },
+                                { label: 'IG Portrait', value: 'ig_portrait' },
+                                {
+                                    label: 'IG Landscape',
+                                    value: 'ig_landscape'
+                                },
+                                {
+                                    label: 'Facebook Post',
+                                    value: 'facebook_post'
+                                },
+                                {
+                                    label: 'Facebook Cover',
+                                    value: 'facebook_cover'
+                                },
+                                {
+                                    label: 'Twitter Post',
+                                    value: 'twitter_post'
+                                },
+                                {
+                                    label: 'Twitter Header',
+                                    value: 'twitter_header'
+                                },
+                                { label: 'TikTok Post', value: 'tiktok_post' }
                             ]}
                             value={form.imageSize}
-                            onChange={(val) =>
-                                setForm((prev) => ({ ...prev, imageSize: val as 'small' | 'medium' | 'large' }))
-                            }
+                            onChange={(e) => {
+                                const value = e.target.value as ImageSize
+                                setForm((prev) => ({
+                                    ...prev,
+                                    imageSize: value
+                                }))
+                            }}
                         />
+                        {!!form.imageSize && (
+                            <Text fontSize="xs" color="gray.600" mt={1}>
+                                Image dimensions:{' '}
+                                {
+                                    {
+                                        ig_square: '1080x1080px',
+                                        ig_story: '1080x1920px',
+                                        ig_portrait: '1080x1350px',
+                                        ig_landscape: '1080x566px',
+                                        facebook_post: '1200x630px',
+                                        facebook_cover: '820x312px',
+                                        twitter_post: '1200x675px',
+                                        twitter_header: '1500x500px',
+                                        tiktok_post: '1080x1920px'
+                                    }[form.imageSize]
+                                }
+                            </Text>
+                        )}
                     </FilterItem.Wrapper>
 
-                    <FilterItem.Wrapper label="Orientation">
+                    <FilterItem.Wrapper label="Resolution">
                         <FilterItem.Radio
-                            name="imageOrientation"
+                            name="imageResolution"
                             options={[
-                                { label: 'Vertical', value: 'vertical' },
-                                { label: 'Horizontal', value: 'horizontal' }
+                                { label: 'Standard', value: 'standard' },
+                                { label: 'High', value: 'high' }
                             ]}
-                            value={form.imageOrientation}
+                            value={form.imageResolution}
                             onChange={(val) =>
-                                setForm((prev) => ({ ...prev, imageOrientation: val as 'vertical' | 'horizontal' }))
+                                setForm((prev) => ({
+                                    ...prev,
+                                    imageResolution: val as ImageResolution
+                                }))
                             }
                         />
                     </FilterItem.Wrapper>
@@ -172,7 +192,13 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                             ]}
                             value={form.backgroundStyle}
                             onChange={(val) =>
-                                setForm((prev) => ({ ...prev, backgroundStyle: val as 'transparent' | 'white' | 'custom' }))
+                                setForm((prev) => ({
+                                    ...prev,
+                                    backgroundStyle: val as
+                                        | 'transparent'
+                                        | 'white'
+                                        | 'custom'
+                                }))
                             }
                         />
                     </FilterItem.Wrapper>
@@ -187,40 +213,12 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                             ]}
                             value={form.imageVariant}
                             onChange={(val) =>
-                                setForm((prev) => ({ ...prev, imageVariant: val as 'grid' | 'spoiler' | 'stacks' }))
-                            }
-                        />
-                    </FilterItem.Wrapper>
-
-                    <FilterItem.Wrapper label="MTG Format">
-                        <FilterItem.Select
-                            name="mtgFormat"
-                            placeholder="Select format (optional)"
-                            options={[
-                                { label: 'Standard', value: 'standard' },
-                                { label: 'Historic', value: 'historic' },
-                                { label: 'Timeless', value: 'timeless' },
-                                { label: 'Gladiator', value: 'gladiator' },
-                                { label: 'Pioneer', value: 'pioneer' },
-                                { label: 'Modern', value: 'modern' },
-                                { label: 'Legacy', value: 'legacy' },
-                                { label: 'Pauper', value: 'pauper' },
-                                { label: 'Vintage', value: 'vintage' },
-                                { label: 'Commander', value: 'commander' },
-                                { label: 'Standard Brawl', value: 'standardbrawl' },
-                                { label: 'Brawl', value: 'brawl' },
-                                { label: 'Alchemy', value: 'alchemy' },
-                                { label: 'Pauper Commander', value: 'paupercommander' },
-                                { label: 'Duel', value: 'duel' },
-                                { label: 'Old School', value: 'oldschool' },
-                                { label: 'Premodern', value: 'premodern' },
-                                { label: 'PreDH', value: 'predh' }
-                            ]}
-                            value={form.mtgFormat || ''}
-                            onChange={(e) =>
-                                setForm((prev) => ({ 
-                                    ...prev, 
-                                    mtgFormat: e.target.value || null 
+                                setForm((prev) => ({
+                                    ...prev,
+                                    imageVariant: val as
+                                        | 'grid'
+                                        | 'spoiler'
+                                        | 'stacks'
                                 }))
                             }
                         />
@@ -232,9 +230,9 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                             label="Show quantity on cards"
                             isChecked={form.includeCardCount ?? true}
                             onChange={(e) =>
-                                setForm((prev) => ({ 
-                                    ...prev, 
-                                    includeCardCount: e.target.checked 
+                                setForm((prev) => ({
+                                    ...prev,
+                                    includeCardCount: e.target.checked
                                 }))
                             }
                         />

@@ -9,7 +9,6 @@ import {
     useColorModeValue,
     Card,
     CardBody,
-    CardHeader,
     useToast,
     Accordion,
     AccordionItem,
@@ -31,7 +30,7 @@ import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
 import AccordionItemHeader from '@/components/AccordionItemHeader'
-import type { DeckPngOptions } from '@/hooks/useDeckPng'
+import { DeckPngOptions } from '../types/api'
 
 export default function Create() {
     const [decklistText, setDecklistText] = useState('')

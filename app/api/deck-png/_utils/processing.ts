@@ -3,16 +3,13 @@
 
 import sharp from 'sharp'
 import chalk from 'chalk'
-import { CardItem } from '../../cards/_types'
 import {
-    CardImageBuffer,
-    SORT_OPTION,
-    SortDirection,
+    CardItem,
     SortOption,
-    ImageSize,
-    ImageOrientation
-} from '../_types'
-import { calculateCardDimensions } from './config'
+    SortDirection,
+    SORT_OPTION
+} from '@/app/types/api'
+import { Dimensions, CardImageBuffer } from '../_types'
 
 /**
  * Filter and sort cards for image processing
@@ -28,7 +25,7 @@ export function filterAndSortCards(
             (card) => card.image_uri && card.quantity > 0 && card.quantity <= 4
         )
         .sort((a, b) => {
-            const key = SORT_OPTION[sortBy] ? SORT_OPTION[sortBy] : 'name'
+            const key = SORT_OPTION.includes(sortBy) ? sortBy : 'name'
             const direction = sortDirection === 'desc' ? -1 : 1
             if (sortBy === 'rarity') {
                 const rarityOrder = ['common', 'uncommon', 'rare', 'mythic']
@@ -76,11 +73,9 @@ export function filterAndSortCards(
  */
 export async function downloadAndResizeCardImage(
     card: CardItem,
-    imageSize: ImageSize,
+    cardDimensions: Dimensions,
     imageOrientation: ImageOrientation
 ): Promise<CardImageBuffer | null> {
-    const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
-
     try {
         const response = await fetch(card.image_uri as string)
         if (!response.ok) {
@@ -97,7 +92,7 @@ export async function downloadAndResizeCardImage(
 
         return {
             name: card.name,
-            type: card.type,
+            groupId: card.groupId,
             buffer: resizedBuffer,
             quantity: card.quantity
         }
@@ -115,7 +110,7 @@ export async function downloadAndResizeCardImage(
  */
 export async function downloadAllCardImages(
     cards: CardItem[],
-    imageSize: ImageSize,
+    cardDimensions: Dimensions,
     imageOrientation: ImageOrientation,
     progressCallback?: (
         current: number,
@@ -133,7 +128,11 @@ export async function downloadAllCardImages(
             progressCallback(i + 1, totalImages, card.name)
         }
 
-        const cardBuffer = await downloadAndResizeCardImage(card, imageSize, imageOrientation)
+        const cardBuffer = await downloadAndResizeCardImage(
+            card,
+            cardDimensions,
+            imageOrientation
+        )
         cardImageBuffers.push(cardBuffer)
     }
 
@@ -156,10 +155,8 @@ export function calculateLayoutMetrics(
     totalSideboardRows: number
     hasSideboard: boolean
 } {
-    const mainImages = successfulImages.filter((img) => img.type === 'main')
-    const sideboardImages = successfulImages.filter(
-        (img) => img.type === 'sideboard'
-    )
+    const mainImages = successfulImages.filter((img) => img.groupId === 0)
+    const sideboardImages = successfulImages.filter((img) => img.groupId !== 0)
 
     const hasSideboard = sideboardImages.length > 0
     const totalMainRows = Math.ceil(mainImages.length / cardsPerRow)
