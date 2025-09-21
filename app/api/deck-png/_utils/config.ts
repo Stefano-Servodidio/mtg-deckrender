@@ -52,7 +52,7 @@ export const CANVAS_SIZE: Record<ImageSize, Dimensions> = {
     tiktok_post: { width: 1080, height: 1920 }
 } as const
 
-const ROW_SIZE: Record<ImageSize, number> = {
+export const ROW_SIZE: Record<ImageSize, number> = {
     ig_square: 7,
     ig_story: 6,
     ig_portrait: 7,
@@ -83,10 +83,10 @@ export function calculateCardDimensions(
     const availableHeight =
         canvasHeight - 2 * DECK_LAYOUT_CONFIG.spacing.canvasPadding
 
-    const totalRows = Math.min(
-        ROW_SIZE[imageSize || 'ig_square'],
-        validImages.length
+    const totalRows = Math.ceil(
+        validImages.length / ROW_SIZE[imageSize || 'ig_square']
     )
+
     const cardHeightMultiplier =
         DECK_LAYOUT_CONFIG.row.heightMultiplier[imageVariant || 'default']
 
@@ -95,10 +95,10 @@ export function calculateCardDimensions(
         availableWidth / ROW_SIZE[imageSize || 'ig_square'] -
         DECK_LAYOUT_CONFIG.spacing.betweenCards
 
-    const maxRawHeight = availableHeight / totalRows
+    const maxRawHeight = availableHeight / (totalRows * cardHeightMultiplier)
 
     const maxCardHeight =
-        maxRawHeight * cardHeightMultiplier -
+        maxRawHeight -
         DECK_LAYOUT_CONFIG.spacing.betweenCards
 
     // Maintain aspect ratio based on base card dimensions
@@ -151,14 +151,14 @@ export function calculateRowHeight(
     switch (imageVariant) {
         case 'grid':
             // Grid layout with 50% overlap
-            return cardHeight * row.gridHeightMultiplier
+            return cardHeight * row.heightMultiplier.grid
         case 'spoiler':
             // Visual spoiler with no overlap
-            return cardHeight * row.spoilerHeightMultiplier
+            return cardHeight * row.heightMultiplier.spoiler
         case 'stacks':
             // Stacks layout (similar to grid for now)
-            return cardHeight * row.gridHeightMultiplier
+            return cardHeight * row.heightMultiplier.stacks
         default:
-            return cardHeight * row.gridHeightMultiplier
+            return cardHeight * row.heightMultiplier.default
     }
 }

@@ -73,11 +73,14 @@ export function filterAndSortCards(
  */
 export async function downloadAndResizeCardImage(
     card: CardItem,
-    cardDimensions: Dimensions,
-    imageOrientation: ImageOrientation
+    cardDimensions: Dimensions
 ): Promise<CardImageBuffer | null> {
     try {
-        const response = await fetch(card.image_uri as string)
+        const response = await fetch(card.image_uri as string, {
+            headers: {
+            'Cache-Control': 'max-age=86400'
+            }
+        })
         if (!response.ok) {
             throw new Error(`Failed to fetch image for ${card.name}`)
         }
@@ -111,7 +114,6 @@ export async function downloadAndResizeCardImage(
 export async function downloadAllCardImages(
     cards: CardItem[],
     cardDimensions: Dimensions,
-    imageOrientation: ImageOrientation,
     progressCallback?: (
         current: number,
         total: number,
@@ -130,8 +132,7 @@ export async function downloadAllCardImages(
 
         const cardBuffer = await downloadAndResizeCardImage(
             card,
-            cardDimensions,
-            imageOrientation
+            cardDimensions
         )
         cardImageBuffers.push(cardBuffer)
     }

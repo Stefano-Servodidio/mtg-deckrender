@@ -4,7 +4,7 @@
 import path from 'path'
 import fs from 'fs/promises'
 import sharp from 'sharp'
-import { CardImageBuffer } from '../_types'
+import { CardImageBuffer, Dimensions } from '../_types'
 import {
     DECK_LAYOUT_CONFIG,
     calculateCardDimensions,
@@ -87,9 +87,9 @@ export function prepareCardOperations(
     imageOrientation: ImageOrientation,
     imageVariant: ImageVariant,
     mainDeckRowHeight?: number
-): any[] {
+): sharp.OverlayOptions[] {
     return images.map((imageData, index) => {
-        const isMainDeck = imageData.type === 'main'
+        const isMainDeck = imageData.groupId === 0
         const { left, top } = calculateCardPosition(
             index,
             cardsPerRow,
@@ -171,7 +171,7 @@ export function prepareQuantityOverlayOperations(
         .map((imageData, index) => {
             if (imageData.quantity < 2) return null // No overlay for single cards
 
-            const isMainDeck = imageData.type === 'main'
+            const isMainDeck = imageData.groupId === 0
             const { left, top } = calculateOverlayPosition(
                 index,
                 cardsPerRow,
@@ -195,11 +195,11 @@ export function prepareQuantityOverlayOperations(
  * Create the base canvas for compositing with background style support
  */
 export function createCanvas(
-    width: number,
-    height: number,
+    dimensions: Dimensions,
     backgroundStyle: BackgroundStyle = 'transparent',
     customBackground?: string
 ): sharp.Sharp {
+    const { width, height } = dimensions
     let background: { r: number; g: number; b: number; alpha: number }
 
     switch (backgroundStyle) {
@@ -237,13 +237,13 @@ export function createCanvas(
  */
 export async function createCompositeImage(
     canvas: sharp.Sharp,
-    cardOperations: any[],
-    overlayOperations: any[],
+    cardOperations: sharp.OverlayOptions[],
+    overlayOperations: sharp.OverlayOptions[],
     fileType: 'png' | 'jpeg' | 'webp' = 'png'
 ): Promise<Buffer> {
     const compositeImage = canvas.composite([
-        // ...cardOperations,
-        // ...overlayOperations
+        ...cardOperations,
+        ...overlayOperations
     ])
 
     // Apply appropriate output format
