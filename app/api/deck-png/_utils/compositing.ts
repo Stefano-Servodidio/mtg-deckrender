@@ -5,11 +5,7 @@ import path from 'path'
 import fs from 'fs/promises'
 import sharp from 'sharp'
 import { CardImageBuffer, Dimensions } from '../_types'
-import {
-    DECK_LAYOUT_CONFIG,
-    calculateCardDimensions,
-    calculateRowHeight
-} from './config'
+import { DECK_LAYOUT_CONFIG, ROW_SIZE, calculateRowHeight } from './config'
 import { ImageSize, ImageVariant, BackgroundStyle } from '@/app/types/api'
 
 /**
@@ -44,18 +40,17 @@ export async function loadQuantityOverlayAssets(): Promise<{
  */
 function calculateCardPosition(
     index: number,
-    cardsPerRow: number,
-    isMainDeck: boolean,
-    imageSize: ImageSize,
-    imageOrientation: ImageOrientation,
-    imageVariant: ImageVariant,
-    mainDeckRowHeight?: number
+    cardDimensions: Dimensions,
+    imageVariant?: ImageVariant,
+    imageSize?: ImageSize
+    // mainDeckRowHeight?: number
 ): { left: number; top: number } {
     const {
         spacing: { betweenCards, canvasPadding, sideboardSeparator }
     } = DECK_LAYOUT_CONFIG
 
-    const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
+    // const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
+    const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
     const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
 
     const row = Math.floor(index / cardsPerRow)
@@ -66,14 +61,15 @@ function calculateCardPosition(
     const baseTopPosition = canvasPadding + row * (rowHeight + betweenCards)
 
     // Add extra spacing for sideboard
-    const sideboardOffset =
-        !isMainDeck && mainDeckRowHeight !== undefined
-            ? mainDeckRowHeight + rowHeight + sideboardSeparator
-            : 0
+    // const sideboardOffset =
+    //     !isMainDeck && mainDeckRowHeight !== undefined
+    //         ? mainDeckRowHeight + rowHeight + sideboardSeparator
+    //         : 0
 
     return {
         left: leftPosition,
-        top: baseTopPosition + sideboardOffset
+        // top: baseTopPosition + sideboardOffset
+        top: baseTopPosition
     }
 }
 
@@ -82,28 +78,26 @@ function calculateCardPosition(
  */
 export function prepareCardOperations(
     images: CardImageBuffer[],
-    cardsPerRow: number,
-    imageSize: ImageSize,
-    imageOrientation: ImageOrientation,
-    imageVariant: ImageVariant,
-    mainDeckRowHeight?: number
+    cardDimensions: Dimensions,
+    imageVariant?: ImageVariant,
+    imageSize?: ImageSize
+    // mainDeckRowHeight?: number
 ): sharp.OverlayOptions[] {
     return images.map((imageData, index) => {
-        const isMainDeck = imageData.groupId === 0
+        // const isMainDeck = imageData.groupId === 0
         const { left, top } = calculateCardPosition(
             index,
-            cardsPerRow,
-            isMainDeck,
-            imageSize,
-            imageOrientation,
+            cardDimensions,
+            // isMainDeck,
             imageVariant,
-            mainDeckRowHeight
+            imageSize
+            // mainDeckRowHeight
         )
-
+        // return position rounded to avoid subpixel rendering issues
         return {
             input: imageData.buffer,
-            left,
-            top
+            left: Math.floor(left),
+            top: Math.floor(top)
         }
     })
 }
@@ -113,24 +107,27 @@ export function prepareCardOperations(
  */
 function calculateOverlayPosition(
     index: number,
-    cardsPerRow: number,
-    isMainDeck: boolean,
-    imageSize: ImageSize,
-    imageOrientation: ImageOrientation,
-    imageVariant: ImageVariant,
-    mainDeckRowHeight?: number
+    cardDimensions: Dimensions,
+    // isMainDeck: boolean,
+    imageVariant?: ImageVariant,
+    imageSize?: ImageSize
+    // mainDeckRowHeight?: number
 ): { left: number; top: number } {
     const { spacing, overlay } = DECK_LAYOUT_CONFIG
-    const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
+    const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
+    // const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
     const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
 
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
 
     // Scale overlay offset based on card scale
-    const scaleRatio = cardDimensions.width / DECK_LAYOUT_CONFIG.card.baseWidth
-    const scaledOverlayOffsetFromRight = overlay.offsetFromRight * scaleRatio
-    const scaledOverlayOffsetFromTop = overlay.offsetFromTop * scaleRatio
+    // const scaleRatio = cardDimensions.width / DECK_LAYOUT_CONFIG.card.baseWidth
+    const scaledOverlayOffsetFromRight =
+        overlay.offsetFromRight * cardDimensions.scale!
+
+    const scaledOverlayOffsetFromTop =
+        overlay.offsetFromTop * cardDimensions.scale!
 
     const leftPosition =
         spacing.canvasPadding +
@@ -144,14 +141,15 @@ function calculateOverlayPosition(
         scaledOverlayOffsetFromTop
 
     // Add extra spacing for sideboard
-    const sideboardOffset =
-        !isMainDeck && mainDeckRowHeight !== undefined
-            ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
-            : 0
+    // const sideboardOffset =
+    //     !isMainDeck && mainDeckRowHeight !== undefined
+    //         ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
+    //         : 0
 
     return {
         left: leftPosition,
-        top: baseTopPosition + sideboardOffset
+        // top: baseTopPosition + sideboardOffset
+        top: baseTopPosition
     }
 }
 
@@ -160,32 +158,30 @@ function calculateOverlayPosition(
  */
 export function prepareQuantityOverlayOperations(
     images: CardImageBuffer[],
-    cardsPerRow: number,
+    cardDimensions: Dimensions,
     quantityAssets: { [key: number]: Buffer },
-    imageSize: ImageSize,
-    imageOrientation: ImageOrientation,
-    imageVariant: ImageVariant,
-    mainDeckRowHeight?: number
+    imageVariant?: ImageVariant,
+    imageSize?: ImageSize
+    // mainDeckRowHeight?: number
 ): any[] {
     return images
         .map((imageData, index) => {
             if (imageData.quantity < 2) return null // No overlay for single cards
 
-            const isMainDeck = imageData.groupId === 0
+            // const isMainDeck = imageData.groupId === 0
             const { left, top } = calculateOverlayPosition(
                 index,
-                cardsPerRow,
-                isMainDeck,
-                imageSize,
-                imageOrientation,
+                cardDimensions,
+                // isMainDeck,
                 imageVariant,
-                mainDeckRowHeight
+                imageSize
+                // mainDeckRowHeight
             )
-
+            // return position rounded to avoid subpixel rendering issues
             return {
                 input: quantityAssets[imageData.quantity] || quantityAssets[1],
-                left,
-                top
+                left: Math.floor(left),
+                top: Math.floor(top)
             }
         })
         .filter((op): op is NonNullable<typeof op> => op !== null)
