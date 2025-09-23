@@ -1,5 +1,6 @@
 // Configuration options for the create page
 
+import { DeckPngOptions, ImageSize } from '@/app/types/api'
 import { DropZone } from '@/components/DropZone'
 import FilterItem from '@/components/FilterItem'
 import {
@@ -15,21 +16,9 @@ import {
 import React from 'react'
 import { FaCogs, FaPen } from 'react-icons/fa'
 
-export interface ConfigureForm {
-    sortBy?: 'name' | 'cmc' | 'typeLine' | 'colors' | 'rarity'
-    sortDirection?: 'asc' | 'desc'
-    rowSize?: number
-    fileType?: 'png' | 'jpeg' | 'webp'
-    imageSize?: 'small' | 'medium' | 'large'
-    imageOrientation?: 'vertical' | 'horizontal'
-    backgroundStyle?: 'transparent' | 'white' | 'custom'
-    imageVariant?: 'grid' | 'spoiler' | 'stacks'
-    mtgFormat?: string | null
-    includeCardCount?: boolean | null
-}
 export interface ConfigureOptionsProps {
-    form: ConfigureForm
-    updateForm: (id: string, value: string | number | boolean | null) => void
+    form: DeckPngOptions
+    updateForm: (_id: string, _value: string | number | boolean | null) => void
 }
 
 const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
@@ -37,6 +26,19 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
     updateForm
 }) => {
     const [editing, setEditing] = React.useState(false)
+
+    const imageSizes: { [_key in ImageSize]: string } = {
+        ig_square: 'Instagram Square (1080x1080)',
+        ig_story: 'Instagram Story (1080x1920)',
+        ig_portrait: 'Instagram Portrait (1080x1350)',
+        ig_landscape: 'Instagram Landscape (1080x566)',
+        facebook_post: 'Facebook Post (1200x630)',
+        facebook_cover: 'Facebook Cover (820x312)',
+        twitter_post: 'Twitter Post (1024x512)',
+        twitter_header: 'Twitter Header (1500x500)',
+        tiktok_post: 'TikTok Post (1080x1920)'
+    }
+
     return (
         <Box
             w="full"
@@ -68,13 +70,24 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                         <strong>Sort by:</strong> {form.sortBy}
                     </Text>
                     <Text fontSize="sm">
+                        <strong>Image size:</strong>{' '}
+                        {form.imageSize ? imageSizes[form.imageSize] : 'N/A'}
+                    </Text>
+                    <Text fontSize="sm">
+                        <strong>Resolution:</strong> {form.imageResolution}
+                    </Text>
+                    <Text fontSize="sm">
+                        <strong>Variant:</strong> {form.imageVariant}
+                    </Text>
+                    <Text fontSize="sm">
+                        <strong>Background:</strong> {form.backgroundStyle}
+                    </Text>
+                    <Text fontSize="sm">
+                        <strong>Include card count:</strong>{' '}
+                        {form.includeCardCount ? 'Yes' : 'No'}
+                    </Text>
+                    <Text fontSize="sm">
                         <strong>File type:</strong> {form.fileType}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>Image size:</strong> {form.imageSize}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>Orientation:</strong> {form.imageOrientation}
                     </Text>
                 </SimpleGrid>
             )}
@@ -97,50 +110,35 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                             />
                         </FilterItem.Wrapper>
 
-                        <FilterItem.Wrapper label="File type">
-                            <FilterItem.Radio
-                                name="fileType"
-                                colorScheme="blue"
-                                options={[
-                                    { label: 'PNG', value: 'png' },
-                                    { label: 'JPEG', value: 'jpeg' },
-                                    { label: 'WebP', value: 'webp' }
-                                ]}
-                                value={form.fileType}
-                                onChange={(val) => {
-                                    updateForm('fileType', val)
-                                }}
-                            />
-                        </FilterItem.Wrapper>
-
                         <FilterItem.Wrapper label="Image size">
-                            <FilterItem.Radio
+                            <FilterItem.Select
                                 name="imageSize"
                                 colorScheme="blue"
-                                options={[
-                                    { label: 'Small', value: 'small' },
-                                    { label: 'Medium', value: 'medium' }
-                                    // { label: 'Large', value: 'large' }
-                                ]}
+                                options={Object.entries(imageSizes).map(
+                                    ([value, label]) => ({
+                                        label,
+                                        value
+                                    })
+                                )}
                                 value={form.imageSize}
-                                onChange={(val) => {
-                                    updateForm('imageSize', val)
+                                onChange={(e) => {
+                                    updateForm('imageSize', e.target.value)
                                 }}
                             />
                         </FilterItem.Wrapper>
 
-                        <FilterItem.Wrapper label="Orientation">
+                        <FilterItem.Wrapper label="Resolution">
                             <FilterItem.Radio
-                                name="imageOrientation"
+                                name="imageResolution"
                                 colorScheme="blue"
                                 options={[
-                                    { label: 'Vertical', value: 'vertical' },
-                                    { label: 'Horizontal', value: 'horizontal' }
+                                    { label: 'Standard', value: 'standard' },
+                                    { label: 'High', value: 'high' }
                                 ]}
-                                value={form.imageOrientation}
-                                onChange={(val) => {
-                                    updateForm('imageOrientation', val)
-                                }}
+                                value={form.imageResolution}
+                                onChange={(val) =>
+                                    updateForm('imageResolution', val)
+                                }
                             />
                         </FilterItem.Wrapper>
 
@@ -185,58 +183,35 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                             )}
                         </FilterItem.Wrapper>
 
-                        {/* <FilterItem.Wrapper label="MTG Format">
-                <FilterItem.Select
-                    name="mtgFormat"
-                    placeholder="Select format (optional)"
-                    options={[
-                        { label: 'Standard', value: 'standard' },
-                        { label: 'Historic', value: 'historic' },
-                        { label: 'Timeless', value: 'timeless' },
-                        { label: 'Gladiator', value: 'gladiator' },
-                        { label: 'Pioneer', value: 'pioneer' },
-                        { label: 'Modern', value: 'modern' },
-                        { label: 'Legacy', value: 'legacy' },
-                        { label: 'Pauper', value: 'pauper' },
-                        { label: 'Vintage', value: 'vintage' },
-                        { label: 'Commander', value: 'commander' },
-                        { label: 'Standard Brawl', value: 'standardbrawl' },
-                        { label: 'Brawl', value: 'brawl' },
-                        { label: 'Alchemy', value: 'alchemy' },
-                        { label: 'Pauper Commander', value: 'paupercommander' },
-                        { label: 'Duel', value: 'duel' },
-                        { label: 'Old School', value: 'oldschool' },
-                        { label: 'Premodern', value: 'premodern' },
-                        { label: 'PreDH', value: 'predh' }
-                    ]}
-                    value={form.mtgFormat || ''}
-                    onChange={(e) =>
-                        updateForm('mtgFormat', e.target.value || null)
-                    }
-                />
-            </FilterItem.Wrapper> */}
+                        <FilterItem.Wrapper label="Include card count">
+                            <FilterItem.Toggle
+                                name="includeCardCount"
+                                label="Show quantity on cards"
+                                isChecked={form.includeCardCount ?? true}
+                                onChange={(e) =>
+                                    updateForm(
+                                        'includeCardCount',
+                                        e.target.checked
+                                    )
+                                }
+                            />
+                        </FilterItem.Wrapper>
 
-                        {/* <FilterItem.Wrapper label="Include card count">
-                <FilterItem.Toggle
-                    name="includeCardCount"
-                    label="Show quantity on cards"
-                    isChecked={form.includeCardCount ?? true}
-                    onChange={(e) =>
-                        updateForm('includeCardCount', e.target.checked)
-                    }
-                />
-            </FilterItem.Wrapper> */}
-                        {/* <FilterItem.Wrapper label="Sort direction">
-                <FilterItem.Radio
-                    name="sortDirection"
-                    options={[
-                        { label: 'Ascending', value: 'asc' },
-                        { label: 'Descending', value: 'desc' }
-                    ]}
-                    value={form.sortDirection}
-                    onChange={(val) => updateForm('sortDirection', val)}
-                />
-            </FilterItem.Wrapper> */}
+                        <FilterItem.Wrapper label="File type">
+                            <FilterItem.Radio
+                                name="fileType"
+                                colorScheme="blue"
+                                options={[
+                                    { label: 'PNG', value: 'png' },
+                                    { label: 'JPEG', value: 'jpeg' },
+                                    { label: 'WebP', value: 'webp' }
+                                ]}
+                                value={form.fileType}
+                                onChange={(val) => {
+                                    updateForm('fileType', val)
+                                }}
+                            />
+                        </FilterItem.Wrapper>
                     </SimpleGrid>
                     <Button
                         colorScheme="blue"

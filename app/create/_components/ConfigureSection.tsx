@@ -1,10 +1,10 @@
 'use client'
-import { CardsResponse } from '@/app/api/cards/_types'
+
 import { Box, Button, Text, VStack, Progress, HStack } from '@chakra-ui/react'
 import React from 'react'
 import { FaImage } from 'react-icons/fa'
-import { DeckPngOptions } from '@/hooks/useDeckPng'
 import ConfigureOptions from './ConfigureOptions'
+import { DeckPngOptions, CardsResponse, ImageResolution } from '@/app/types/api'
 
 interface ProgressInfo {
     current: number
@@ -14,7 +14,7 @@ interface ProgressInfo {
 }
 
 export interface ConfigureSectionProps {
-    handleGenerateImage: (form: DeckPngOptions) => void
+    handleGenerateImage: (_form: DeckPngOptions) => void
     isGenerating: boolean
     cardsData: CardsResponse | null
     progress?: ProgressInfo | null
@@ -29,13 +29,11 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
     const [form, setForm] = React.useState<DeckPngOptions>({
         sortBy: 'name',
         sortDirection: 'asc',
-        rowSize: 7,
         fileType: 'png',
-        imageSize: 'medium',
+        imageSize: 'ig_square',
         imageVariant: 'grid',
-        imageOrientation: 'vertical',
+        imageResolution: 'standard' as ImageResolution,
         backgroundStyle: 'transparent',
-        mtgFormat: null,
         includeCardCount: true
     })
 

@@ -3,15 +3,16 @@ import { DropZone } from '@/components/DropZone'
 import {
     Box,
     Button,
-    Divider,
     HStack,
     Text,
     Textarea,
     useColorModeValue,
     VStack,
-    Progress
+    Progress,
+    Tooltip,
+    Icon
 } from '@chakra-ui/react'
-import { FaUpload } from 'react-icons/fa'
+import { FaInfoCircle, FaUpload } from 'react-icons/fa'
 
 interface ProgressInfo {
     current: number
@@ -22,10 +23,10 @@ interface ProgressInfo {
 
 export interface UploadSectionProps {
     decklistText: string
-    setDecklistText: (text: string) => void
+    setDecklistText: (_text: string) => void
     handleUpload: () => void
     isLoadingCards: boolean
-    handleFileUpload: (files: File[]) => void
+    handleFileUpload: (_files: File[]) => void
     progress?: ProgressInfo | null
 }
 
@@ -38,53 +39,86 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     progress
 }) => {
     return (
-        <VStack spacing={6}>
-            <Box w="full">
-                <Text fontWeight="semibold" mb={3} color="gray.700">
-                    Paste Decklist Text
-                </Text>
-                <Text fontSize="sm" color="gray.500" mb={2}>
-                    Paste the decklist list one card per line, with the quantity
-                    and cardname (e.g. &quot;2x Llanowar Elves&quot;, &quot;1
-                    Black Lotus&quot;).
-                    <br /> You can add a sideboard by including an empty line.
-                    Works with or without the keyword &quot;SIDEBOARD&quot;.
-                </Text>
-                <Textarea
-                    value={decklistText}
-                    onChange={(e) => setDecklistText(e.target.value)}
-                    placeholder="Paste your decklist here..."
-                    size="lg"
-                    minH="200px"
-                    bg={useColorModeValue('gray.50', 'gray.700')}
-                    border="2px dashed"
-                    borderColor="gray.300"
-                    _hover={{
-                        borderColor: 'purple.300'
-                    }}
-                    _focus={{
-                        borderColor: 'purple.400',
-                        boxShadow: '0 0 0 1px var(--chakra-colors-purple-400)'
-                    }}
-                />
-            </Box>
-
-            <HStack w="full" align="center">
-                <Divider />
-                <Text color="gray.500" fontWeight="medium" px={4}>
-                    OR
-                </Text>
-                <Divider />
+        <VStack spacing={6} w="full">
+            <HStack
+                spacing={4}
+                w="full"
+                h="200px"
+                flex={1}
+                align="start"
+                flexWrap="wrap"
+            >
+                <Box w={{ base: 'full', md: 'auto' }} h="full" flex={1}>
+                    <HStack
+                        spacing={2}
+                        mb={3}
+                        justify={'flex-start'}
+                        align={'center'}
+                    >
+                        <Text
+                            fontWeight="semibold"
+                            color="gray.700"
+                            w="fit-content"
+                        >
+                            Paste Decklist Text
+                        </Text>
+                        <Tooltip
+                            label='Paste the decklist list one card per line, with the
+                        quantity and cardname (e.g. "2x Llanowar
+                        Elves", "1 Black Lotus").
+                        <br /> You can add a sideboard by including an empty
+                        line. Works with or without the keyword
+                        "SIDEBOARD".'
+                            placement="bottom"
+                            hasArrow
+                        >
+                            <Box width={4} height={'min-content'}>
+                                <Icon
+                                    as={FaInfoCircle}
+                                    width={4}
+                                    height={4}
+                                    color={'orange.500'}
+                                />
+                            </Box>
+                        </Tooltip>
+                    </HStack>
+                    <Textarea
+                        value={decklistText}
+                        onChange={(e) => setDecklistText(e.target.value)}
+                        placeholder="Paste your decklist here..."
+                        size="lg"
+                        minH="300px"
+                        bg={useColorModeValue('gray.50', 'gray.700')}
+                        border="2px dashed"
+                        borderColor="gray.300"
+                        _hover={{
+                            borderColor: 'orange.300'
+                        }}
+                        _focus={{
+                            borderColor: 'orange.400',
+                            boxShadow:
+                                '0 0 0 1px var(--chakra-colors-orange-400)'
+                        }}
+                    />
+                </Box>
+                {/* File Upload Section */}
+                <VStack
+                    w={{ base: 'full', md: '40%', lg: '30%' }}
+                    h="full"
+                    align={'flex-start'}
+                    gap={0}
+                >
+                    <Text fontWeight="semibold" mb={3} color="gray.700">
+                        Or upload Text File
+                    </Text>
+                    <Box flex={1} w="full">
+                        <DropZone
+                            onFileUpload={handleFileUpload}
+                            colorScheme="orange"
+                        />
+                    </Box>
+                </VStack>
             </HStack>
-
-            {/* File Upload Section */}
-            <Box w="full">
-                <Text fontWeight="semibold" mb={3} color="gray.700">
-                    Upload Text File
-                </Text>
-                <DropZone onFileUpload={handleFileUpload} />
-            </Box>
-
             {/* Progress Section */}
             {isLoadingCards && progress && (
                 <Box w="full">
@@ -101,7 +135,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                                 <Text
                                     fontSize="sm"
                                     fontWeight="medium"
-                                    color="purple.600"
+                                    color="orange.600"
                                 >
                                     {progress.current}/{progress.total} (
                                     {progress.percentage}%)
@@ -109,6 +143,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                             </HStack>
                             <Progress
                                 value={progress.percentage}
+                                colorScheme="orange"
                                 size="md"
                                 borderRadius="md"
                                 bg="gray.100"
@@ -124,6 +159,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 leftIcon={<FaUpload />}
                 onClick={handleUpload}
                 isLoading={isLoadingCards}
+                colorScheme="orange"
                 loadingText="Uploading..."
                 w={{ base: 'full', md: 'auto' }}
                 px={8}

@@ -1,20 +1,6 @@
-import { CardItem } from '@/app/api/cards/_types'
 import React, { useState, useCallback } from 'react'
 import { useFetchState } from './useFetchState'
-
-export interface DeckPngOptions {
-    rowSize?: number
-    sortBy?: 'name' | 'cmc' | 'typeLine' | 'colors' | 'rarity'
-    sortDirection?: 'asc' | 'desc'
-    fileType?: 'png' | 'jpeg' | 'webp'
-    imageSize?: 'small' | 'medium' | 'large'
-    imageVariant?: 'grid' | 'spoiler' | 'stacks'
-    imageOrientation?: 'vertical' | 'horizontal'
-    backgroundStyle?: 'transparent' | 'white' | 'custom'
-    customBackground?: string
-    mtgFormat?: string | null
-    includeCardCount?: boolean
-}
+import { CardItem, DeckPngOptions } from '@/app/types/api'
 
 interface ProgressInfo {
     current: number

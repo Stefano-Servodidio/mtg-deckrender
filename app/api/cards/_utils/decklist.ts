@@ -1,22 +1,53 @@
 // Utility functions for processing decklists
 // This file contains logic moved from the cards API route to separate data processing concerns
 
-import { CardItem, CardType } from '../_types'
+import { CardItem } from '@/app/types/api'
 
 /**
  * Parse a decklist string and split it into main deck and sideboard sections
  * Supports multiple formats for sideboard separation
  */
-export function parseDecklist(decklist: string): [string, string] {
-    if (decklist.includes('\n\n')) {
-        const parts = decklist.split('\n\n')
-        return [parts[0] || '', parts[1] || '']
-    } else if (decklist.includes('\n\nSIDEBOARD\n')) {
-        const parts = decklist.split('\n\nSIDEBOARD\n')
-        return [parts[0] || '', parts[1] || '']
-    } else {
-        return [decklist, '']
+export function parseDecklist(decklist: string): string[] {
+    let parsedList = decklist.trim()
+    const firstCharIndex = parsedList.search(/[^\s\n]/)
+    // Remove leading non-alphanumeric characters
+    if (firstCharIndex > 0) {
+        parsedList = parsedList.slice(firstCharIndex)
     }
+
+    const separators = [
+        '\n\n',
+        '\nSIDEBOARD\n',
+        '\nSideboard\n',
+        '\nsideboard\n',
+        '\nSIDEBOARD:\n',
+        '\nSideboard:\n',
+        '\nsideboard:\n',
+        '\nSB:\n',
+        '\nsb:\n',
+        '\nSB\n',
+        '\nSb\n',
+        '\nsb\n',
+        '\n--\n',
+        '\n\nSIDEBOARD\n',
+        '\n\nSideboard\n',
+        '\n\nsideboard\n',
+        '\n\nSIDEBOARD:\n',
+        '\n\nSideboard:\n',
+        '\n\nsideboard:\n',
+        '\n\nSB:\n',
+        '\n\nsb:\n',
+        '\n\nSB\n',
+        '\n\nSb\n',
+        '\n\nsb\n',
+        '\n\n--\n'
+    ]
+    const separatorRegex = new RegExp(separators.join('|'), 'g')
+    let groups: string[] = decklist
+        .split(separatorRegex)
+        .map((section) => section.trim())
+
+    return groups
 }
 
 /**
@@ -25,14 +56,16 @@ export function parseDecklist(decklist: string): [string, string] {
  */
 export function getUniqueCards(
     decklist: string,
-    type: 'main' | 'sideboard'
-): { name: string; quantity: number; type: 'main' | 'sideboard' }[] {
+    groupId: number
+): { name: string; quantity: number; groupId: number }[] {
+    // Replace first space with # to split quantity and name, then trim lines
     const cardStrings = decklist
         .split('\n')
         .map((line) => line.replace(' ', '#').trim())
 
+    // Filter out empty lines
     return cardStrings.reduce<
-        { name: string; quantity: number; type: 'main' | 'sideboard' }[]
+        { name: string; quantity: number; groupId: number }[]
     >((acc, line) => {
         if (!line) {
             return acc
@@ -40,7 +73,7 @@ export function getUniqueCards(
         const [quantityStr, name] = line.split('#')
         const quantity = parseInt(quantityStr.replace('x', ''), 10)
         if (!isNaN(quantity) && quantity > 0 && name) {
-            acc.push({ name, quantity, type })
+            acc.push({ name, quantity, groupId })
         }
         return acc
     }, [])
@@ -52,7 +85,7 @@ export function getUniqueCards(
 export function createCardItem(
     scryfallData: any,
     quantity: number,
-    type: CardType
+    groupId: number
 ): CardItem {
     return {
         id: scryfallData.id,
@@ -64,7 +97,7 @@ export function createCardItem(
         colors: scryfallData.colors,
         legalities: scryfallData.legalities,
         quantity,
-        type
+        groupId
     }
 }
 
@@ -74,7 +107,7 @@ export function createCardItem(
 export function createMockCardItem(
     name: string,
     quantity: number,
-    type: CardType
+    groupId: number
 ): CardItem {
     return {
         id: `mock-${name.toLowerCase().replace(/\s+/g, '-')}`,
@@ -109,7 +142,7 @@ export function createMockCardItem(
             paupercommander: 'not_legal'
         },
         quantity,
-        type
+        groupId
     }
 }
 

@@ -1,8 +1,7 @@
 'use client'
-import { Box, Button, Heading, Text, VStack } from '@chakra-ui/react'
+import { Box, Button, Text, VStack } from '@chakra-ui/react'
 import React from 'react'
-import { FaCogs, FaDownload } from 'react-icons/fa'
-import DownloadIcon from '@/components/icons/DownloadIcon'
+import { FaDownload } from 'react-icons/fa'
 import Image from 'next/image'
 
 export interface DownloadSectionProps {

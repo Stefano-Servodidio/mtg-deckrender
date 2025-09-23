@@ -9,6 +9,7 @@ import { useCallback } from 'react'
 import { FaCloudUploadAlt, FaFileAlt } from 'react-icons/fa'
 
 interface DropZoneProps extends Omit<ReactDropzoneProps, 'onDrop'> {
+    onFileUpload: (_files: File[]) => void
     colorScheme?: string
 }
 

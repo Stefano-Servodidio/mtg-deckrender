@@ -112,7 +112,9 @@ const Wrapper: React.FC<{
                 <Heading size="sm">{label}</Heading>
             </CardHeader>
         )}
-        <CardBody paddingTop={0}>{children}</CardBody>
+        <CardBody paddingTop={0} gap={2} display="flex" flexDirection="column">
+            {children}
+        </CardBody>
     </Card>
 )
 

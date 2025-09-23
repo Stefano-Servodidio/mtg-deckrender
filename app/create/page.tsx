@@ -24,8 +24,8 @@ import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
-import type { DeckPngOptions } from '@/hooks/useDeckPng'
 import Accordion, { AccordionSection } from '@/components/Accordion'
+import { DeckPngOptions } from '../types/api'
 
 export default function Create() {
     const [decklistText, setDecklistText] = useState('')

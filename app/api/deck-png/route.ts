@@ -1,34 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import chalk from 'chalk'
-import { DeckPngRequest } from './_types'
 import {
-    DECK_LAYOUT_CONFIG,
     calculateCanvasDimensions,
-    calculateRowHeight
+    calculateCardDimensions
 } from './_utils/config'
+import { sortCards } from './_utils/processing'
 import {
-    filterAndSortCards,
-    downloadAllCardImages,
-    calculateLayoutMetrics
-} from './_utils/processing'
-import {
-    loadQuantityOverlayAssets,
     prepareCardOperations,
-    prepareQuantityOverlayOperations,
     createCanvas,
-    createCompositeImage
+    createCompositeImage,
+    loadQuantityOverlayAssets,
+    prepareQuantityOverlayOperations
 } from './_utils/compositing'
+import { DeckPngOptions, DeckPngRequest } from '@/app/types/api'
+import { downloadAllCardImages } from './_utils/api'
 
-const defaultOptions = {
-    rowSize: DECK_LAYOUT_CONFIG.row.defaultCardsPerRow,
-    imageSize: 'medium' as const,
+const defaultOptions: DeckPngOptions = {
+    imageSize: 'ig_square' as const,
     imageVariant: 'grid' as const,
-    imageOrientation: 'vertical' as const,
+    imageResolution: 'standard' as const,
     backgroundStyle: 'transparent' as const,
     sortBy: 'cmc' as const,
     sortDirection: 'asc' as const,
     fileType: 'png' as const,
-    mtgFormat: null,
     includeCardCount: true as const
 }
 
@@ -69,11 +63,15 @@ export async function POST(request: NextRequest) {
                             })}\n\n`
                         )
                     )
-                    console.log(cards)
 
-                    // Filter and sort cards for processing
-                    const validCardImages = filterAndSortCards(
-                        cards,
+                    // Filter out invalid cards
+                    const validCards = cards.filter(
+                        (card) => card.image_uri && card.quantity > 0
+                    )
+
+                    //Sort cards for processing
+                    const validCardImages = sortCards(
+                        validCards,
                         options.sortBy,
                         options.sortDirection
                     )
@@ -104,12 +102,22 @@ export async function POST(request: NextRequest) {
                     )
 
                     // Create composite image using Sharp
-                    const cardsPerRow =
-                        options?.rowSize || defaultOptions.rowSize
+                    const canvasDimensions = calculateCanvasDimensions(
+                        options.imageSize,
+                        options.imageResolution
+                    )
+
+                    const cardDimensions = calculateCardDimensions(
+                        validCardImages?.length || 0,
+                        canvasDimensions,
+                        options.imageSize,
+                        options.imageVariant
+                    )
 
                     // Download all card images with progress tracking
                     const successfulImages = await downloadAllCardImages(
                         validCardImages,
+                        cardDimensions,
                         (current, total, cardName) => {
                             const progressPercentage =
                                 10 + Math.round((current / total) * 50) // 10-60%
@@ -152,22 +160,16 @@ export async function POST(request: NextRequest) {
                     )
 
                     // Calculate layout metrics
-                    const {
-                        mainImages,
-                        sideboardImages,
-                        totalMainRows,
-                        totalSideboardRows,
-                        hasSideboard
-                    } = calculateLayoutMetrics(successfulImages, cardsPerRow)
+                    // const {
+                    //     mainImages,
+                    //     sideboardImages,
+                    //     totalMainRows,
+                    //     totalSideboardRows,
+                    //     hasSideboard
+                    // } = calculateLayoutMetrics(successfulImages, cardsPerRow)
 
-                    const totalRows =
-                        totalMainRows + (hasSideboard ? totalSideboardRows : 0)
-                    const { width: canvasWidth, height: canvasHeight } =
-                        calculateCanvasDimensions(
-                            cardsPerRow,
-                            totalRows,
-                            hasSideboard
-                        )
+                    // const totalRows =
+                    //     totalMainRows + (hasSideboard ? totalSideboardRows : 0)
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -180,8 +182,12 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Create base canvas
-                    const canvas = createCanvas(canvasWidth, canvasHeight)
+                    // Create base canvas with background style
+                    const canvas = createCanvas(
+                        canvasDimensions,
+                        options.backgroundStyle,
+                        options.customBackground
+                    )
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -194,39 +200,58 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Load quantity overlay assets
-                    const quantityAssets = await loadQuantityOverlayAssets()
+                    // Load quantity overlay assets (conditionally based on includeCardCount)
+                    const quantityAssets = options.includeCardCount
+                        ? await loadQuantityOverlayAssets()
+                        : {}
 
                     // Calculate row height for sideboard positioning
-                    const rowHeight = calculateRowHeight()
-                    const mainDeckRowHeight = rowHeight * totalMainRows
+                    // const rowHeight = calculateRowHeight(
+                    //     options.imageVariant,
+                    //     cardDimensions.height
+                    // )
+                    // const mainDeckRowHeight = rowHeight * totalMainRows
 
                     // Prepare card composite operations
-                    const mainOperations = prepareCardOperations(
-                        mainImages,
-                        cardsPerRow
-                    )
-                    const sideboardOperations = prepareCardOperations(
-                        sideboardImages,
-                        cardsPerRow,
-                        mainDeckRowHeight
-                    )
+                    // const mainOperations = prepareCardOperations(
+                    //     mainImages,
+                    //     cardsPerRow,
+                    //     options.imageSize,
+                    //     options.imageOrientation,
+                    //     options.imageVariant
+                    // )
+                    // const sideboardOperations = prepareCardOperations(
+                    //     sideboardImages,
+                    //     cardsPerRow,
+                    //     options.imageSize,
+                    //     options.imageOrientation,
+                    //     options.imageVariant,
+                    //     mainDeckRowHeight
+                    // )
 
-                    // Prepare quantity overlay operations
-                    const mainOverlayOperations =
-                        prepareQuantityOverlayOperations(
-                            mainImages,
-                            cardsPerRow,
-                            quantityAssets
-                        )
+                    // Prepare quantity overlay operations (only if includeCardCount is true)
+                    // const mainOverlayOperations = options.includeCardCount
+                    //     ? prepareQuantityOverlayOperations(
+                    //           mainImages,
+                    //           cardsPerRow,
+                    //           quantityAssets,
+                    //           options.imageSize,
+                    //           options.imageOrientation,
+                    //           options.imageVariant
+                    //       )
+                    //     : []
 
-                    const sideboardOverlayOperations =
-                        prepareQuantityOverlayOperations(
-                            sideboardImages,
-                            cardsPerRow,
-                            quantityAssets,
-                            mainDeckRowHeight
-                        )
+                    // const sideboardOverlayOperations = options.includeCardCount
+                    //     ? prepareQuantityOverlayOperations(
+                    //           sideboardImages,
+                    //           cardsPerRow,
+                    //           quantityAssets,
+                    //           options.imageSize,
+                    //           options.imageOrientation,
+                    //           options.imageVariant,
+                    //           mainDeckRowHeight
+                    //       )
+                    //     : []
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -239,19 +264,37 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
+                    const allCardOperations = prepareCardOperations(
+                        successfulImages,
+                        cardDimensions,
+                        options.imageVariant,
+                        options.imageSize
+                    )
+
+                    const allOverlayOperations = options.includeCardCount
+                        ? prepareQuantityOverlayOperations(
+                              successfulImages,
+                              cardDimensions,
+                              quantityAssets,
+                              options.imageVariant,
+                              options.imageSize
+                          )
+                        : []
+
                     // Create the composite image
-                    const allCardOperations = [
-                        ...mainOperations,
-                        ...sideboardOperations
-                    ]
-                    const allOverlayOperations = [
-                        ...mainOverlayOperations,
-                        ...sideboardOverlayOperations
-                    ]
+                    // const allCardOperations = [
+                    //     ...mainOperations,
+                    //     ...sideboardOperations
+                    // ]
+                    // const allOverlayOperations: sharp.OverlayOptions[] = [
+                    //     ...mainOverlayOperations,
+                    //     ...sideboardOverlayOperations
+                    // ]
                     const outputBuffer = await createCompositeImage(
                         canvas,
                         allCardOperations,
-                        allOverlayOperations
+                        allOverlayOperations,
+                        options.fileType
                     )
 
                     console.log(
@@ -261,7 +304,7 @@ export async function POST(request: NextRequest) {
                     )
                     console.log(
                         chalk.cyan(
-                            `Canvas size: ${canvasWidth}x${canvasHeight}`
+                            `Canvas size: ${canvasDimensions.width}x${canvasDimensions.height}`
                         )
                     )
                     console.log(
@@ -280,8 +323,8 @@ export async function POST(request: NextRequest) {
                                 type: 'complete',
                                 result: {
                                     imageData: base64Image,
-                                    width: canvasWidth,
-                                    height: canvasHeight,
+                                    width: canvasDimensions.width,
+                                    height: canvasDimensions.height,
                                     cardCount: successfulImages.length
                                 },
                                 message: `Generated deck image with ${successfulImages.length} cards`
