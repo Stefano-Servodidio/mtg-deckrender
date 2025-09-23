@@ -1,3 +1,4 @@
+/* eslint-disable unused-imports/no-unused-vars */
 export interface CardImageBuffer {
     name: string
     groupId: number
@@ -14,3 +15,9 @@ export type Dimensions = {
     }
     scale?: number
 }
+
+export type ProgressCallback = (
+    current: number,
+    total: number,
+    cardName: string
+) => void
