@@ -2,6 +2,7 @@
 // This file contains logic moved from the cards API route to separate data processing concerns
 
 import { CardItem } from '@/app/types/api'
+import { ScryfallCard } from '@/app/types/scryfall'
 
 /**
  * Parse a decklist string and split it into main deck and sideboard sections
@@ -83,7 +84,7 @@ export function getUniqueCards(
  * Create a CardItem object from Scryfall API response data
  */
 export function createCardItem(
-    scryfallData: any,
+    scryfallData: ScryfallCard,
     quantity: number,
     groupId: number
 ): CardItem {

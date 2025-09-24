@@ -158,6 +158,21 @@ export async function POST(request: NextRequest) {
                                 quantity,
                                 groupId
                             )
+                            if (cardData.image_uri === null) {
+                                errors.push(name)
+                                controller.enqueue(
+                                    new TextEncoder().encode(
+                                        `data: ${JSON.stringify({
+                                            type: 'progress',
+                                            current: i + 1,
+                                            total: totalCards,
+                                            message: `No image available for ${name}`,
+                                            error: name
+                                        })}\n\n`
+                                    )
+                                )
+                                continue
+                            }
                             cards.push(cardData)
 
                             // Cache the card data for 24 hours

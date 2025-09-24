@@ -56,14 +56,28 @@ export default function Create() {
     // Handle cards fetch completion
     React.useEffect(() => {
         if (cardsData && !isLoadingCards && !cardsError) {
-            toast({
-                title: 'Decklist uploaded!',
-                description: `Cards fetched successfully. Found ${cardsData.cards?.length || 0} unique cards.`,
-                status: 'success',
-                duration: 3000,
-                isClosable: true
-            })
-            // Move to configure section after successful upload
+            if (cardsData?.errors?.length) {
+                toast({
+                    title: 'Some cards were not found',
+                    description: `Fetched ${
+                        cardsData.cards?.length || 0
+                    } unique cards. ${cardsData.errors.length} cards could not be found:\n${cardsData.errors
+                        .map((e: string) => `- ${e}`)
+                        .join('\n')}`,
+                    status: 'warning',
+                    duration: 5000,
+                    isClosable: true
+                })
+            } else {
+                toast({
+                    title: 'Decklist uploaded!',
+                    description: `Cards fetched successfully. Found ${cardsData.cards?.length || 0} unique cards.`,
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true
+                })
+                // Move to configure section after successful upload
+            }
             setAccordionIndex([1])
         } else if (cardsError && !isLoadingCards) {
             toast({

@@ -9,7 +9,6 @@ import {
     useColorModeValue,
     VStack,
     Progress,
-    Tooltip,
     Icon
 } from '@chakra-ui/react'
 import { FaInfoCircle, FaUpload } from 'react-icons/fa'
@@ -62,30 +61,22 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         >
                             Paste Decklist Text
                         </Text>
-                        <Tooltip
-                            label='Paste the decklist list one card per line, with the
-                        quantity and cardname (e.g. "2x Llanowar
-                        Elves", "1 Black Lotus").
-                        <br /> You can add a sideboard by including an empty
-                        line. Works with or without the keyword
-                        "SIDEBOARD".'
-                            placement="bottom"
-                            hasArrow
-                        >
-                            <Box width={4} height={'min-content'}>
-                                <Icon
-                                    as={FaInfoCircle}
-                                    width={4}
-                                    height={4}
-                                    color={'orange.500'}
-                                />
-                            </Box>
-                        </Tooltip>
+
+                        <Box width={4} height={'min-content'}>
+                            <Icon
+                                as={FaInfoCircle}
+                                width={4}
+                                height={4}
+                                color={'orange.500'}
+                            />
+                        </Box>
                     </HStack>
                     <Textarea
                         value={decklistText}
                         onChange={(e) => setDecklistText(e.target.value)}
-                        placeholder="Paste your decklist here..."
+                        placeholder={
+                            'Paste the decklist list one card per line, with the quantity and cardname (e.g. "2x Llanowar Elves", "1 Black Lotus").\nYou can add a sideboard by including an empty line. Works with or without the keyword "SIDEBOARD".'
+                        }
                         size="lg"
                         minH="300px"
                         bg={useColorModeValue('gray.50', 'gray.700')}
@@ -115,6 +106,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         <DropZone
                             onFileUpload={handleFileUpload}
                             colorScheme="orange"
+                            wrapperProps={{ h: '300px' }}
                         />
                     </Box>
                 </VStack>

@@ -5,8 +5,9 @@ import path from 'path'
 import fs from 'fs/promises'
 import sharp from 'sharp'
 import { CardImageBuffer, Dimensions } from '../_types'
-import { DECK_LAYOUT_CONFIG, ROW_SIZE, calculateRowHeight } from './config'
+import { DECK_LAYOUT_CONFIG, ROW_SIZE } from './config'
 import { ImageSize, ImageVariant, BackgroundStyle } from '@/app/types/api'
+import { calculateRowHeight } from './processing'
 
 /**
  * Load an asset file as a buffer
@@ -17,32 +18,15 @@ export async function getAssetBuffer(filename: string): Promise<Buffer> {
 }
 
 /**
- * Load quantity overlay assets
- */
-export async function loadQuantityOverlayAssets(): Promise<{
-    [key: number]: Buffer
-}> {
-    const x1Buffer = await getAssetBuffer('x1.png')
-    const x2Buffer = await getAssetBuffer('x2.png')
-    const x3Buffer = await getAssetBuffer('x3.png')
-    const x4Buffer = await getAssetBuffer('x4.png')
-
-    return {
-        1: x1Buffer,
-        2: x2Buffer,
-        3: x3Buffer,
-        4: x4Buffer
-    }
-}
-
-/**
  * Calculate position for a card in the grid based on layout settings
  */
 function calculateCardPosition(
     index: number,
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
-    imageSize?: ImageSize
+    imageSize?: ImageSize,
+    topModifier?: number,
+    leftModifier?: number
     // mainDeckRowHeight?: number
 ): { left: number; top: number } {
     const {
@@ -56,9 +40,13 @@ function calculateCardPosition(
     const row = Math.floor(index / cardsPerRow)
     const col = index % cardsPerRow
 
+    const yMod = topModifier ? topModifier : 0
+    const xMod = leftModifier ? leftModifier : 0
+
     const leftPosition =
-        canvasPadding + col * (cardDimensions.width + betweenCards)
-    const baseTopPosition = canvasPadding + row * (rowHeight + betweenCards)
+        canvasPadding + col * (cardDimensions.width + betweenCards) + xMod
+    const baseTopPosition =
+        canvasPadding + row * (rowHeight + betweenCards) + yMod
 
     // Add extra spacing for sideboard
     // const sideboardOffset =
@@ -102,56 +90,8 @@ export function prepareCardOperations(
     })
 }
 
-/**
- * Calculate position for quantity overlay based on layout settings
- */
-function calculateOverlayPosition(
-    index: number,
-    cardDimensions: Dimensions,
-    // isMainDeck: boolean,
-    imageVariant?: ImageVariant,
-    imageSize?: ImageSize
-    // mainDeckRowHeight?: number
-): { left: number; top: number } {
-    const { spacing, overlay } = DECK_LAYOUT_CONFIG
-    const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
-    // const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
-    const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
-
-    const row = Math.floor(index / cardsPerRow)
-    const col = index % cardsPerRow
-
-    // Scale overlay offset based on card scale
-    // const scaleRatio = cardDimensions.width / DECK_LAYOUT_CONFIG.card.baseWidth
-    const scaledOverlayOffsetFromRight =
-        overlay.offsetFromRight * cardDimensions.scale!
-
-    const scaledOverlayOffsetFromTop =
-        overlay.offsetFromTop * cardDimensions.scale!
-
-    const leftPosition =
-        spacing.canvasPadding +
-        col * (cardDimensions.width + spacing.betweenCards) +
-        cardDimensions.width -
-        scaledOverlayOffsetFromRight
-
-    const baseTopPosition =
-        spacing.canvasPadding +
-        row * (rowHeight + spacing.betweenCards) +
-        scaledOverlayOffsetFromTop
-
-    // Add extra spacing for sideboard
-    // const sideboardOffset =
-    //     !isMainDeck && mainDeckRowHeight !== undefined
-    //         ? mainDeckRowHeight + rowHeight + spacing.sideboardSeparator
-    //         : 0
-
-    return {
-        left: leftPosition,
-        // top: baseTopPosition + sideboardOffset
-        top: baseTopPosition
-    }
-}
+const svgCount = (count: number, scale: number) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${125 * scale}" height="${125 * scale}" viewBox="0 0 ${125 * scale} ${125 * scale}" role="img" aria-label="x${count} box"><defs><style>@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700");</style></defs><rect x="0" y="0" width="${125 * scale}" height="${125 * scale}" rx="4" ry="4" fill="#000000"/><text x="50%" y="50%" fill="#FFFFFF" font-size="${60 * scale}" font-family="Inter, system-ui, sans-serif" font-weight="bold" text-anchor="middle" dominant-baseline="middle">x${count}</text></svg>`
 
 /**
  * Prepare quantity overlay operations for Sharp
@@ -159,27 +99,38 @@ function calculateOverlayPosition(
 export function prepareQuantityOverlayOperations(
     images: CardImageBuffer[],
     cardDimensions: Dimensions,
-    quantityAssets: { [key: number]: Buffer },
     imageVariant?: ImageVariant,
     imageSize?: ImageSize
     // mainDeckRowHeight?: number
 ): any[] {
+    const { overlay } = DECK_LAYOUT_CONFIG
+    const scaledOverlayOffsetFromRight =
+        overlay.offsetFromRight * cardDimensions.scale!
+
+    const scaledOverlayOffsetFromTop =
+        overlay.offsetFromTop * cardDimensions.scale!
+
+    const leftModifier = cardDimensions.width - scaledOverlayOffsetFromRight
+
+    const topModifier = scaledOverlayOffsetFromTop
+
     return images
         .map((imageData, index) => {
             if (imageData.quantity < 2) return null // No overlay for single cards
-
-            // const isMainDeck = imageData.groupId === 0
-            const { left, top } = calculateOverlayPosition(
+            const { left, top } = calculateCardPosition(
                 index,
                 cardDimensions,
                 // isMainDeck,
                 imageVariant,
-                imageSize
+                imageSize,
+                topModifier,
+                leftModifier
                 // mainDeckRowHeight
             )
             // return position rounded to avoid subpixel rendering issues
+            let svgOverlay = svgCount(imageData.quantity, cardDimensions.scale!)
             return {
-                input: quantityAssets[imageData.quantity] || quantityAssets[1],
+                input: Buffer.from(svgOverlay),
                 left: Math.floor(left),
                 top: Math.floor(top)
             }

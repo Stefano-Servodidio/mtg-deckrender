@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import chalk from 'chalk'
 import {
     calculateCanvasDimensions,
-    calculateCardDimensions
-} from './_utils/config'
-import { sortCards } from './_utils/processing'
+    calculateCardDimensions,
+    sortCards
+} from './_utils/processing'
 import {
     prepareCardOperations,
     createCanvas,
     createCompositeImage,
-    loadQuantityOverlayAssets,
     prepareQuantityOverlayOperations
 } from './_utils/compositing'
 import { DeckPngOptions, DeckPngRequest } from '@/app/types/api'
@@ -200,11 +199,6 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Load quantity overlay assets (conditionally based on includeCardCount)
-                    const quantityAssets = options.includeCardCount
-                        ? await loadQuantityOverlayAssets()
-                        : {}
-
                     // Calculate row height for sideboard positioning
                     // const rowHeight = calculateRowHeight(
                     //     options.imageVariant,
@@ -275,7 +269,6 @@ export async function POST(request: NextRequest) {
                         ? prepareQuantityOverlayOperations(
                               successfulImages,
                               cardDimensions,
-                              quantityAssets,
                               options.imageVariant,
                               options.imageSize
                           )

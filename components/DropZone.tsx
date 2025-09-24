@@ -1,6 +1,13 @@
 'use client'
 
-import { Box, VStack, Text, Icon, useColorModeValue } from '@chakra-ui/react'
+import {
+    Box,
+    VStack,
+    Text,
+    Icon,
+    useColorModeValue,
+    BoxProps
+} from '@chakra-ui/react'
 import {
     useDropzone,
     DropzoneProps as ReactDropzoneProps
@@ -11,11 +18,13 @@ import { FaCloudUploadAlt, FaFileAlt } from 'react-icons/fa'
 interface DropZoneProps extends Omit<ReactDropzoneProps, 'onDrop'> {
     onFileUpload: (_files: File[]) => void
     colorScheme?: string
+    wrapperProps?: BoxProps
 }
 
 export function DropZone({
     onFileUpload,
-    colorScheme = 'purple'
+    colorScheme = 'purple',
+    wrapperProps
 }: DropZoneProps) {
     const onDrop = useCallback(
         (acceptedFiles: File[]) => {
@@ -53,6 +62,7 @@ export function DropZone({
                 transform: 'scale(1.01)'
             }}
             textAlign="center"
+            {...wrapperProps}
         >
             <input {...getInputProps()} />
             <VStack spacing={4}>
