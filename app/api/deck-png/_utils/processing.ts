@@ -12,6 +12,7 @@ import {
 } from '@/app/types/api'
 import { CardImageBuffer, Dimensions } from '../_types'
 import { DECK_LAYOUT_CONFIG, ROW_SIZE, CANVAS_SIZE } from './config'
+import sharp from 'sharp'
 
 /**
  * Calculate card dimensions based on image size and orientation settings
@@ -20,35 +21,39 @@ export function calculateCardDimensions(
     validImagesCount: number,
     canvasSize: Dimensions,
     imageSize?: ImageSize,
-    imageVariant?: ImageVariant
+    imageVariant?: ImageVariant,
+    groupIds?: number[]
 ): Dimensions {
     const { width: canvasWidth, height: canvasHeight } = canvasSize
+    const { card, row, spacing } = DECK_LAYOUT_CONFIG
+    const baseWidth = card.baseWidth
+    const baseHeight = card.baseHeight
 
-    const baseWidth = DECK_LAYOUT_CONFIG.card.baseWidth
-    const baseHeight = DECK_LAYOUT_CONFIG.card.baseHeight
+    // Calculate available space on canvas
+    // Subtract padding and space for group separators
+    const availableWidth = canvasWidth - 2 * spacing.canvasPadding
 
-    const availableWidth =
-        canvasWidth - 2 * DECK_LAYOUT_CONFIG.spacing.canvasPadding
     const availableHeight =
-        canvasHeight - 2 * DECK_LAYOUT_CONFIG.spacing.canvasPadding
+        canvasHeight -
+        2 * spacing.canvasPadding -
+        spacing.groupSeparator * (groupIds?.length || 0)
 
     const totalRows = Math.ceil(
         validImagesCount / ROW_SIZE[imageSize || 'ig_square']
     )
 
-    const cardHeightMultiplier =
-        DECK_LAYOUT_CONFIG.row.heightMultiplier[imageVariant || 'default']
+    const cardHeightMultiplier = row.heightMultiplier[imageVariant || 'default']
 
     // Calculate max card dimensions to fit in the canvas
     const maxCardWidth =
         availableWidth / ROW_SIZE[imageSize || 'ig_square'] -
-        DECK_LAYOUT_CONFIG.spacing.betweenCards
+        spacing.betweenCards
 
     // last row is always fully visible, so we calculate based on that
     const maxRawHeight =
         availableHeight / ((totalRows - 1) * cardHeightMultiplier + 1)
 
-    const maxCardHeight = maxRawHeight - DECK_LAYOUT_CONFIG.spacing.betweenCards
+    const maxCardHeight = maxRawHeight - spacing.betweenCards
 
     // Maintain aspect ratio based on base card dimensions
     let scale = 1 // Default scale
@@ -155,32 +160,51 @@ export function sortCards(
 }
 
 /**
+ * resize downloaded images to target dimensions
+ */
+export async function resizeImages(
+    images: CardImageBuffer[],
+    cardDimensions: Dimensions
+): Promise<CardImageBuffer[]> {
+    return Promise.all(
+        images.map(async (img) => {
+            if (!img.buffer) return img
+            const resizedBuffer = await sharp(img.buffer)
+                .resize({
+                    width: Math.round(cardDimensions.width),
+                    height: Math.round(cardDimensions.height)
+                })
+                .toBuffer()
+            return {
+                ...img,
+                buffer: resizedBuffer
+            }
+        })
+    )
+}
+
+/**
  * Calculate layout metrics for the image grid
  */
 export function calculateLayoutMetrics(
-    successfulImages: CardImageBuffer[],
-    cardsPerRow: number
+    images: CardImageBuffer[],
+    imageSize: ImageSize | undefined
 ): {
-    mainImages: CardImageBuffer[]
-    sideboardImages: CardImageBuffer[]
-    totalMainRows: number
-    totalSideboardRows: number
-    hasSideboard: boolean
+    groups: CardImageBuffer[][]
+    rowsPerGroup: { [groupId: number]: number }
 } {
-    const mainImages = successfulImages.filter((img) => img.groupId === 0)
-    const sideboardImages = successfulImages.filter((img) => img.groupId !== 0)
+    const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
+    const groups = Object.groupBy(images, (img) => img.groupId)
 
-    const hasSideboard = sideboardImages.length > 0
-    const totalMainRows = Math.ceil(mainImages.length / cardsPerRow)
-    const totalSideboardRows = hasSideboard
-        ? Math.ceil(sideboardImages.length / cardsPerRow)
-        : 0
+    const rowsPerGroup: { [groupId: number]: number } = {}
+    for (const [groupId, groupImages] of Object.entries(groups)) {
+        rowsPerGroup[Number(groupId)] = Math.ceil(
+            groupImages.length / cardsPerRow
+        )
+    }
 
     return {
-        mainImages,
-        sideboardImages,
-        totalMainRows,
-        totalSideboardRows,
-        hasSideboard
+        groups: Array.from(Object.values(groups)) as CardImageBuffer[][],
+        rowsPerGroup
     }
 }

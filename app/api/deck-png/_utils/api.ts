@@ -1,15 +1,13 @@
 import { CardItem } from '@/app/types/api'
 import chalk from 'chalk'
-import sharp from 'sharp'
-import { Dimensions, CardImageBuffer, ProgressCallback } from '../_types'
+import { CardImageBuffer, ProgressCallback } from '../_types'
 
 /**
  * Download and resize a single card image based on size settings
  */
 export async function downloadAndResizeCardImage(
-    card: CardItem,
-    cardDimensions: Dimensions
-): Promise<CardImageBuffer | null> {
+    card: CardItem
+): Promise<CardImageBuffer> {
     try {
         const response = await fetch(card.image_uri as string, {
             headers: {
@@ -21,17 +19,11 @@ export async function downloadAndResizeCardImage(
         }
 
         const buffer = await response.arrayBuffer()
-        const resizedBuffer = await sharp(Buffer.from(buffer))
-            .resize({
-                width: Math.round(cardDimensions.width),
-                height: Math.round(cardDimensions.height)
-            })
-            .toBuffer()
 
         return {
             name: card.name,
             groupId: card.groupId,
-            buffer: resizedBuffer,
+            buffer: Buffer.from(buffer),
             quantity: card.quantity
         }
     } catch (error) {
@@ -39,7 +31,12 @@ export async function downloadAndResizeCardImage(
             chalk.red(`Error fetching image for ${card.name}:`),
             error
         )
-        return null
+        return {
+            name: card.name,
+            groupId: card.groupId,
+            buffer: null,
+            quantity: card.quantity
+        }
     }
 }
 
@@ -48,10 +45,10 @@ export async function downloadAndResizeCardImage(
  */
 export async function downloadAllCardImages(
     cards: CardItem[],
-    cardDimensions: Dimensions,
     progressCallback?: ProgressCallback
-): Promise<CardImageBuffer[]> {
-    const cardImageBuffers: (CardImageBuffer | null)[] = []
+): Promise<[CardImageBuffer[], CardImageBuffer[]]> {
+    const successfulImages: CardImageBuffer[] = []
+    const failedImages: CardImageBuffer[] = []
     const totalImages = cards.length
 
     for (let i = 0; i < cards.length; i++) {
@@ -61,15 +58,11 @@ export async function downloadAllCardImages(
             progressCallback(i + 1, totalImages, card.name)
         }
 
-        const cardBuffer = await downloadAndResizeCardImage(
-            card,
-            cardDimensions
-        )
-        cardImageBuffers.push(cardBuffer)
+        const cardBuffer = await downloadAndResizeCardImage(card)
+        if (cardBuffer?.buffer) successfulImages.push(cardBuffer)
+        else failedImages.push(cardBuffer)
     }
 
     // Filter out failed downloads
-    return cardImageBuffers.filter(
-        (img): img is CardImageBuffer => img !== null
-    )
+    return [successfulImages, failedImages]
 }

@@ -2,7 +2,7 @@
 export interface CardImageBuffer {
     name: string
     groupId: number
-    buffer: Buffer
+    buffer: Buffer | null
     quantity: number
 }
 

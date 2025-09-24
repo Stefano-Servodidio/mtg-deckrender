@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import {
     calculateCanvasDimensions,
     calculateCardDimensions,
+    resizeImages,
     sortCards
 } from './_utils/processing'
 import {
@@ -100,38 +101,25 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Create composite image using Sharp
-                    const canvasDimensions = calculateCanvasDimensions(
-                        options.imageSize,
-                        options.imageResolution
-                    )
-
-                    const cardDimensions = calculateCardDimensions(
-                        validCardImages?.length || 0,
-                        canvasDimensions,
-                        options.imageSize,
-                        options.imageVariant
-                    )
-
                     // Download all card images with progress tracking
-                    const successfulImages = await downloadAllCardImages(
-                        validCardImages,
-                        cardDimensions,
-                        (current, total, cardName) => {
-                            const progressPercentage =
-                                10 + Math.round((current / total) * 50) // 10-60%
-                            controller.enqueue(
-                                new TextEncoder().encode(
-                                    `data: ${JSON.stringify({
-                                        type: 'progress',
-                                        current: progressPercentage,
-                                        total: 100,
-                                        message: `Downloading image for ${cardName}...`
-                                    })}\n\n`
+                    const [successfulImages, failedImages] =
+                        await downloadAllCardImages(
+                            validCardImages,
+                            (current, total, cardName) => {
+                                const progressPercentage =
+                                    10 + Math.round((current / total) * 50) // 10-60%
+                                controller.enqueue(
+                                    new TextEncoder().encode(
+                                        `data: ${JSON.stringify({
+                                            type: 'progress',
+                                            current: progressPercentage,
+                                            total: 100,
+                                            message: `Downloading image for ${cardName}...`
+                                        })}\n\n`
+                                    )
                                 )
-                            )
-                        }
-                    )
+                            }
+                        )
 
                     if (successfulImages.length === 0) {
                         controller.enqueue(
@@ -147,6 +135,19 @@ export async function POST(request: NextRequest) {
                         return
                     }
 
+                    if (failedImages.length > 0) {
+                        controller.enqueue(
+                            new TextEncoder().encode(
+                                `data: ${JSON.stringify({
+                                    type: 'progress',
+                                    current: 60,
+                                    total: 100,
+                                    message: `Warning: Failed to download ${failedImages.length} images. Proceeding with ${successfulImages.length} images.`
+                                })}\n\n`
+                            )
+                        )
+                    }
+
                     controller.enqueue(
                         new TextEncoder().encode(
                             `data: ${JSON.stringify({
@@ -158,6 +159,29 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
+                    const canvasDimensions = calculateCanvasDimensions(
+                        options.imageSize,
+                        options.imageResolution
+                    )
+
+                    const cardDimensions = calculateCardDimensions(
+                        successfulImages?.length || 0,
+                        canvasDimensions,
+                        options.imageSize,
+                        options.imageVariant,
+                        successfulImages.reduce((prev, card) => {
+                            if (!prev.includes(card.groupId)) {
+                                prev.push(card.groupId)
+                            }
+                            return prev
+                        }, [] as number[])
+                    )
+
+                    const resizedImages = await resizeImages(
+                        successfulImages,
+                        cardDimensions
+                    )
+
                     // Calculate layout metrics
                     // const {
                     //     mainImages,
@@ -165,7 +189,7 @@ export async function POST(request: NextRequest) {
                     //     totalMainRows,
                     //     totalSideboardRows,
                     //     hasSideboard
-                    // } = calculateLayoutMetrics(successfulImages, cardsPerRow)
+                    // } = calculateLayoutMetrics(resizedImages, cardsPerRow)
 
                     // const totalRows =
                     //     totalMainRows + (hasSideboard ? totalSideboardRows : 0)
@@ -259,7 +283,7 @@ export async function POST(request: NextRequest) {
                     )
 
                     const allCardOperations = prepareCardOperations(
-                        successfulImages,
+                        resizedImages,
                         cardDimensions,
                         options.imageVariant,
                         options.imageSize
@@ -267,7 +291,7 @@ export async function POST(request: NextRequest) {
 
                     const allOverlayOperations = options.includeCardCount
                         ? prepareQuantityOverlayOperations(
-                              successfulImages,
+                              resizedImages,
                               cardDimensions,
                               options.imageVariant,
                               options.imageSize

@@ -30,7 +30,7 @@ function calculateCardPosition(
     // mainDeckRowHeight?: number
 ): { left: number; top: number } {
     const {
-        spacing: { betweenCards, canvasPadding, sideboardSeparator }
+        spacing: { betweenCards, canvasPadding, groupSeparator }
     } = DECK_LAYOUT_CONFIG
 
     // const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
@@ -71,23 +71,25 @@ export function prepareCardOperations(
     imageSize?: ImageSize
     // mainDeckRowHeight?: number
 ): sharp.OverlayOptions[] {
-    return images.map((imageData, index) => {
-        // const isMainDeck = imageData.groupId === 0
-        const { left, top } = calculateCardPosition(
-            index,
-            cardDimensions,
-            // isMainDeck,
-            imageVariant,
-            imageSize
-            // mainDeckRowHeight
-        )
-        // return position rounded to avoid subpixel rendering issues
-        return {
-            input: imageData.buffer,
-            left: Math.floor(left),
-            top: Math.floor(top)
-        }
-    })
+    return images
+        .map((imageData, index) => {
+            // const isMainDeck = imageData.groupId === 0
+            const { left, top } = calculateCardPosition(
+                index,
+                cardDimensions,
+                // isMainDeck,
+                imageVariant,
+                imageSize
+                // mainDeckRowHeight
+            )
+            // return position rounded to avoid subpixel rendering issues
+            return {
+                input: imageData.buffer!,
+                left: Math.floor(left),
+                top: Math.floor(top)
+            }
+        })
+        .filter((op) => op.input !== null)
 }
 
 const svgCount = (count: number, scale: number) =>
