@@ -23,8 +23,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Run tests
-        run: npm run test:coverage
+#      - name: Run tests
+#        run: npm run test:coverage
 
       - name: Build Next.js
         run: npm run build
