@@ -149,7 +149,11 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                 options={[
                                     { label: 'Grid', value: 'grid' },
                                     { label: 'Spoiler', value: 'spoiler' },
-                                    { label: 'Stacks', value: 'stacks' }
+                                    {
+                                        label: 'Stacks',
+                                        value: 'stacks',
+                                        disabled: true
+                                    }
                                 ]}
                                 value={form.imageVariant}
                                 onChange={(val) =>
@@ -167,18 +171,22 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                         value: 'transparent'
                                     },
                                     { label: 'White', value: 'white' },
-                                    { label: 'Custom', value: 'custom' }
+                                    {
+                                        label: 'Custom',
+                                        value: 'custom',
+                                        disabled: true
+                                    }
                                 ]}
                                 value={form.backgroundStyle}
                                 onChange={(val) =>
                                     updateForm('backgroundStyle', val)
                                 }
-                                mb={4}
                             />
                             {form.backgroundStyle === 'custom' && (
                                 <DropZone
                                     onFileUpload={() => {}}
                                     colorScheme="blue"
+                                    wrapperProps={{ mt: 4 }}
                                 />
                             )}
                         </FilterItem.Wrapper>

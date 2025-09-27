@@ -25,6 +25,9 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                         border="1px solid"
                         borderColor="gray.200"
                         maxW="400px"
+                        // Add checkered background for transparency indication
+                        backgroundImage="repeating-conic-gradient(#f0f0f0 0% 25%, transparent 0% 50%)"
+                        backgroundSize="20px 20px"
                     >
                         <Image
                             src={generatedImage}

@@ -8,10 +8,9 @@ import {
     Textarea,
     useColorModeValue,
     VStack,
-    Progress,
-    Icon
+    Progress
 } from '@chakra-ui/react'
-import { FaInfoCircle, FaUpload } from 'react-icons/fa'
+import { FaUpload } from 'react-icons/fa'
 
 interface ProgressInfo {
     current: number
@@ -48,29 +47,14 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 flexWrap="wrap"
             >
                 <Box w={{ base: 'full', md: 'auto' }} h="full" flex={1}>
-                    <HStack
-                        spacing={2}
+                    <Text
+                        fontWeight="semibold"
+                        color="gray.700"
+                        w="fit-content"
                         mb={3}
-                        justify={'flex-start'}
-                        align={'center'}
                     >
-                        <Text
-                            fontWeight="semibold"
-                            color="gray.700"
-                            w="fit-content"
-                        >
-                            Paste Decklist Text
-                        </Text>
-
-                        <Box width={4} height={'min-content'}>
-                            <Icon
-                                as={FaInfoCircle}
-                                width={4}
-                                height={4}
-                                color={'orange.500'}
-                            />
-                        </Box>
-                    </HStack>
+                        Paste Decklist Text
+                    </Text>
                     <Textarea
                         value={decklistText}
                         onChange={(e) => setDecklistText(e.target.value)}

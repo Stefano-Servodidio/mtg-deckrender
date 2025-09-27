@@ -17,15 +17,13 @@ import {
     Box
 } from '@chakra-ui/react'
 import React from 'react'
-
 export interface FilterItemProps {
     label?: string
     name: string
-    options?: { label: string; value: string }[]
+    options?: { label: string; value: string; disabled?: boolean }[]
 }
 
 const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
-    label,
     options,
     colorScheme = 'purple',
     ...props
@@ -42,6 +40,10 @@ const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
                         {...(props.value === option.value && {
                             bg: colorScheme + '.500',
                             color: 'white'
+                        })}
+                        {...(option.disabled && {
+                            bg: 'gray.50',
+                            pointerEvents: 'none'
                         })}
                         _hover={
                             !(props.value === option.value)
@@ -61,6 +63,7 @@ const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
                                 cursor: 'pointer',
                                 color: 'grey'
                             }}
+                            disabled={option.disabled}
                         >
                             {option.label}
                         </ChakraRadio>
@@ -72,7 +75,6 @@ const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
 }
 
 const Select: React.FC<FilterItemProps & SelectProps> = ({
-    label,
     options,
     placeholder,
     ...props
@@ -80,7 +82,11 @@ const Select: React.FC<FilterItemProps & SelectProps> = ({
     return (
         <ChakraSelect placeholder={placeholder || 'Select option'} {...props}>
             {options?.map((option) => (
-                <option key={option.value} value={option.value}>
+                <option
+                    key={option.value}
+                    value={option.value}
+                    disabled={option.disabled}
+                >
                     {option.label}
                 </option>
             ))}
