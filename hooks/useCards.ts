@@ -14,7 +14,7 @@ interface UseCardsReturn {
     error: Error | null
     isLoading: boolean
     progress: ProgressInfo | null
-    fetchCards: (decklist: string) => Promise<void>
+    fetchCards: (_decklist: string) => Promise<void>
     reset: () => void
 }
 

@@ -2,11 +2,11 @@ import { useState, useCallback } from 'react'
 
 export interface FetchState<T> {
     data: T | null
-    setData: (data: T | null) => void
+    setData: (_data: T | null) => void
     error: Error | null
-    setError: (error: Error | null) => void
+    setError: (_error: Error | null) => void
     isLoading: boolean
-    setIsLoading: (isLoading: boolean) => void
+    setIsLoading: (_isLoading: boolean) => void
     reset: () => void
 }
 

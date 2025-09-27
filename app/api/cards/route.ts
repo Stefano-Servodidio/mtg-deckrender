@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
                                     })}\n\n`
                                 )
                             )
-                        } catch (fetchError) {
+                        } catch (_fetchError) {
                             // Fallback to mock data for demonstration
                             console.log(
                                 chalk.yellow(

@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 
 interface FetchCache<T> {
-    get: (key: string) => T | undefined
-    set: (key: string, value: T) => void
+    get: (_key: string) => T | undefined
+    set: (_key: string, _value: T) => void
     clear: () => void
     keys: () => string[]
 }

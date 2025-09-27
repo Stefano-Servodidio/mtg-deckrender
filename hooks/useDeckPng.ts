@@ -15,8 +15,8 @@ interface UseDeckPngReturn {
     isLoading: boolean
     progress: ProgressInfo | null
     generateImage: (
-        cards: CardItem[],
-        options?: DeckPngOptions
+        _cards: CardItem[],
+        _options?: DeckPngOptions
     ) => Promise<void>
     reset: () => void
 }
