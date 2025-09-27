@@ -165,34 +165,16 @@ export async function POST(request: NextRequest) {
                     )
 
                     const cardDimensions = calculateCardDimensions(
-                        successfulImages?.length || 0,
+                        successfulImages,
                         canvasDimensions,
                         options.imageSize,
-                        options.imageVariant,
-                        successfulImages.reduce((prev, card) => {
-                            if (!prev.includes(card.groupId)) {
-                                prev.push(card.groupId)
-                            }
-                            return prev
-                        }, [] as number[])
+                        options.imageVariant
                     )
 
                     const resizedImages = await resizeImages(
                         successfulImages,
                         cardDimensions
                     )
-
-                    // Calculate layout metrics
-                    // const {
-                    //     mainImages,
-                    //     sideboardImages,
-                    //     totalMainRows,
-                    //     totalSideboardRows,
-                    //     hasSideboard
-                    // } = calculateLayoutMetrics(resizedImages, cardsPerRow)
-
-                    // const totalRows =
-                    //     totalMainRows + (hasSideboard ? totalSideboardRows : 0)
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -223,53 +205,21 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    // Calculate row height for sideboard positioning
-                    // const rowHeight = calculateRowHeight(
-                    //     options.imageVariant,
-                    //     cardDimensions.height
-                    // )
-                    // const mainDeckRowHeight = rowHeight * totalMainRows
+                    const cardOperations = prepareCardOperations(
+                        resizedImages,
+                        cardDimensions,
+                        options.imageVariant,
+                        options.imageSize
+                    )
 
-                    // Prepare card composite operations
-                    // const mainOperations = prepareCardOperations(
-                    //     mainImages,
-                    //     cardsPerRow,
-                    //     options.imageSize,
-                    //     options.imageOrientation,
-                    //     options.imageVariant
-                    // )
-                    // const sideboardOperations = prepareCardOperations(
-                    //     sideboardImages,
-                    //     cardsPerRow,
-                    //     options.imageSize,
-                    //     options.imageOrientation,
-                    //     options.imageVariant,
-                    //     mainDeckRowHeight
-                    // )
-
-                    // Prepare quantity overlay operations (only if includeCardCount is true)
-                    // const mainOverlayOperations = options.includeCardCount
-                    //     ? prepareQuantityOverlayOperations(
-                    //           mainImages,
-                    //           cardsPerRow,
-                    //           quantityAssets,
-                    //           options.imageSize,
-                    //           options.imageOrientation,
-                    //           options.imageVariant
-                    //       )
-                    //     : []
-
-                    // const sideboardOverlayOperations = options.includeCardCount
-                    //     ? prepareQuantityOverlayOperations(
-                    //           sideboardImages,
-                    //           cardsPerRow,
-                    //           quantityAssets,
-                    //           options.imageSize,
-                    //           options.imageOrientation,
-                    //           options.imageVariant,
-                    //           mainDeckRowHeight
-                    //       )
-                    //     : []
+                    const overlayOperations = options.includeCardCount
+                        ? prepareQuantityOverlayOperations(
+                              resizedImages,
+                              cardDimensions,
+                              options.imageVariant,
+                              options.imageSize
+                          )
+                        : []
 
                     controller.enqueue(
                         new TextEncoder().encode(
@@ -282,35 +232,10 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
-                    const allCardOperations = prepareCardOperations(
-                        resizedImages,
-                        cardDimensions,
-                        options.imageVariant,
-                        options.imageSize
-                    )
-
-                    const allOverlayOperations = options.includeCardCount
-                        ? prepareQuantityOverlayOperations(
-                              resizedImages,
-                              cardDimensions,
-                              options.imageVariant,
-                              options.imageSize
-                          )
-                        : []
-
-                    // Create the composite image
-                    // const allCardOperations = [
-                    //     ...mainOperations,
-                    //     ...sideboardOperations
-                    // ]
-                    // const allOverlayOperations: sharp.OverlayOptions[] = [
-                    //     ...mainOverlayOperations,
-                    //     ...sideboardOverlayOperations
-                    // ]
                     const outputBuffer = await createCompositeImage(
                         canvas,
-                        allCardOperations,
-                        allOverlayOperations,
+                        cardOperations,
+                        overlayOperations,
                         options.fileType
                     )
 

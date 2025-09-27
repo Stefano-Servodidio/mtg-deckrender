@@ -27,13 +27,11 @@ function calculateCardPosition(
     imageSize?: ImageSize,
     topModifier?: number,
     leftModifier?: number
-    // mainDeckRowHeight?: number
 ): { left: number; top: number } {
     const {
-        spacing: { betweenCards, canvasPadding, groupSeparator }
+        spacing: { betweenCards, canvasPadding }
     } = DECK_LAYOUT_CONFIG
 
-    // const cardDimensions = calculateCardDimensions(imageSize, imageOrientation)
     const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
     const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
 
@@ -48,15 +46,8 @@ function calculateCardPosition(
     const baseTopPosition =
         canvasPadding + row * (rowHeight + betweenCards) + yMod
 
-    // Add extra spacing for sideboard
-    // const sideboardOffset =
-    //     !isMainDeck && mainDeckRowHeight !== undefined
-    //         ? mainDeckRowHeight + rowHeight + sideboardSeparator
-    //         : 0
-
     return {
         left: leftPosition,
-        // top: baseTopPosition + sideboardOffset
         top: baseTopPosition
     }
 }
@@ -69,18 +60,36 @@ export function prepareCardOperations(
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
     imageSize?: ImageSize
-    // mainDeckRowHeight?: number
 ): sharp.OverlayOptions[] {
+    let separator = DECK_LAYOUT_CONFIG.spacing.groupSeparator
+
+    if (imageVariant === 'grid') {
+        separator +=
+            cardDimensions.height *
+            (1 - DECK_LAYOUT_CONFIG.row.heightMultiplier.grid)
+    }
+
+    let processedGroups: Set<number> = new Set()
+    let cardIndex = -1
     return images
-        .map((imageData, index) => {
-            // const isMainDeck = imageData.groupId === 0
+        .map((imageData) => {
+            if (!processedGroups.has(imageData.groupId)) {
+                // Skip to the next row when a new group is encountered
+                const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
+                cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
+            } else {
+                cardIndex += 1
+            }
+
+            processedGroups.add(imageData.groupId)
+
+            const topModifier = (processedGroups.size - 1) * separator
             const { left, top } = calculateCardPosition(
-                index,
+                cardIndex,
                 cardDimensions,
-                // isMainDeck,
                 imageVariant,
-                imageSize
-                // mainDeckRowHeight
+                imageSize,
+                topModifier
             )
             // return position rounded to avoid subpixel rendering issues
             return {
@@ -103,9 +112,17 @@ export function prepareQuantityOverlayOperations(
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
     imageSize?: ImageSize
-    // mainDeckRowHeight?: number
 ): any[] {
     const { overlay } = DECK_LAYOUT_CONFIG
+
+    let separator = DECK_LAYOUT_CONFIG.spacing.groupSeparator
+
+    if (imageVariant === 'grid') {
+        separator +=
+            cardDimensions.height *
+            (1 - DECK_LAYOUT_CONFIG.row.heightMultiplier.grid)
+    }
+
     const scaledOverlayOffsetFromRight =
         overlay.offsetFromRight * cardDimensions.scale!
 
@@ -114,20 +131,33 @@ export function prepareQuantityOverlayOperations(
 
     const leftModifier = cardDimensions.width - scaledOverlayOffsetFromRight
 
-    const topModifier = scaledOverlayOffsetFromTop
+    let processedGroups: Set<number> = new Set()
+    let cardIndex = -1
 
     return images
-        .map((imageData, index) => {
+        .map((imageData) => {
+            // Reset card index when a new group is encountered
+            if (!processedGroups.has(imageData.groupId)) {
+                const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
+                cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
+            } else {
+                cardIndex += 1
+            }
+
+            processedGroups.add(imageData.groupId)
+
             if (imageData.quantity < 2) return null // No overlay for single cards
+
+            const topModifier =
+                (processedGroups.size - 1) * separator +
+                scaledOverlayOffsetFromTop
             const { left, top } = calculateCardPosition(
-                index,
+                cardIndex,
                 cardDimensions,
-                // isMainDeck,
                 imageVariant,
                 imageSize,
                 topModifier,
                 leftModifier
-                // mainDeckRowHeight
             )
             // return position rounded to avoid subpixel rendering issues
             let svgOverlay = svgCount(imageData.quantity, cardDimensions.scale!)

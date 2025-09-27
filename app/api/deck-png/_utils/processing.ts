@@ -18,16 +18,27 @@ import sharp from 'sharp'
  * Calculate card dimensions based on image size and orientation settings
  */
 export function calculateCardDimensions(
-    validImagesCount: number,
+    images: CardImageBuffer[],
     canvasSize: Dimensions,
     imageSize?: ImageSize,
-    imageVariant?: ImageVariant,
-    groupIds?: number[]
+    imageVariant?: ImageVariant
 ): Dimensions {
     const { width: canvasWidth, height: canvasHeight } = canvasSize
     const { card, row, spacing } = DECK_LAYOUT_CONFIG
     const baseWidth = card.baseWidth
     const baseHeight = card.baseHeight
+    const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
+
+    let groups = new Map<number, CardImageBuffer[]>()
+    console.log(images)
+    images.forEach((card) => {
+        if (!groups.has(card.groupId)) {
+            groups.set(card.groupId, [])
+        }
+        groups.get(card.groupId)?.push(card)
+    })
+
+    const groupSpacerCount = groups.size > 1 ? groups.size - 1 : 0
 
     // Calculate available space on canvas
     // Subtract padding and space for group separators
@@ -36,11 +47,11 @@ export function calculateCardDimensions(
     const availableHeight =
         canvasHeight -
         2 * spacing.canvasPadding -
-        spacing.groupSeparator * (groupIds?.length || 0)
+        spacing.groupSeparator * groupSpacerCount
 
-    const totalRows = Math.ceil(
-        validImagesCount / ROW_SIZE[imageSize || 'ig_square']
-    )
+    const totalRows = Array.from(groups.values()).reduce((sum, group) => {
+        return sum + Math.ceil(group.length / rowSize)
+    }, 0)
 
     const cardHeightMultiplier = row.heightMultiplier[imageVariant || 'default']
 
@@ -49,9 +60,11 @@ export function calculateCardDimensions(
         availableWidth / ROW_SIZE[imageSize || 'ig_square'] -
         spacing.betweenCards
 
-    // last row is always fully visible, so we calculate based on that
+    // last row of each group is always fully visible, so we calculate based on that
     const maxRawHeight =
-        availableHeight / ((totalRows - 1) * cardHeightMultiplier + 1)
+        availableHeight /
+        ((totalRows - groupSpacerCount) * cardHeightMultiplier +
+            groupSpacerCount)
 
     const maxCardHeight = maxRawHeight - spacing.betweenCards
 
@@ -124,16 +137,20 @@ export function sortCards(
     sortDirection?: SortDirection
 ): CardItem[] {
     return cards.sort((a, b) => {
+        // Keep groups together
+        if (a.groupId !== b.groupId) {
+            return 0
+        }
         const key = sortBy && SORT_OPTION.includes(sortBy) ? sortBy : 'name'
         const direction = sortDirection === 'desc' ? -1 : 1
-        if (sortBy === 'rarity') {
+        if (key === 'rarity') {
             const rarityOrder = ['common', 'uncommon', 'rare', 'mythic']
             return (
                 (rarityOrder.indexOf(a.rarity) -
                     rarityOrder.indexOf(b.rarity)) *
                 direction
             )
-        } else if (sortBy === 'colors') {
+        } else if (key === 'colors') {
             const colorOrder = ['W', 'U', 'B', 'R', 'G', 'multi', 'colorless']
             const aColor = a.colors?.length
                 ? a.colors.length > 1
@@ -181,30 +198,4 @@ export async function resizeImages(
             }
         })
     )
-}
-
-/**
- * Calculate layout metrics for the image grid
- */
-export function calculateLayoutMetrics(
-    images: CardImageBuffer[],
-    imageSize: ImageSize | undefined
-): {
-    groups: CardImageBuffer[][]
-    rowsPerGroup: { [groupId: number]: number }
-} {
-    const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
-    const groups = Object.groupBy(images, (img) => img.groupId)
-
-    const rowsPerGroup: { [groupId: number]: number } = {}
-    for (const [groupId, groupImages] of Object.entries(groups)) {
-        rowsPerGroup[Number(groupId)] = Math.ceil(
-            groupImages.length / cardsPerRow
-        )
-    }
-
-    return {
-        groups: Array.from(Object.values(groups)) as CardImageBuffer[][],
-        rowsPerGroup
-    }
 }

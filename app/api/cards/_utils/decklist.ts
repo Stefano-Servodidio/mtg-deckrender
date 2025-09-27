@@ -4,6 +4,35 @@
 import { CardItem } from '@/app/types/api'
 import { ScryfallCard } from '@/app/types/scryfall'
 
+const decklistSeparators = [
+    '\n\n',
+    '\nSIDEBOARD\n',
+    '\nSideboard\n',
+    '\nsideboard\n',
+    '\nSIDEBOARD:\n',
+    '\nSideboard:\n',
+    '\nsideboard:\n',
+    '\nSB:\n',
+    '\nsb:\n',
+    '\nSB\n',
+    '\nSb\n',
+    '\nsb\n',
+    '\n--\n',
+    '\n\nSIDEBOARD\n',
+    '\n\nSideboard\n',
+    '\n\nsideboard\n',
+    '\n\nSIDEBOARD:\n',
+    '\n\nSideboard:\n',
+    '\n\nsideboard:\n',
+    '\n\nSB:\n',
+    '\n\nsb:\n',
+    '\n\nSB\n',
+    '\n\nSb\n',
+    '\n\nsb\n',
+    '\n\n--\n'
+]
+
+const decklistSeparatorRegex = new RegExp(decklistSeparators.join('|'), 'g')
 /**
  * Parse a decklist string and split it into main deck and sideboard sections
  * Supports multiple formats for sideboard separation
@@ -16,36 +45,8 @@ export function parseDecklist(decklist: string): string[] {
         parsedList = parsedList.slice(firstCharIndex)
     }
 
-    const separators = [
-        '\n\n',
-        '\nSIDEBOARD\n',
-        '\nSideboard\n',
-        '\nsideboard\n',
-        '\nSIDEBOARD:\n',
-        '\nSideboard:\n',
-        '\nsideboard:\n',
-        '\nSB:\n',
-        '\nsb:\n',
-        '\nSB\n',
-        '\nSb\n',
-        '\nsb\n',
-        '\n--\n',
-        '\n\nSIDEBOARD\n',
-        '\n\nSideboard\n',
-        '\n\nsideboard\n',
-        '\n\nSIDEBOARD:\n',
-        '\n\nSideboard:\n',
-        '\n\nsideboard:\n',
-        '\n\nSB:\n',
-        '\n\nsb:\n',
-        '\n\nSB\n',
-        '\n\nSb\n',
-        '\n\nsb\n',
-        '\n\n--\n'
-    ]
-    const separatorRegex = new RegExp(separators.join('|'), 'g')
     let groups: string[] = decklist
-        .split(separatorRegex)
+        .split(decklistSeparatorRegex)
         .map((section) => section.trim())
 
     return groups
