@@ -1,5 +1,3 @@
-'use client'
-
 import {
     Box,
     Container,
@@ -7,16 +5,19 @@ import {
     VStack,
     HStack,
     Link,
-    Divider,
-    useColorModeValue
+    Divider
+    // useColorModeValue
 } from '@chakra-ui/react'
-import { FaExternalLinkAlt } from 'react-icons/fa'
 
 export function Footer() {
-    const bg = useColorModeValue('gray.50', 'gray.900')
-    const borderColor = useColorModeValue('gray.200', 'gray.700')
-    const textColor = useColorModeValue('gray.600', 'gray.400')
-    const linkColor = useColorModeValue('purple.600', 'purple.400')
+    // const bg = useColorModeValue('gray.50', 'gray.900')
+    // const borderColor = useColorModeValue('gray.200', 'gray.700')
+    // const textColor = useColorModeValue('gray.600', 'gray.400')
+    // const linkColor = useColorModeValue('purple.600', 'purple.400')
+    const bg = 'gray.50'
+    const borderColor = 'gray.200'
+    const textColor = 'gray.600'
+    const linkColor = 'purple.600'
 
     return (
         <Box bg={bg} borderTop="1px solid" borderColor={borderColor} mt="auto">

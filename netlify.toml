@@ -1,0 +1,19 @@
+[dev]
+  command = "npm run dev"
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Force Next.js detection
+[context.production]
+  command = "npm run build"
+
+[context.deploy-preview]
+  command = "npm run build"

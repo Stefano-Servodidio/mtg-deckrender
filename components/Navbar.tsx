@@ -1,12 +1,10 @@
-'use client'
-
 import {
     Box,
     Container,
     Flex,
     Heading,
     Button,
-    useColorModeValue,
+    // useColorModeValue,
     HStack,
     MenuButton
 } from '@chakra-ui/react'
@@ -15,13 +13,15 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
-import { usePathname } from 'next/navigation'
 
 export function Navbar() {
-    const pathname = usePathname()
-    const bg = useColorModeValue('white', 'gray.800')
-    const borderColor = useColorModeValue('gray.200', 'gray.700')
-    const menuHighlightBg = useColorModeValue('purple.50', 'purple.900')
+    // const pathname = window?.location?.pathname
+    // const bg = useColorModeValue('white', 'gray.800')
+    // const borderColor = useColorModeValue('gray.200', 'gray.700')
+    // const menuHighlightBg = useColorModeValue('purple.50', 'purple.900')
+    const bg = 'white'
+    const borderColor = 'gray.200'
+    const menuHighlightBg = 'purple.50'
 
     return (
         <Box
@@ -89,7 +89,7 @@ export function Navbar() {
                         <Link href="/create" style={{ textDecoration: 'none' }}>
                             <Button
                                 variant="solid"
-                                colorScheme="purple"
+                                colorScheme="orange"
                                 leftIcon={<FaImage />}
                                 size="md"
                                 _hover={{
@@ -115,11 +115,9 @@ export function Navbar() {
                                 <Link href="/" passHref>
                                     <MenuItem
                                         icon={<FaHome />}
-                                        {...(pathname === '/' && {
-                                            fontWeight: 'bold',
-                                            color: 'purple.600',
-                                            backgroundColor: menuHighlightBg
-                                        })}
+                                        fontWeight="bold"
+                                        color={'purple.600'}
+                                        _hover={{ bg: 'purple.50' }}
                                     >
                                         Home
                                     </MenuItem>
@@ -127,11 +125,9 @@ export function Navbar() {
                                 <Link href="/create" passHref>
                                     <MenuItem
                                         icon={<FaImage />}
-                                        {...(pathname === '/create' && {
-                                            fontWeight: 'bold',
-                                            color: 'purple.600',
-                                            backgroundColor: menuHighlightBg
-                                        })}
+                                        fontWeight="bold"
+                                        color={'orange.600'}
+                                        _hover={{ bg: 'orange.50' }}
                                     >
                                         Create
                                     </MenuItem>

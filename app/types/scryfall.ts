@@ -85,6 +85,25 @@ export type ScryfallCard = {
     textless: boolean
     booster: boolean
     story_spotlight: boolean
+    card_faces?: Array<{
+        object: string
+        name: string
+        mana_cost: string
+        type_line: string
+        oracle_text: string
+        colors: string[]
+        artist: string
+        artist_id: string
+        illustration_id: string
+        image_uris: {
+            small: string
+            normal: string
+            large: string
+            png: string
+            art_crop: string
+            border_crop: string
+        }
+    }>
     prices: {
         usd: string | null
         usd_foil: string | null
