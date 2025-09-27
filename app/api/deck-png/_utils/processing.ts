@@ -30,15 +30,13 @@ export function calculateCardDimensions(
     const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
 
     let groups = new Map<number, CardImageBuffer[]>()
-    console.log(images)
+
     images.forEach((card) => {
         if (!groups.has(card.groupId)) {
             groups.set(card.groupId, [])
         }
         groups.get(card.groupId)?.push(card)
     })
-
-    const groupSpacerCount = groups.size > 1 ? groups.size - 1 : 0
 
     // Calculate available space on canvas
     // Subtract padding and space for group separators
@@ -47,7 +45,7 @@ export function calculateCardDimensions(
     const availableHeight =
         canvasHeight -
         2 * spacing.canvasPadding -
-        spacing.groupSeparator * groupSpacerCount
+        spacing.groupSeparator * (groups.size - 1)
 
     const totalRows = Array.from(groups.values()).reduce((sum, group) => {
         return sum + Math.ceil(group.length / rowSize)
@@ -63,8 +61,7 @@ export function calculateCardDimensions(
     // last row of each group is always fully visible, so we calculate based on that
     const maxRawHeight =
         availableHeight /
-        ((totalRows - groupSpacerCount) * cardHeightMultiplier +
-            groupSpacerCount)
+        ((totalRows - groups.size) * cardHeightMultiplier + groups.size)
 
     const maxCardHeight = maxRawHeight - spacing.betweenCards
 

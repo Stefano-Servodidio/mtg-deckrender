@@ -89,13 +89,20 @@ export function createCardItem(
     quantity: number,
     groupId: number
 ): CardItem {
+    let imageUri = null
+    if (scryfallData.card_faces && scryfallData.card_faces.length > 0) {
+        // If the card has multiple faces, use the front face's image
+        imageUri = scryfallData.card_faces[0].image_uris?.png || null
+    } else {
+        imageUri = scryfallData.image_uris?.png || null
+    }
     return {
         id: scryfallData.id,
         name: scryfallData.name,
         cmc: scryfallData.cmc,
         typeLine: scryfallData.type_line,
         rarity: scryfallData.rarity,
-        image_uri: scryfallData.image_uris?.png || null,
+        image_uri: imageUri,
         colors: scryfallData.colors,
         legalities: scryfallData.legalities,
         quantity,

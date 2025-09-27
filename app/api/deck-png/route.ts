@@ -29,11 +29,13 @@ const defaultOptions: DeckPngOptions = {
 export async function POST(request: NextRequest) {
     try {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/deck-png')))
+
         const { cards, options: requestOptions }: DeckPngRequest =
             await request.json()
 
         const options = { ...defaultOptions, ...(requestOptions || {}) }
-        console.log('Options:', options)
+        console.log(chalk.yellow('Options:', chalk.cyan(options)))
+
         if (!cards || !Array.isArray(cards)) {
             return NextResponse.json(
                 { error: 'Invalid request. Expected cards array.' },
