@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { DropZone } from '../DropZone'
 import { DropzoneState } from 'react-dropzone'

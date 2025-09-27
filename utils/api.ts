@@ -1,5 +1,3 @@
-import path from 'path'
-import fs from 'fs/promises'
 import { CardImageBuffer } from '../app/api/deck-png/_types'
 
 // Re-export functions from new utility files for backward compatibility

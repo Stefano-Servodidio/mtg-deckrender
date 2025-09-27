@@ -8,7 +8,7 @@ import {
     HStack,
     MenuButton
 } from '@chakra-ui/react'
-import { FaHome, FaImage, FaPlus } from 'react-icons/fa'
+import { FaHome, FaImage } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
@@ -21,7 +21,6 @@ export function Navbar() {
     // const menuHighlightBg = useColorModeValue('purple.50', 'purple.900')
     const bg = 'white'
     const borderColor = 'gray.200'
-    const menuHighlightBg = 'purple.50'
 
     return (
         <Box

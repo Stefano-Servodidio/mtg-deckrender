@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react'
-import { CardsResponse, CardItem } from '@/app/api/cards/_types'
 import { useFetchState } from './useFetchState'
-import { useFetchCache } from './useFetchCache'
+import { CardsResponse, CardItem } from '@/app/types/api'
 
 interface ProgressInfo {
     current: number

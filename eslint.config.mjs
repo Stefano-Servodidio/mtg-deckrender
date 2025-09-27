@@ -15,6 +15,21 @@ const compat = new FlatCompat({
 
 export default defineConfig([
     {
+        ignores: [
+            'node_modules/**',
+            '.next/**',
+            'out/**',
+            'build/**',
+            'dist/**',
+            '.git/**',
+            'coverage/**',
+            '*.config.js',
+            '*.config.mjs',
+            'public/**',
+            '.netlify/**'
+        ]
+    },
+    {
         extends: compat.extends('next/core-web-vitals'),
 
         plugins: {

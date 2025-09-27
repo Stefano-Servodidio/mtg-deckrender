@@ -6,7 +6,6 @@ import {
     Button,
     VStack,
     HStack,
-    Icon,
     Flex
 } from '@chakra-ui/react'
 import Link from 'next/link'
@@ -15,7 +14,6 @@ import { Navbar } from '@/components/Navbar'
 import ImageIcon from '@/components/icons/ImageIcon'
 import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadIcon from '@/components/icons/UploadIcon'
-import { FaImage } from 'react-icons/fa'
 import { gradients } from '@/theme/gradients'
 import FeatureCard from '@/components/FeatureCard'
 
