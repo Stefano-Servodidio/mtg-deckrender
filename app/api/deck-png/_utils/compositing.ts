@@ -102,12 +102,12 @@ export function prepareCardOperations(
 }
 
 const svgCount = (count: number, scale: number) => {
-    // Use a base64 encoded font or system font fallback
+    // Use DejaVu Sans which is commonly available on Lambda, with system fallbacks
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${125 * scale}" height="${125 * scale}" viewBox="0 0 ${125 * scale} ${125 * scale}" role="img" aria-label="x${count} box">
         <defs>
             <style>
                 text { 
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    font-family: "DejaVu Sans", "Liberation Sans", "Nimbus Sans L", Arial, sans-serif;
                     font-weight: bold;
                 }
             </style>
@@ -116,6 +116,7 @@ const svgCount = (count: number, scale: number) => {
         <text x="50%" y="50%" fill="#FFFFFF" font-size="${60 * scale}" text-anchor="middle" dominant-baseline="middle">x${count}</text>
     </svg>`
 }
+
 /**
  * Prepare quantity overlay operations for Sharp
  */
