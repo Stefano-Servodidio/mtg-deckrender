@@ -49,12 +49,12 @@ export const CANVAS_SIZE: Record<ImageSize, Dimensions> = {
 
 export const ROW_SIZE: Record<ImageSize, number> = {
     ig_square: 7,
-    ig_story: 6,
+    ig_story: 5,
     ig_portrait: 7,
     ig_landscape: 12,
     facebook_post: 7,
     facebook_cover: 12,
     twitter_post: 7,
     twitter_header: 12,
-    tiktok_post: 6
+    tiktok_post: 5
 }

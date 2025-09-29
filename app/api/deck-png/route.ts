@@ -34,7 +34,12 @@ export async function POST(request: NextRequest) {
             await request.json()
 
         const options = { ...defaultOptions, ...(requestOptions || {}) }
-        console.log(chalk.yellow('Options:', chalk.cyan(options)))
+        console.log(
+            chalk.yellow(
+                'Options:',
+                chalk.cyan(JSON.stringify(options, null, 2))
+            )
+        )
 
         if (!cards || !Array.isArray(cards)) {
             return NextResponse.json(
@@ -215,7 +220,7 @@ export async function POST(request: NextRequest) {
                     )
 
                     const overlayOperations = options.includeCardCount
-                        ? prepareQuantityOverlayOperations(
+                        ? await prepareQuantityOverlayOperations(
                               resizedImages,
                               cardDimensions,
                               options.imageVariant,

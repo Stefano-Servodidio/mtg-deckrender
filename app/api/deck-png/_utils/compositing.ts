@@ -1,21 +1,13 @@
 // Image compositing utilities for deck PNG generation
 // This file contains logic for positioning cards and quantity overlays on the canvas
 
-import path from 'path'
-import fs from 'fs/promises'
 import sharp from 'sharp'
 import { CardImageBuffer, Dimensions } from '../_types'
 import { DECK_LAYOUT_CONFIG, ROW_SIZE } from './config'
 import { ImageSize, ImageVariant, BackgroundStyle } from '@/app/types/api'
 import { calculateRowHeight } from './processing'
-
-/**
- * Load an asset file as a buffer
- */
-export async function getAssetBuffer(filename: string): Promise<Buffer> {
-    const assetPath = path.join(process.cwd(), 'assets', filename)
-    return await fs.readFile(assetPath)
-}
+import { overlayCache } from '@/utils/cache'
+import { getAssetBuffer } from '@/utils/assets'
 
 /**
  * Calculate position for a card in the grid based on layout settings
@@ -101,31 +93,15 @@ export function prepareCardOperations(
         .filter((op) => op.input !== null)
 }
 
-const svgCount = (count: number, scale: number) => {
-    // Use DejaVu Sans which is commonly available on Lambda, with system fallbacks
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${125 * scale}" height="${125 * scale}" viewBox="0 0 ${125 * scale} ${125 * scale}" role="img" aria-label="x${count} box">
-        <defs>
-            <style>
-                text { 
-                    font-family: "DejaVu Sans", "Liberation Sans", "Nimbus Sans L", Arial, sans-serif;
-                    font-weight: bold;
-                }
-            </style>
-        </defs>
-        <rect x="0" y="0" width="${125 * scale}" height="${125 * scale}" rx="4" ry="4" fill="#000000"/>
-        <text x="50%" y="50%" fill="#FFFFFF" font-size="${60 * scale}" text-anchor="middle" dominant-baseline="middle">x${count}</text>
-    </svg>`
-}
-
 /**
  * Prepare quantity overlay operations for Sharp
  */
-export function prepareQuantityOverlayOperations(
+export async function prepareQuantityOverlayOperations(
     images: CardImageBuffer[],
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
     imageSize?: ImageSize
-): any[] {
+): Promise<sharp.OverlayOptions[]> {
     const { overlay } = DECK_LAYOUT_CONFIG
 
     let separator = DECK_LAYOUT_CONFIG.spacing.groupSeparator
@@ -147,8 +123,8 @@ export function prepareQuantityOverlayOperations(
     let processedGroups: Set<number> = new Set()
     let cardIndex = -1
 
-    return images
-        .map((imageData) => {
+    const overlayOperations = await Promise.all(
+        images.map(async (imageData) => {
             // Reset card index when a new group is encountered
             if (!processedGroups.has(imageData.groupId)) {
                 const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
@@ -172,15 +148,41 @@ export function prepareQuantityOverlayOperations(
                 topModifier,
                 leftModifier
             )
-            // return position rounded to avoid subpixel rendering issues
-            let svgOverlay = svgCount(imageData.quantity, cardDimensions.scale!)
-            return {
-                input: Buffer.from(svgOverlay),
-                left: Math.floor(left),
-                top: Math.floor(top)
+
+            // In your prepareQuantityOverlayOperations function:
+            const cacheKey = `x${imageData.quantity}_${Math.floor(125 * cardDimensions.scale!)}`
+
+            if (overlayCache.has(cacheKey)) {
+                const cachedBuffer = overlayCache.get(cacheKey)!
+                return {
+                    input: cachedBuffer,
+                    left: Math.floor(left),
+                    top: Math.floor(top)
+                }
+            } else {
+                const buffer = await getAssetBuffer(
+                    `assets/overlays/x${imageData.quantity}.png`,
+                    'assets/overlayError.png'
+                )
+                const resizedBuffer = await sharp(buffer)
+                    .resize(Math.floor(125 * cardDimensions.scale!), null)
+                    .toBuffer()
+
+                // Cache the resized overlay
+                overlayCache.set(cacheKey, resizedBuffer)
+
+                return {
+                    input: resizedBuffer,
+                    left: Math.floor(left),
+                    top: Math.floor(top)
+                }
             }
         })
-        .filter((op): op is NonNullable<typeof op> => op !== null)
+    )
+
+    return overlayOperations.filter(
+        (op): op is NonNullable<typeof op> => op !== null
+    )
 }
 
 /**

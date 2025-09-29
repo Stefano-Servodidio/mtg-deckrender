@@ -7,7 +7,9 @@
     },
     "scripts": {
         "dev": "next dev",
+        "prebuild": "node scripts/generate-overlays.js",
         "build": "next build",
+        "postbuild": "node scripts/cleanup-overlays.js",
         "start": "next start",
         "lint": "next lint",
         "format": "prettier --write .",
@@ -15,6 +17,8 @@
         "test:run": "vitest run",
         "test:ui": "vitest --ui",
         "test:coverage": "vitest run --coverage",
+        "generate:overlays": "node scripts/generate-overlays.js",
+        "cleanup:overlays": "node scripts/cleanup-overlays.js",
         "bump:patch": "npm version patch && git push && git push --tags",
         "bump:minor": "npm version minor && git push && git push --tags",
         "bump:major": "npm version major && git push && git push --tags"
