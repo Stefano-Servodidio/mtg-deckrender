@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 function cleanupOverlays() {
-    const overlayDir = path.join(process.cwd(), 'assets', 'overlays')
+    const overlayDir = path.join(process.cwd(), 'public', 'overlays')
 
     if (fs.existsSync(overlayDir)) {
         console.log('🧹 Cleaning up overlay images...')

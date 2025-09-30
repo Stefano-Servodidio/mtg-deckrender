@@ -84,7 +84,7 @@ export default function Home() {
                                 textAlign="center"
                                 minH="42px"
                             >
-                                Convert to a beautiful PNG format
+                                Convert to a high-quality deck image
                             </Text>
                         </VStack>
                         <VStack flex={1}>
@@ -103,14 +103,15 @@ export default function Home() {
 
                     <Link href="/create" style={{ textDecoration: 'none' }}>
                         <Button
-                            size="lg"
+                            size="xl"
                             colorScheme="orange"
                             px={8}
                             py={6}
-                            fontSize="lg"
+                            fontSize="xl"
+                            fontWeight={'bold'}
                             _hover={{
                                 transform: 'translateY(-2px)',
-                                boxShadow: 'lg'
+                                boxShadow: 'xl'
                             }}
                             transition="all 0.2s"
                         >
@@ -124,7 +125,7 @@ export default function Home() {
             <Container maxW="7xl" py={16}>
                 <VStack spacing={12}>
                     <Heading size={{ base: 'lg', md: 'xl' }} textAlign="center">
-                        Why Choose MTG Deck to PNG?
+                        A deck image generator for the Magic community
                     </Heading>
 
                     <Flex

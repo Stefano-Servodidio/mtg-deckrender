@@ -17,6 +17,3 @@
 
 [context.deploy-preview]
   command = "npm run build"
-
-[functions]
-  included_files = ["assets/overlays/**"]

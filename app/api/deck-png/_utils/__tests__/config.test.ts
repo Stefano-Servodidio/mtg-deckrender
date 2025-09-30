@@ -2,127 +2,154 @@ import { describe, expect, test } from 'vitest'
 import {
     calculateCardDimensions,
     calculateCanvasDimensions,
-    calculateRowHeight,
-    IMAGE_SIZE_CONFIG
-} from '../config'
+    calculateRowHeight
+} from '../processing'
+import { CANVAS_SIZE, DECK_LAYOUT_CONFIG } from '../config'
 
-describe('Config utility functions', () => {
+describe('Processing utility functions', () => {
     describe('calculateCardDimensions', () => {
-        test('should calculate correct dimensions for vertical orientation', () => {
-            const result = calculateCardDimensions('medium', 'vertical')
+        test('should calculate card dimensions based on canvas size and images', () => {
+            const mockImages = [
+                { name: 'Card1', groupId: 1, buffer: null, quantity: 4 },
+                { name: 'Card2', groupId: 1, buffer: null, quantity: 2 }
+            ]
+            const canvasSize = { width: 1080, height: 1080 }
 
-            // For vertical, width should be constrained to cross-axis (1440px)
-            expect(result.width).toBe(1440)
-            // Height should be scaled proportionally: 1440 * (204/146) ≈ 2012.05
-            expect(result.height).toBeCloseTo(2012.05, 1)
+            const result = calculateCardDimensions(
+                mockImages,
+                canvasSize,
+                'ig_square',
+                'grid'
+            )
+
+            expect(result.width).toBeGreaterThan(0)
+            expect(result.height).toBeGreaterThan(0)
+            expect(result.scale).toBeDefined()
+            expect(result.original).toBeDefined()
         })
 
-        test('should calculate correct dimensions for horizontal orientation', () => {
-            const result = calculateCardDimensions('medium', 'horizontal')
+        test('should handle different image variants', () => {
+            const mockImages = [
+                { name: 'Card1', groupId: 1, buffer: null, quantity: 4 }
+            ]
+            const canvasSize = { width: 1080, height: 1080 }
 
-            // For horizontal, height should be constrained to cross-axis (1440px)
-            expect(result.height).toBe(1440)
-            // Width should be scaled proportionally: 1440 * (146/204) ≈ 1030.59
-            expect(result.width).toBeCloseTo(1030.59, 1)
+            const gridResult = calculateCardDimensions(
+                mockImages,
+                canvasSize,
+                'ig_square',
+                'grid'
+            )
+            const spoilerResult = calculateCardDimensions(
+                mockImages,
+                canvasSize,
+                'ig_square',
+                'spoiler'
+            )
+
+            // Both should produce valid dimensions
+            expect(gridResult.width).toBeGreaterThan(0)
+            expect(spoilerResult.width).toBeGreaterThan(0)
+        })
+    })
+
+    describe('calculateCanvasDimensions', () => {
+        test('should return correct dimensions for ig_square', () => {
+            const result = calculateCanvasDimensions('ig_square', 'standard')
+
+            expect(result.width).toBe(1080)
+            expect(result.height).toBe(1080)
         })
 
-        test('should handle different image sizes', () => {
-            const small = calculateCardDimensions('small', 'vertical')
-            const medium = calculateCardDimensions('medium', 'vertical')
-            const large = calculateCardDimensions('large', 'vertical')
+        test('should return correct dimensions for ig_story', () => {
+            const result = calculateCanvasDimensions('ig_story', 'standard')
 
-            expect(small.width).toBe(1080)
-            expect(medium.width).toBe(1440)
-            expect(large.width).toBe(1920)
+            expect(result.width).toBe(1080)
+            expect(result.height).toBe(1920)
+        })
 
-            // Heights should scale proportionally
-            expect(small.height).toBeCloseTo(1509.04, 1) // 1080 * (204/146)
-            expect(medium.height).toBeCloseTo(2012.05, 1) // 1440 * (204/146)
-            expect(large.height).toBeCloseTo(2682.74, 1) // 1920 * (204/146)
+        test('should scale dimensions for high resolution', () => {
+            const standardResult = calculateCanvasDimensions('ig_square', 'standard')
+            const highResult = calculateCanvasDimensions('ig_square', 'high')
+
+            expect(highResult.width).toBe(standardResult.width * 1.5)
+            expect(highResult.height).toBe(standardResult.height * 1.5)
+        })
+
+        test('should throw error for invalid image size', () => {
+            expect(() => {
+                // @ts-ignore - Testing invalid input
+                calculateCanvasDimensions('invalid_size', 'standard')
+            }).toThrow('Invalid image size')
         })
     })
 
     describe('calculateRowHeight', () => {
         test('should calculate correct row height for grid variant', () => {
-            const cardHeight = 204
+            const cardHeight = 1040
             const result = calculateRowHeight('grid', cardHeight)
 
-            // Grid should use 50% overlap (0.5 multiplier)
-            expect(result).toBe(102) // 204 * 0.5
+            // Grid should use 0.4 multiplier according to config
+            expect(result).toBe(416) // 1040 * 0.4
         })
 
         test('should calculate correct row height for spoiler variant', () => {
-            const cardHeight = 204
+            const cardHeight = 1040
             const result = calculateRowHeight('spoiler', cardHeight)
 
-            // Spoiler should use no overlap (1.0 multiplier)
-            expect(result).toBe(204) // 204 * 1.0
+            // Spoiler should use 1.0 multiplier (no overlap)
+            expect(result).toBe(1040) // 1040 * 1.0
         })
 
-        test('should handle stacks variant like grid', () => {
-            const cardHeight = 204
+        test('should calculate correct row height for stacks variant', () => {
+            const cardHeight = 1040
             const result = calculateRowHeight('stacks', cardHeight)
 
-            // Stacks should use same as grid (0.5 multiplier)
-            expect(result).toBe(102) // 204 * 0.5
+            // Stacks should use 1.0 multiplier
+            expect(result).toBe(1040) // 1040 * 1.0
+        })
+
+        test('should handle default variant', () => {
+            const cardHeight = 1040
+            const result = calculateRowHeight(undefined, cardHeight)
+
+            // Default should use 1.0 multiplier
+            expect(result).toBe(1040) // 1040 * 1.0
+        })
+
+        test('should return 0 for undefined card height', () => {
+            const result = calculateRowHeight('grid', undefined)
+            expect(result).toBe(0)
         })
     })
 
-    describe('calculateCanvasDimensions', () => {
-        test('should calculate canvas dimensions correctly', () => {
-            const result = calculateCanvasDimensions(
-                3, // cardsPerRow
-                2, // totalRows
-                false, // hasSideboard
-                'small', // imageSize
-                'vertical', // imageOrientation
-                'grid' // imageVariant
-            )
-
-            // For vertical small (1080px width cards), 3 cards per row:
-            // width = 1080 * 3 + 4 * (3-1) + 4 * 2 = 3240 + 8 + 8 = 3256
-            expect(result.width).toBe(3256)
-
-            // For grid variant with card height ≈ 1509.04:
-            // rowHeight = 1509.04 * 0.5 = 754.52
-            // height = 754.52 * 2 + 4 * (2-1) + 4 * 2 = 1509.04 + 4 + 8 = 1521.04
-            expect(result.height).toBeCloseTo(1521.04, 1)
-        })
-
-        test('should add sideboard spacing when sideboard is present', () => {
-            const withoutSideboard = calculateCanvasDimensions(
-                3,
-                2,
-                false,
-                'small',
-                'vertical',
-                'grid'
-            )
-            const withSideboard = calculateCanvasDimensions(
-                3,
-                2,
-                true,
-                'small',
-                'vertical',
-                'grid'
-            )
-
-            // With sideboard should be taller
-            expect(withSideboard.height).toBeGreaterThan(
-                withoutSideboard.height
-            )
+    describe('CANVAS_SIZE configuration', () => {
+        test('should have correct canvas size values', () => {
+            expect(CANVAS_SIZE.ig_square).toEqual({ width: 1080, height: 1080 })
+            expect(CANVAS_SIZE.ig_story).toEqual({ width: 1080, height: 1920 })
+            expect(CANVAS_SIZE.ig_portrait).toEqual({ width: 1080, height: 1350 })
+            expect(CANVAS_SIZE.facebook_post).toEqual({ width: 1200, height: 630 })
+            expect(CANVAS_SIZE.twitter_post).toEqual({ width: 1200, height: 675 })
         })
     })
 
-    describe('IMAGE_SIZE_CONFIG', () => {
-        test('should have correct configuration values', () => {
-            expect(IMAGE_SIZE_CONFIG.small.crossAxis).toBe(1080)
-            expect(IMAGE_SIZE_CONFIG.medium.crossAxis).toBe(1440)
-            expect(IMAGE_SIZE_CONFIG.large.crossAxis).toBe(1920)
+    describe('DECK_LAYOUT_CONFIG configuration', () => {
+        test('should have correct base card dimensions', () => {
+            expect(DECK_LAYOUT_CONFIG.card.baseWidth).toBe(745)
+            expect(DECK_LAYOUT_CONFIG.card.baseHeight).toBe(1040)
+        })
 
-            expect(IMAGE_SIZE_CONFIG.small.cardScale).toBe(0.6)
-            expect(IMAGE_SIZE_CONFIG.medium.cardScale).toBe(0.8)
-            expect(IMAGE_SIZE_CONFIG.large.cardScale).toBe(1.0)
+        test('should have correct spacing values', () => {
+            expect(DECK_LAYOUT_CONFIG.spacing.betweenCards).toBe(0)
+            expect(DECK_LAYOUT_CONFIG.spacing.groupSeparator).toBe(70)
+            expect(DECK_LAYOUT_CONFIG.spacing.canvasPadding).toBe(20)
+        })
+
+        test('should have correct row height multipliers', () => {
+            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.default).toBe(1.0)
+            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.grid).toBe(0.4)
+            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.spoiler).toBe(1.0)
+            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.stacks).toBe(1.0)
         })
     })
 })

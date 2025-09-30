@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 
 async function generateOverlays() {
-    const outputDir = path.join(process.cwd(), 'assets', 'overlays')
+    const outputDir = path.join(process.cwd(), 'public', 'overlays')
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(outputDir)) {
@@ -16,6 +16,11 @@ async function generateOverlays() {
 
     // Generate overlays for quantities 2-100
     for (let count = 2; count <= totalOverlays; count++) {
+        const filePath = path.join(outputDir, `x${count}.png`)
+        if (fs.existsSync(filePath)) {
+            process.stdout.write(`\r   Skipping x${count}.png (already exists)`)
+            continue
+        }
         const svg = `
             <svg xmlns="http://www.w3.org/2000/svg" width="125" height="125" viewBox="0 0 125 125">
                 <rect width="100%" height="100%" rx="5%" fill="#000000" stroke="#474747ff" stroke-width="2" />

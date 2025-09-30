@@ -45,11 +45,17 @@ export function parseDecklist(decklist: string): string[] {
         parsedList = parsedList.slice(firstCharIndex)
     }
 
-    let groups: string[] = decklist
+    let cardStrings: string[] = parsedList
         .split(decklistSeparatorRegex)
-        .map((section) => section.trim())
+        .reduce<string[]>((acc, section) => {
+            const trimmed = section.trim()
+            if (trimmed) {
+                acc.push(trimmed)
+            }
+            return acc
+        }, [])
 
-    return groups
+    return cardStrings
 }
 
 /**
