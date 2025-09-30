@@ -1,6 +1,6 @@
 {
     "name": "nextjs",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "private": true,
     "engines": {
         "node": ">=22.0.0"
@@ -9,7 +9,6 @@
         "dev": "next dev",
         "prebuild": "node scripts/generate-overlays.js",
         "build": "next build",
-        "postbuild": "node scripts/cleanup-overlays.js",
         "start": "next start",
         "lint": "next lint",
         "format": "prettier --write .",
