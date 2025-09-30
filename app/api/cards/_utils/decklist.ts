@@ -1,11 +1,12 @@
 // Utility functions for processing decklists
 // This file contains logic moved from the cards API route to separate data processing concerns
 
-import { CardItem } from '@/app/types/api'
-import { ScryfallCard } from '@/app/types/scryfall'
+import { CardItem } from '@/types/api'
+import { ScryfallCard } from '@/types/scryfall'
 
 const decklistSeparators = [
     '\n\n',
+    '\r\n\r\n',
     '\nSIDEBOARD\n',
     '\nSideboard\n',
     '\nsideboard\n',
@@ -39,7 +40,7 @@ const decklistSeparatorRegex = new RegExp(decklistSeparators.join('|'), 'g')
  */
 export function parseDecklist(decklist: string): string[] {
     let parsedList = decklist.trim()
-    const firstCharIndex = parsedList.search(/[^\s\n]/)
+    const firstCharIndex = parsedList.search(/[^\s\n\r]/)
     // Remove leading non-alphanumeric characters
     if (firstCharIndex > 0) {
         parsedList = parsedList.slice(firstCharIndex)
@@ -54,7 +55,6 @@ export function parseDecklist(decklist: string): string[] {
             }
             return acc
         }, [])
-
     return cardStrings
 }
 
@@ -69,7 +69,7 @@ export function getUniqueCards(
     // Replace first space with # to split quantity and name, then trim lines
     const cardStrings = decklist
         .split('\n')
-        .map((line) => line.replace(' ', '#').trim())
+        .map((line) => line.replace('\r', '').replace(' ', '#').trim())
 
     // Filter out empty lines
     return cardStrings.reduce<

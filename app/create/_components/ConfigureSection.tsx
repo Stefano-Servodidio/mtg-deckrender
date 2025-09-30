@@ -4,7 +4,7 @@ import { Box, Button, Text, VStack, Progress, HStack } from '@chakra-ui/react'
 import React from 'react'
 import { FaImage } from 'react-icons/fa'
 import ConfigureOptions from './ConfigureOptions'
-import { DeckPngOptions, CardsResponse, ImageResolution } from '@/app/types/api'
+import { DeckPngOptions, CardsResponse, ImageResolution } from '@/types/api'
 
 interface ProgressInfo {
     current: number

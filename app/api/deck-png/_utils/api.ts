@@ -1,19 +1,16 @@
-import { CardItem } from '@/app/types/api'
+import { CardItem } from '@/types/api'
 import chalk from 'chalk'
 import { CardImageBuffer, ProgressCallback } from '../_types'
+import { cardImageCache } from '@/utils/cache'
 
 /**
  * Download and resize a single card image based on size settings
  */
-export async function downloadAndResizeCardImage(
+export async function downloadCardImage(
     card: CardItem
 ): Promise<CardImageBuffer> {
     try {
-        const response = await fetch(card.image_uri as string, {
-            headers: {
-                'Cache-Control': 'max-age=86400'
-            }
-        })
+        const response = await fetch(card.image_uri as string)
         if (!response.ok) {
             throw new Error(`Failed to fetch image for ${card.name}`)
         }
@@ -58,9 +55,23 @@ export async function downloadAllCardImages(
             progressCallback(i + 1, totalImages, card.name)
         }
 
-        const cardBuffer = await downloadAndResizeCardImage(card)
-        if (cardBuffer?.buffer) successfulImages.push(cardBuffer)
-        else failedImages.push(cardBuffer)
+        // Check cache first
+        const cacheKey = `${card.id}`
+        const cached = cardImageCache.get(cacheKey)
+
+        if (cached) {
+            successfulImages.push(cached)
+            console.log(chalk.cyan(`Cache hit for card image: ${card.name}`))
+            continue
+        }
+
+        const cardBuffer = await downloadCardImage(card)
+        if (cardBuffer?.buffer) {
+            successfulImages.push(cardBuffer)
+            cardImageCache.set(cacheKey, cardBuffer)
+        } else {
+            failedImages.push(cardBuffer)
+        }
     }
 
     // Filter out failed downloads

@@ -7,10 +7,8 @@ import {
     createMockCardItem,
     sleep
 } from './_utils/decklist'
-import { CardItem } from '@/app/types/api'
-
-// Simple in-memory cache for card data
-const cardCache = new Map<string, { data: any; expires: number }>()
+import { CardItem } from '@/types/api'
+import { cardCache } from '@/utils/cache'
 
 export async function POST(request: NextRequest) {
     try {
@@ -207,12 +205,6 @@ export async function POST(request: NextRequest) {
                                 groupId
                             )
                             cards.push(mockCardData)
-
-                            // Cache the mock data
-                            cardCache.set(cacheKey, {
-                                data: mockCardData,
-                                expires: now + CACHE_DURATION
-                            })
 
                             // Send progress update with mock card
                             controller.enqueue(

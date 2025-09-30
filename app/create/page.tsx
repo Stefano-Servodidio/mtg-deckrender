@@ -15,7 +15,7 @@ import { useState, useCallback } from 'react'
 import React from 'react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-import { useCards } from '@/hooks/useCards'
+// import { useCards } from '@/hooks/useCards'
 import { useDeckPng } from '@/hooks/useDeckPng'
 import { gradients } from '@/theme/gradients'
 import UploadIcon from '@/components/icons/UploadIcon'
@@ -25,7 +25,8 @@ import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
 import Accordion, { AccordionSection } from '@/components/Accordion'
-import { DeckPngOptions } from '../types/api'
+import { DeckPngOptions } from '../../types/api'
+import { useCollections } from '@/hooks/useCollections'
 
 export default function Create() {
     const [decklistText, setDecklistText] = useState('')
@@ -33,13 +34,21 @@ export default function Create() {
     const toast = useToast()
 
     // Use the custom hooks
+    // const {
+    //     data: cardsData,
+    //     error: cardsError,
+    //     isLoading: isLoadingCards,
+    //     progress: cardsProgress,
+    //     fetchCards
+    // } = useCards()
+
     const {
         data: cardsData,
         error: cardsError,
         isLoading: isLoadingCards,
         progress: cardsProgress,
-        fetchCards
-    } = useCards()
+        fetchCollections: fetchCards
+    } = useCollections()
 
     const {
         data: generatedImage,

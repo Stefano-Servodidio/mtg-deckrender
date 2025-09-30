@@ -1,7 +1,7 @@
 // Configuration file for deck PNG generation dimensions and settings
 // This centralizes all layout calculations and makes them human-readable
 
-import { ImageSize } from '@/app/types/api'
+import { ImageSize } from '@/types/api'
 import { Dimensions } from '../_types'
 
 export const DECK_LAYOUT_CONFIG = {

@@ -1,13 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useFetchState } from './useFetchState'
-import { CardsResponse, CardItem } from '@/app/types/api'
-
-interface ProgressInfo {
-    current: number
-    total: number
-    message: string
-    percentage: number
-}
+import { CardsResponse, CardItem, ProgressInfo } from '@/types/api'
 
 interface UseCardsReturn {
     data: CardsResponse | null
@@ -20,9 +13,17 @@ interface UseCardsReturn {
 
 // Hook to fetch cards based on a decklist
 export function useCards(): UseCardsReturn {
-    const { data, setData, error, setError, isLoading, setIsLoading, reset } =
-        useFetchState<CardsResponse>()
-    const [progress, setProgress] = useState<ProgressInfo | null>(null)
+    const {
+        data,
+        setData,
+        error,
+        setError,
+        isLoading,
+        setIsLoading,
+        reset,
+        progress,
+        setProgress
+    } = useFetchState<CardsResponse>()
 
     const fetchCards = useCallback(
         async (decklist: string) => {
@@ -31,10 +32,8 @@ export function useCards(): UseCardsReturn {
                 return
             }
 
+            reset()
             setIsLoading(true)
-            setError(null)
-            setData(null)
-            setProgress(null)
 
             try {
                 if (process.env.NODE_ENV === 'development') {
@@ -149,13 +148,13 @@ export function useCards(): UseCardsReturn {
                 setIsLoading(false)
             }
         },
-        [setData, setError, setIsLoading]
+        [reset, setData, setError, setIsLoading, setProgress]
     )
 
     const resetWithProgress = useCallback(() => {
         reset()
         setProgress(null)
-    }, [reset])
+    }, [reset, setProgress])
 
     return {
         data,

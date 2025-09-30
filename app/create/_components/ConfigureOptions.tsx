@@ -1,6 +1,6 @@
 // Configuration options for the create page
 
-import { DeckPngOptions, ImageSize } from '@/app/types/api'
+import { DeckPngOptions, ImageSize } from '@/types/api'
 import { DropZone } from '@/components/DropZone'
 import FilterItem from '@/components/FilterItem'
 import {

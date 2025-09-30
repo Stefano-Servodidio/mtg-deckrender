@@ -9,7 +9,7 @@ import {
     ImageResolution,
     ImageSize,
     ImageVariant
-} from '@/app/types/api'
+} from '@/types/api'
 import { CardImageBuffer, Dimensions } from '../_types'
 import { DECK_LAYOUT_CONFIG, ROW_SIZE, CANVAS_SIZE } from './config'
 import sharp from 'sharp'
