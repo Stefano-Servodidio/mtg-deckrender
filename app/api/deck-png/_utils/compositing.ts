@@ -8,6 +8,7 @@ import { ImageSize, ImageVariant, BackgroundStyle } from '@/types/api'
 import { calculateRowHeight } from './processing'
 import { overlayCache } from '@/utils/cache'
 import { getAssetBuffer } from '@/utils/assets'
+import chalk from 'chalk'
 
 /**
  * Calculate position for a card in the grid based on layout settings
@@ -154,6 +155,11 @@ export async function prepareQuantityOverlayOperations(
 
             if (overlayCache.has(cacheKey)) {
                 const cachedBuffer = overlayCache.get(cacheKey)!
+                console.log(
+                    chalk.cyan(
+                        `Cache hit for overlay: x${imageData.quantity}, scale: ${cardDimensions.scale}`
+                    )
+                )
                 return {
                     input: cachedBuffer,
                     left: Math.floor(left),
