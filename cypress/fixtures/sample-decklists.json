@@ -1,0 +1,6 @@
+{
+  "basicLands": "60x Island\n15x Plains",
+  "mixedDeck": "4x Lightning Bolt\n4x Counterspell\n4x Brainstorm\n4x Swords to Plowshares\n4x Force of Will\n4x Flooded Strand\n4x Scalding Tarn\n4x Tundra\n4x Volcanic Island\n24x Island",
+  "withSideboard": "4x Lightning Bolt\n4x Counterspell\n4x Brainstorm\n4x Swords to Plowshares\n4x Force of Will\n4x Flooded Strand\n4x Scalding Tarn\n4x Tundra\n4x Volcanic Island\n24x Island\n\nSIDEBOARD:\n3x Red Elemental Blast\n3x Pyroblast\n3x Surgical Extraction\n3x Rest in Peace\n3x Containment Priest",
+  "singleCards": "1x Black Lotus\n1x Ancestral Recall\n1x Time Walk\n1x Mox Sapphire\n1x Mox Ruby"
+}

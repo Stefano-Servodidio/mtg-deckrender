@@ -32,7 +32,7 @@ export function Navbar() {
             top={0}
             zIndex={10}
         >
-            <Container maxW="7xl" py={4}>
+            <Container data-testid="navbar-container" maxW="7xl" py={4}>
                 <Flex justify="space-between" align="center">
                     <Link href="/" style={{ textDecoration: 'none' }}>
                         <HStack
@@ -71,7 +71,11 @@ export function Navbar() {
                         </HStack>
                     </Link>
 
-                    <HStack spacing={4} display={{ base: 'none', md: 'flex' }}>
+                    <HStack
+                        data-testid="navbar-links-desktop"
+                        spacing={4}
+                        display={{ base: 'none', md: 'flex' }}
+                    >
                         <Link href="/" style={{ textDecoration: 'none' }}>
                             <Button
                                 variant="ghost"
@@ -101,9 +105,13 @@ export function Navbar() {
                             </Button>
                         </Link>
                     </HStack>
-                    <Box display={{ base: 'block', md: 'none' }}>
+                    <Box
+                        data-testid="navbar-links-mobile"
+                        display={{ base: 'block', md: 'none' }}
+                    >
                         <Menu autoSelect={false}>
                             <MenuButton
+                                data-testid="navbar-mobile-menu-button"
                                 as={IconButton}
                                 icon={<FaBars />}
                                 variant="outline"

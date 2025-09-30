@@ -21,7 +21,7 @@ export function Footer() {
 
     return (
         <Box bg={bg} borderTop="1px solid" borderColor={borderColor} mt="auto">
-            <Container maxW="7xl" py={8}>
+            <Container data-testid="footer-container" maxW="7xl" py={8}>
                 <VStack spacing={6}>
                     <VStack spacing={4} textAlign="center">
                         <Text fontSize="sm" color={textColor} maxW="4xl">
