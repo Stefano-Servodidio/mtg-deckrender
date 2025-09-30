@@ -161,8 +161,8 @@ export async function prepareQuantityOverlayOperations(
                 }
             } else {
                 const buffer = await getAssetBuffer(
-                    `assets/overlays/x${imageData.quantity}.png`,
-                    'assets/overlayError.png'
+                    `public/overlays/x${imageData.quantity}.png`,
+                    'public/overlayError.png'
                 )
                 const resizedBuffer = await sharp(buffer)
                     .resize(Math.floor(125 * cardDimensions.scale!), null)

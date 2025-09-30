@@ -9,7 +9,6 @@
         "dev": "next dev",
         "prebuild": "node scripts/generate-overlays.js",
         "build": "next build",
-        "postbuild": "node scripts/cleanup-overlays.js",
         "start": "next start",
         "lint": "next lint",
         "format": "prettier --write .",
