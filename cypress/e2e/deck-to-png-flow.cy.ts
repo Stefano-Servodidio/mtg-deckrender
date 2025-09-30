@@ -8,7 +8,9 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
         // Load test data
         cy.fixture('sample-decklists').then((decklists) => {
             // Step 1: Navigate to create page
-            cy.get('a[href="/create"]').click()
+            cy.get(
+                '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+            ).click()
             cy.url().should('include', '/create')
 
             // Step 2: Upload the decklist
@@ -16,7 +18,7 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
 
             // Step 3: Wait for cards to be fetched and loaded
             cy.get('button').contains('Configure Image').should('be.visible')
-            
+
             // Step 4: Generate image with default options
             cy.generateImage()
 
@@ -31,7 +33,9 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
     it('should handle mixed deck with various card types', () => {
         cy.fixture('sample-decklists').then((decklists) => {
             // Navigate to create page
-            cy.get('a[href="/create"]').click()
+            cy.get(
+                '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+            ).click()
 
             // Upload a more complex decklist
             cy.uploadDecklist(decklists.mixedDeck)
@@ -47,7 +51,9 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
     it('should handle deck with sideboard', () => {
         cy.fixture('sample-decklists').then((decklists) => {
             // Navigate to create page
-            cy.get('a[href="/create"]').click()
+            cy.get(
+                '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+            ).click()
 
             // Upload decklist with sideboard
             cy.uploadDecklist(decklists.withSideboard)
@@ -62,20 +68,26 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
 
     it('should validate empty decklist handling', () => {
         // Navigate to create page
-        cy.get('a[href="/create"]').click()
+        cy.get(
+            '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+        ).click()
 
         // Try to upload without any text
         cy.get('button').contains('Upload Decklist').should('be.disabled')
 
         // Enter some text and verify button becomes enabled
-        cy.get('textarea[placeholder*="Paste the decklist"]').type('4x Lightning Bolt')
+        cy.get('textarea[placeholder*="Paste the decklist"]').type(
+            '4x Lightning Bolt'
+        )
         cy.get('button').contains('Upload Decklist').should('not.be.disabled')
     })
 
     it('should test image configuration options', () => {
         cy.fixture('sample-decklists').then((decklists) => {
             // Navigate to create page
-            cy.get('a[href="/create"]').click()
+            cy.get(
+                '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+            ).click()
 
             // Upload basic decklist
             cy.uploadDecklist(decklists.basicLands)
@@ -98,7 +110,9 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
 
     it('should handle navigation between sections', () => {
         // Navigate to create page
-        cy.get('a[href="/create"]').click()
+        cy.get(
+            '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+        ).click()
 
         // Test accordion functionality
         cy.get('button').contains('Upload Decklist').should('be.visible')
@@ -113,7 +127,9 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
 
     it('should display proper error handling for invalid decklist', () => {
         // Navigate to create page
-        cy.get('a[href="/create"]').click()
+        cy.get(
+            '[data-testid="navbar-container"] [data-testid="navbar-links-desktop"] a[href="/create"]'
+        ).click()
 
         // Enter invalid decklist format
         cy.get('textarea[placeholder*="Paste the decklist"]')
