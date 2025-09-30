@@ -8,6 +8,7 @@ import {
     sleep
 } from '../cards/_utils/decklist'
 import { CardItem } from '@/types/api'
+import { collectionCardCache } from '@/utils/cache'
 
 export async function POST(request: NextRequest) {
     try {
@@ -90,38 +91,38 @@ export async function POST(request: NextRequest) {
                         const cardsToFetch: typeof uniqueCards = []
 
                         for (const card of batch) {
-                            // const cacheKey = card.name.toLowerCase()
-                            // const cached = cardCache.get(cacheKey)
+                            const cacheKey = card.name.toLowerCase()
+                            const cached = collectionCardCache.get(cacheKey)
 
-                            // if (cached && cached.expires > now) {
-                            //     const cardData = {
-                            //         ...cached.data,
-                            //         quantity: card.quantity,
-                            //         groupId: card.groupId
-                            //     }
-                            //     cachedCards.push(cardData)
-                            //     console.log(
-                            //         chalk.cyan(
-                            //             `Cache hit for card: ${card.name}`
-                            //         )
-                            //     )
+                            if (cached && cached.expires > now) {
+                                const cardData = {
+                                    ...cached.data,
+                                    quantity: card.quantity,
+                                    groupId: card.groupId
+                                }
+                                cachedCards.push(cardData)
+                                console.log(
+                                    chalk.cyan(
+                                        `Cache hit for card: ${card.name}`
+                                    )
+                                )
 
-                            //     processedCards++
-                            //     // Send progress update for cached card
-                            //     controller.enqueue(
-                            //         new TextEncoder().encode(
-                            //             `data: ${JSON.stringify({
-                            //                 type: 'progress',
-                            //                 current: processedCards,
-                            //                 total: totalCards,
-                            //                 message: `Loaded ${card.name} (cached)`,
-                            //                 card: cardData
-                            //             })}\n\n`
-                            //         )
-                            //     )
-                            // } else {
-                            cardsToFetch.push(card)
-                            // }
+                                processedCards++
+                                // Send progress update for cached card
+                                controller.enqueue(
+                                    new TextEncoder().encode(
+                                        `data: ${JSON.stringify({
+                                            type: 'progress',
+                                            current: processedCards,
+                                            total: totalCards,
+                                            message: `Loaded ${card.name} (cached)`,
+                                            card: cardData
+                                        })}\n\n`
+                                    )
+                                )
+                            } else {
+                                cardsToFetch.push(card)
+                            }
                         }
 
                         cards.push(...cachedCards)
@@ -201,19 +202,9 @@ export async function POST(request: NextRequest) {
                                     const batchData = await response.json()
                                     const foundCards = batchData.data || []
 
-                                    // Create a map of found cards by name (lowercase for matching)
-                                    // const foundCardsMap = new Map<string, any>()
-                                    // for (const scryfallCard of foundCards) {
-                                    //     foundCardsMap.set(
-                                    //         scryfallCard.name.toLowerCase(),
-                                    //         scryfallCard
-                                    //     )
-                                    // }
-
                                     // Process each card in the fetch list
                                     for (const card of cardsToFetch) {
                                         const cacheKey = card.name.toLowerCase()
-                                        // const scryfallData = foundCardsMap.get(cacheKey)
                                         const scryfallData = foundCards.find(
                                             (c: any) =>
                                                 c.name
@@ -251,10 +242,10 @@ export async function POST(request: NextRequest) {
                                             cards.push(cardData)
 
                                             // Cache the card data for 24 hours
-                                            // cardCache.set(cacheKey, {
-                                            //     data: cardData,
-                                            //     expires: now + CACHE_DURATION
-                                            // })
+                                            collectionCardCache.set(cacheKey, {
+                                                data: cardData,
+                                                expires: now + CACHE_DURATION
+                                            })
 
                                             processedCards++
                                             controller.enqueue(
