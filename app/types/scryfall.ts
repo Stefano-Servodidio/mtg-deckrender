@@ -1,3 +1,12 @@
+export type ScryfallImageUris = {
+    small: string
+    normal: string
+    large: string
+    png: string
+    art_crop: string
+    border_crop: string
+} | null
+
 export type ScryfallCard = {
     object: string
     id: string
@@ -13,14 +22,7 @@ export type ScryfallCard = {
     layout: string
     highres_image: boolean
     image_status: string
-    image_uris: {
-        small: string
-        normal: string
-        large: string
-        png: string
-        art_crop: string
-        border_crop: string
-    }
+    image_uris: ScryfallImageUris
     mana_cost: string
     cmc: number
     type_line: string
@@ -95,14 +97,7 @@ export type ScryfallCard = {
         artist: string
         artist_id: string
         illustration_id: string
-        image_uris: {
-            small: string
-            normal: string
-            large: string
-            png: string
-            art_crop: string
-            border_crop: string
-        }
+        image_uris: ScryfallImageUris
     }>
     prices: {
         usd: string | null
