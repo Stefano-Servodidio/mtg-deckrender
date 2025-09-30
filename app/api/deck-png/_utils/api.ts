@@ -1,4 +1,4 @@
-import { CardItem } from '@/app/types/api'
+import { CardItem } from '@/types/api'
 import chalk from 'chalk'
 import { CardImageBuffer, ProgressCallback } from '../_types'
 

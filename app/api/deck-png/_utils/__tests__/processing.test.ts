@@ -1,9 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
-import {
-    sortCards,
-    resizeImages
-} from '../processing'
-import { CardItem } from '@/app/types/api'
+import { sortCards, resizeImages } from '../processing'
+import { CardItem } from '@/types/api'
 import { CardImageBuffer } from '../_types'
 
 // Mock sharp
@@ -60,7 +57,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by name ascending by default', () => {
             const result = sortCards([...mockCards])
-            
+
             expect(result[0].name).toBe('Alpha Card')
             expect(result[1].name).toBe('Beta Card')
             expect(result[2].name).toBe('Zebra Card')
@@ -68,7 +65,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by name descending', () => {
             const result = sortCards([...mockCards], 'name', 'desc')
-            
+
             expect(result[0].name).toBe('Zebra Card')
             expect(result[1].name).toBe('Beta Card')
             expect(result[2].name).toBe('Alpha Card')
@@ -76,7 +73,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by cmc ascending', () => {
             const result = sortCards([...mockCards], 'cmc', 'asc')
-            
+
             expect(result[0].cmc).toBe(1)
             expect(result[1].cmc).toBe(3)
             expect(result[2].cmc).toBe(5)
@@ -84,7 +81,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by cmc descending', () => {
             const result = sortCards([...mockCards], 'cmc', 'desc')
-            
+
             expect(result[0].cmc).toBe(5)
             expect(result[1].cmc).toBe(3)
             expect(result[2].cmc).toBe(1)
@@ -92,7 +89,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by rarity ascending', () => {
             const result = sortCards([...mockCards], 'rarity', 'asc')
-            
+
             expect(result[0].rarity).toBe('common')
             expect(result[1].rarity).toBe('rare')
             expect(result[2].rarity).toBe('mythic')
@@ -100,7 +97,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by rarity descending', () => {
             const result = sortCards([...mockCards], 'rarity', 'desc')
-            
+
             expect(result[0].rarity).toBe('mythic')
             expect(result[1].rarity).toBe('rare')
             expect(result[2].rarity).toBe('common')
@@ -108,20 +105,20 @@ describe('Processing utility functions', () => {
 
         test('should sort by colors ascending', () => {
             const result = sortCards([...mockCards], 'colors', 'asc')
-            
+
             // Expected order: U (Blue), R (Red), multi (Black+Red)
-            expect(result[0].colors).toEqual(['U'])  // Blue
-            expect(result[1].colors).toEqual(['R'])  // Red  
-            expect(result[2].colors).toEqual(['B', 'R'])  // Multi
+            expect(result[0].colors).toEqual(['U']) // Blue
+            expect(result[1].colors).toEqual(['R']) // Red
+            expect(result[2].colors).toEqual(['B', 'R']) // Multi
         })
 
         test('should sort by colors descending', () => {
             const result = sortCards([...mockCards], 'colors', 'desc')
-            
+
             // Reverse order: multi, R, U
-            expect(result[0].colors).toEqual(['B', 'R'])  // Multi
-            expect(result[1].colors).toEqual(['R'])  // Red
-            expect(result[2].colors).toEqual(['U'])  // Blue
+            expect(result[0].colors).toEqual(['B', 'R']) // Multi
+            expect(result[1].colors).toEqual(['R']) // Red
+            expect(result[2].colors).toEqual(['U']) // Blue
         })
 
         test('should handle colorless cards', () => {
@@ -130,11 +127,15 @@ describe('Processing utility functions', () => {
                 colors: [],
                 name: 'Colorless Card'
             }
-            
-            const result = sortCards([colorlessCard, mockCards[1]], 'colors', 'asc')
-            
-            expect(result[0].colors).toEqual(['U'])  // Blue comes before colorless
-            expect(result[1].colors).toEqual([])  // Colorless
+
+            const result = sortCards(
+                [colorlessCard, mockCards[1]],
+                'colors',
+                'asc'
+            )
+
+            expect(result[0].colors).toEqual(['U']) // Blue comes before colorless
+            expect(result[1].colors).toEqual([]) // Colorless
         })
 
         test('should handle cards with no colors property', () => {
@@ -143,11 +144,15 @@ describe('Processing utility functions', () => {
                 colors: undefined as any,
                 name: 'No Colors Card'
             }
-            
-            const result = sortCards([noColorsCard, mockCards[1]], 'colors', 'asc')
-            
-            expect(result[0].colors).toEqual(['U'])  // Blue
-            expect(result[1].colors).toBeUndefined()  // No colors
+
+            const result = sortCards(
+                [noColorsCard, mockCards[1]],
+                'colors',
+                'asc'
+            )
+
+            expect(result[0].colors).toEqual(['U']) // Blue
+            expect(result[1].colors).toBeUndefined() // No colors
         })
 
         test('should keep groups together and not sort across groups', () => {
@@ -156,9 +161,9 @@ describe('Processing utility functions', () => {
                 { ...mockCards[1], groupId: 1, name: 'Alpha' },
                 { ...mockCards[2], groupId: 0, name: 'Beta' }
             ]
-            
+
             const result = sortCards([...cardsInDifferentGroups], 'name', 'asc')
-            
+
             // Should maintain original order when cards are in different groups
             expect(result[0].name).toBe('Zebra')
             expect(result[1].name).toBe('Alpha')
@@ -167,7 +172,7 @@ describe('Processing utility functions', () => {
 
         test('should use default sort when invalid sortBy provided', () => {
             const result = sortCards([...mockCards], 'invalid' as any, 'asc')
-            
+
             // Should fall back to name sorting
             expect(result[0].name).toBe('Alpha Card')
             expect(result[1].name).toBe('Beta Card')
@@ -186,7 +191,7 @@ describe('Processing utility functions', () => {
 
         test('should sort by typeLine', () => {
             const result = sortCards([...mockCards], 'typeLine', 'asc')
-            
+
             expect(result[0].typeLine).toBe('Creature')
             expect(result[1].typeLine).toBe('Instant')
             expect(result[2].typeLine).toBe('Sorcery')
@@ -198,11 +203,11 @@ describe('Processing utility functions', () => {
                 { ...mockCards[1], cmc: 2, name: 'Card B' },
                 { ...mockCards[2], cmc: 2, name: 'Card C' }
             ]
-            
+
             const result = sortCards([...equalCards], 'cmc', 'asc')
-            
+
             // When CMC is equal, should maintain relative order
-            expect(result.every(card => card.cmc === 2)).toBe(true)
+            expect(result.every((card) => card.cmc === 2)).toBe(true)
         })
     })
 
@@ -237,19 +242,21 @@ describe('Processing utility functions', () => {
             const sharp = await import('sharp')
             const mockSharpInstance = {
                 resize: vi.fn().mockReturnThis(),
-                toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized-image'))
+                toBuffer: vi
+                    .fn()
+                    .mockResolvedValue(Buffer.from('resized-image'))
             }
-            
+
             // Mock sharp to return our mock instance
             vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
-            
+
             const result = await resizeImages(mockCardImages, mockDimensions)
-            
+
             expect(result).toHaveLength(3)
             expect(result[0].buffer).toEqual(Buffer.from('resized-image'))
             expect(result[1].buffer).toEqual(Buffer.from('resized-image'))
             expect(result[2].buffer).toBeNull() // Should remain null if original was null
-            
+
             // Verify sharp was called correctly
             expect(sharp.default).toHaveBeenCalledWith(Buffer.from('image1'))
             expect(sharp.default).toHaveBeenCalledWith(Buffer.from('image2'))
@@ -274,9 +281,12 @@ describe('Processing utility functions', () => {
                     quantity: 1
                 }
             ]
-            
-            const result = await resizeImages(imagesWithNullBuffers, mockDimensions)
-            
+
+            const result = await resizeImages(
+                imagesWithNullBuffers,
+                mockDimensions
+            )
+
             expect(result).toHaveLength(2)
             expect(result[0].buffer).toBeNull()
             expect(result[1].buffer).toBeNull()
@@ -288,11 +298,14 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
-            
+
             vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
-            
-            const result = await resizeImages([mockCardImages[0]], mockDimensions)
-            
+
+            const result = await resizeImages(
+                [mockCardImages[0]],
+                mockDimensions
+            )
+
             expect(result[0].name).toBe('Card 1')
             expect(result[0].groupId).toBe(0)
             expect(result[0].quantity).toBe(1)
@@ -310,19 +323,19 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
-            
+
             vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
-            
+
             const fractionalDimensions = {
                 width: 100.7,
                 height: 140.3
             }
-            
+
             await resizeImages([mockCardImages[0]], fractionalDimensions)
-            
+
             expect(mockSharpInstance.resize).toHaveBeenCalledWith({
                 width: 101, // Math.round(100.7)
-                height: 140  // Math.round(140.3)
+                height: 140 // Math.round(140.3)
             })
         })
 
@@ -330,13 +343,16 @@ describe('Processing utility functions', () => {
             const sharp = await import('sharp')
             const mockSharpInstance = {
                 resize: vi.fn().mockReturnThis(),
-                toBuffer: vi.fn().mockRejectedValue(new Error('Sharp processing failed'))
+                toBuffer: vi
+                    .fn()
+                    .mockRejectedValue(new Error('Sharp processing failed'))
             }
-            
+
             vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
-            
-            await expect(resizeImages([mockCardImages[0]], mockDimensions))
-                .rejects.toThrow('Sharp processing failed')
+
+            await expect(
+                resizeImages([mockCardImages[0]], mockDimensions)
+            ).rejects.toThrow('Sharp processing failed')
         })
     })
 })

@@ -1,8 +1,8 @@
 // Utility functions for processing decklists
 // This file contains logic moved from the cards API route to separate data processing concerns
 
-import { CardItem } from '@/app/types/api'
-import { ScryfallCard } from '@/app/types/scryfall'
+import { CardItem } from '@/types/api'
+import { ScryfallCard } from '@/types/scryfall'
 
 const decklistSeparators = [
     '\n\n',

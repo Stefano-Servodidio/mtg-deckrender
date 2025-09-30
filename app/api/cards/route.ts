@@ -7,7 +7,7 @@ import {
     createMockCardItem,
     sleep
 } from './_utils/decklist'
-import { CardItem } from '@/app/types/api'
+import { CardItem } from '@/types/api'
 
 // Simple in-memory cache for card data
 const cardCache = new Map<string, { data: any; expires: number }>()

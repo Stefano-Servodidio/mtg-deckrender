@@ -7,7 +7,7 @@ export interface CardItem {
     cmc: ScryfallCard['cmc']
     typeLine: ScryfallCard['type_line']
     rarity: ScryfallCard['rarity']
-    image_uri: ScryfallCard['image_uris']['png'] | null
+    image_uri: string | null
     colors: ScryfallCard['colors']
     legalities: ScryfallCard['legalities']
     quantity: number // Number of copies of the card
@@ -99,4 +99,11 @@ export interface DeckPngOptions {
 export interface DeckPngRequest {
     cards: CardItem[]
     options?: DeckPngOptions
+}
+
+export interface ProgressInfo {
+    current: number
+    total: number
+    message: string
+    percentage: number
 }

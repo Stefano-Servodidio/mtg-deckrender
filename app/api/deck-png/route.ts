@@ -12,7 +12,7 @@ import {
     createCompositeImage,
     prepareQuantityOverlayOperations
 } from './_utils/compositing'
-import { DeckPngOptions, DeckPngRequest } from '@/app/types/api'
+import { DeckPngOptions, DeckPngRequest } from '@/types/api'
 import { downloadAllCardImages } from './_utils/api'
 
 const defaultOptions: DeckPngOptions = {

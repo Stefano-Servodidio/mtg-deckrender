@@ -7,10 +7,7 @@ import {
     createMockCardItem,
     sleep
 } from '../cards/_utils/decklist'
-import { CardItem } from '@/app/types/api'
-
-// Simple in-memory cache for card data
-const cardCache = new Map<string, { data: any; expires: number }>()
+import { CardItem } from '@/types/api'
 
 export async function POST(request: NextRequest) {
     try {
@@ -73,7 +70,7 @@ export async function POST(request: NextRequest) {
                     )
 
                     // Split cards into batches
-                    const batches: typeof uniqueCards[] = []
+                    const batches: (typeof uniqueCards)[] = []
                     for (let i = 0; i < uniqueCards.length; i += BATCH_SIZE) {
                         batches.push(uniqueCards.slice(i, i + BATCH_SIZE))
                     }
@@ -93,36 +90,38 @@ export async function POST(request: NextRequest) {
                         const cardsToFetch: typeof uniqueCards = []
 
                         for (const card of batch) {
-                            const cacheKey = card.name.toLowerCase()
-                            const cached = cardCache.get(cacheKey)
+                            // const cacheKey = card.name.toLowerCase()
+                            // const cached = cardCache.get(cacheKey)
 
-                            if (cached && cached.expires > now) {
-                                const cardData = {
-                                    ...cached.data,
-                                    quantity: card.quantity,
-                                    groupId: card.groupId
-                                }
-                                cachedCards.push(cardData)
-                                console.log(
-                                    chalk.cyan(`Cache hit for card: ${card.name}`)
-                                )
+                            // if (cached && cached.expires > now) {
+                            //     const cardData = {
+                            //         ...cached.data,
+                            //         quantity: card.quantity,
+                            //         groupId: card.groupId
+                            //     }
+                            //     cachedCards.push(cardData)
+                            //     console.log(
+                            //         chalk.cyan(
+                            //             `Cache hit for card: ${card.name}`
+                            //         )
+                            //     )
 
-                                processedCards++
-                                // Send progress update for cached card
-                                controller.enqueue(
-                                    new TextEncoder().encode(
-                                        `data: ${JSON.stringify({
-                                            type: 'progress',
-                                            current: processedCards,
-                                            total: totalCards,
-                                            message: `Loaded ${card.name} (cached)`,
-                                            card: cardData
-                                        })}\n\n`
-                                    )
-                                )
-                            } else {
-                                cardsToFetch.push(card)
-                            }
+                            //     processedCards++
+                            //     // Send progress update for cached card
+                            //     controller.enqueue(
+                            //         new TextEncoder().encode(
+                            //             `data: ${JSON.stringify({
+                            //                 type: 'progress',
+                            //                 current: processedCards,
+                            //                 total: totalCards,
+                            //                 message: `Loaded ${card.name} (cached)`,
+                            //                 card: cardData
+                            //             })}\n\n`
+                            //         )
+                            //     )
+                            // } else {
+                            cardsToFetch.push(card)
+                            // }
                         }
 
                         cards.push(...cachedCards)
@@ -142,9 +141,11 @@ export async function POST(request: NextRequest) {
                             )
 
                             try {
-                                const identifiers = cardsToFetch.map((card) => ({
-                                    name: card.name
-                                }))
+                                const identifiers = cardsToFetch.map(
+                                    (card) => ({
+                                        name: card.name
+                                    })
+                                )
 
                                 const response = await fetch(
                                     'https://api.scryfall.com/cards/collection',
@@ -183,13 +184,6 @@ export async function POST(request: NextRequest) {
                                         )
                                         cards.push(mockCardData)
 
-                                        // Cache the mock data
-                                        const cacheKey = card.name.toLowerCase()
-                                        cardCache.set(cacheKey, {
-                                            data: mockCardData,
-                                            expires: now + CACHE_DURATION
-                                        })
-
                                         processedCards++
                                         controller.enqueue(
                                             new TextEncoder().encode(
@@ -208,19 +202,24 @@ export async function POST(request: NextRequest) {
                                     const foundCards = batchData.data || []
 
                                     // Create a map of found cards by name (lowercase for matching)
-                                    const foundCardsMap = new Map<string, any>()
-                                    for (const scryfallCard of foundCards) {
-                                        foundCardsMap.set(
-                                            scryfallCard.name.toLowerCase(),
-                                            scryfallCard
-                                        )
-                                    }
+                                    // const foundCardsMap = new Map<string, any>()
+                                    // for (const scryfallCard of foundCards) {
+                                    //     foundCardsMap.set(
+                                    //         scryfallCard.name.toLowerCase(),
+                                    //         scryfallCard
+                                    //     )
+                                    // }
 
                                     // Process each card in the fetch list
                                     for (const card of cardsToFetch) {
                                         const cacheKey = card.name.toLowerCase()
-                                        const scryfallData =
-                                            foundCardsMap.get(cacheKey)
+                                        // const scryfallData = foundCardsMap.get(cacheKey)
+                                        const scryfallData = foundCards.find(
+                                            (c: any) =>
+                                                c.name
+                                                    .toLowerCase()
+                                                    .includes(cacheKey)
+                                        )
 
                                         if (scryfallData) {
                                             const cardData = createCardItem(
@@ -234,13 +233,16 @@ export async function POST(request: NextRequest) {
                                                 processedCards++
                                                 controller.enqueue(
                                                     new TextEncoder().encode(
-                                                        `data: ${JSON.stringify({
-                                                            type: 'progress',
-                                                            current: processedCards,
-                                                            total: totalCards,
-                                                            message: `No image available for ${card.name}`,
-                                                            error: card.name
-                                                        })}\n\n`
+                                                        `data: ${JSON.stringify(
+                                                            {
+                                                                type: 'progress',
+                                                                current:
+                                                                    processedCards,
+                                                                total: totalCards,
+                                                                message: `No image available for ${card.name}`,
+                                                                error: card.name
+                                                            }
+                                                        )}\n\n`
                                                     )
                                                 )
                                                 continue
@@ -249,10 +251,10 @@ export async function POST(request: NextRequest) {
                                             cards.push(cardData)
 
                                             // Cache the card data for 24 hours
-                                            cardCache.set(cacheKey, {
-                                                data: cardData,
-                                                expires: now + CACHE_DURATION
-                                            })
+                                            // cardCache.set(cacheKey, {
+                                            //     data: cardData,
+                                            //     expires: now + CACHE_DURATION
+                                            // })
 
                                             processedCards++
                                             controller.enqueue(
@@ -282,12 +284,6 @@ export async function POST(request: NextRequest) {
                                                     card.groupId
                                                 )
                                             cards.push(mockCardData)
-
-                                            // Cache the mock data
-                                            cardCache.set(cacheKey, {
-                                                data: mockCardData,
-                                                expires: now + CACHE_DURATION
-                                            })
 
                                             processedCards++
                                             controller.enqueue(
@@ -319,13 +315,6 @@ export async function POST(request: NextRequest) {
                                         card.groupId
                                     )
                                     cards.push(mockCardData)
-
-                                    // Cache the mock data
-                                    const cacheKey = card.name.toLowerCase()
-                                    cardCache.set(cacheKey, {
-                                        data: mockCardData,
-                                        expires: now + CACHE_DURATION
-                                    })
 
                                     processedCards++
                                     controller.enqueue(

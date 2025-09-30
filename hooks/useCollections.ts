@@ -1,21 +1,18 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { useFetchState } from './useFetchState'
-import { CardItem, DeckPngOptions, ProgressInfo } from '@/types/api'
+import { CardItem, CardsResponse, ProgressInfo } from '@/types/api'
 
-interface UseDeckPngReturn {
-    data: string | null
+interface UseCollectionsReturn {
+    data: CardsResponse | null
     error: Error | null
     isLoading: boolean
     progress: ProgressInfo | null
-    generateImage: (
-        _cards: CardItem[],
-        _options?: DeckPngOptions
-    ) => Promise<void>
+    fetchCollections: (_decklist: string) => Promise<void>
     reset: () => void
 }
 
-// Hook to generate a deck PNG image from card data
-export function useDeckPng(): UseDeckPngReturn {
+// Hook to fetch card collections
+export function useCollections(): UseCollectionsReturn {
     const {
         data,
         setData,
@@ -23,37 +20,34 @@ export function useDeckPng(): UseDeckPngReturn {
         setError,
         isLoading,
         setIsLoading,
+        reset,
         progress,
-        setProgress,
-        reset: resetState
-    } = useFetchState<string>()
+        setProgress
+    } = useFetchState<CardsResponse>()
 
-    const generateImage = useCallback(
-        async (cards: CardItem[], options?: DeckPngOptions) => {
-            if (!cards || cards.length === 0) {
-                setError(new Error('Cards are required'))
+    const fetchCollections = useCallback(
+        async (decklist: string) => {
+            if (!decklist?.trim()) {
+                setError(new Error('Decklist is required'))
                 return
             }
 
-            resetState()
+            reset()
             setIsLoading(true)
 
             try {
                 if (process.env.NODE_ENV === 'development') {
                     console.log(
-                        'POST /api/deck-png - Generating image (streaming)'
+                        'POST /api/collections - Fetching from API (streaming)'
                     )
                 }
 
-                const response = await fetch('/api/deck-png', {
+                const response = await fetch('/api/collections', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        cards,
-                        options
-                    })
+                    body: JSON.stringify({ decklist: decklist.trim() })
                 })
 
                 if (!response.ok) {
@@ -69,6 +63,8 @@ export function useDeckPng(): UseDeckPngReturn {
                     const reader = response.body.getReader()
                     const decoder = new TextDecoder()
                     let buffer = ''
+                    const cards: CardItem[] = []
+                    const errors: string[] = []
 
                     try {
                         while (true) {
@@ -91,35 +87,30 @@ export function useDeckPng(): UseDeckPngReturn {
                                                 current: data.current,
                                                 total: data.total,
                                                 message: data.message,
-                                                percentage: data.current // current is already a percentage for deck-png
+                                                percentage: Math.round(
+                                                    (data.current /
+                                                        data.total) *
+                                                        100
+                                                )
                                             }
                                             setProgress(progressInfo)
-                                        } else if (data.type === 'complete') {
-                                            // Convert base64 image to blob URL
-                                            const base64Data =
-                                                data.result.imageData
-                                            const binaryString =
-                                                atob(base64Data)
-                                            const bytes = new Uint8Array(
-                                                binaryString.length
-                                            )
-                                            for (
-                                                let i = 0;
-                                                i < binaryString.length;
-                                                i++
-                                            ) {
-                                                bytes[i] =
-                                                    binaryString.charCodeAt(i)
+
+                                            // Add collection to our accumulating list if provided
+                                            if (data.collection) {
+                                                cards.push(data.card)
                                             }
-                                            const blob = new Blob([bytes], {
-                                                type: 'image/png'
-                                            })
-                                            const imageUrl =
-                                                URL.createObjectURL(blob)
-                                            setData(imageUrl)
+
+                                            // Add error to our list if provided
+                                            if (data.error) {
+                                                errors.push(data.error)
+                                            }
+                                        } else if (data.type === 'complete') {
+                                            // Final result
+                                            const result = data.result
+                                            setData(result)
                                             setProgress({
-                                                current: 100,
-                                                total: 100,
+                                                current: result.cards.length,
+                                                total: result.cards.length,
                                                 message: data.message,
                                                 percentage: 100
                                             })
@@ -142,53 +133,35 @@ export function useDeckPng(): UseDeckPngReturn {
                         reader.releaseLock()
                     }
                 } else {
-                    // Fallback for non-streaming response (shouldn't happen with new implementation)
-                    const arrayBuffer = await response.arrayBuffer()
-                    const uint8Array = new Uint8Array(arrayBuffer)
-                    const blob = new Blob([uint8Array], { type: 'image/png' })
-                    const imageUrl = URL.createObjectURL(blob)
-                    setData(imageUrl)
+                    // Fallback to regular JSON response
+                    const result = await response.json()
+                    setData(result)
                 }
             } catch (err) {
                 const error =
                     err instanceof Error
                         ? err
-                        : new Error('Failed to generate deck PNG')
+                        : new Error('Failed to fetch card collections')
                 setError(error)
-                console.error('Error generating deck PNG:', error)
+                console.error('Error fetching card collections:', error)
             } finally {
                 setIsLoading(false)
             }
         },
-        [resetState, setData, setError, setIsLoading, setProgress]
+        [reset, setData, setError, setIsLoading, setProgress]
     )
 
-    const reset = useCallback(() => {
-        // Clean up any existing object URL
-        if (data) {
-            URL.revokeObjectURL(data)
-        }
-        resetState()
+    const resetWithProgress = useCallback(() => {
+        reset()
         setProgress(null)
-    }, [data, resetState, setProgress])
-
-    const revokeUrl = useCallback(() => {
-        if (data) {
-            URL.revokeObjectURL(data)
-        }
-    }, [data])
-
-    React.useEffect(() => {
-        return () => revokeUrl()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [reset, setProgress])
 
     return {
         data,
         error,
         isLoading,
         progress,
-        generateImage,
-        reset
+        fetchCollections,
+        reset: resetWithProgress
     }
 }

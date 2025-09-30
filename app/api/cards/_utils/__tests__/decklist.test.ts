@@ -6,7 +6,7 @@ import {
     createMockCardItem,
     sleep
 } from '../decklist'
-import { ScryfallCard } from '@/app/types/scryfall'
+import { ScryfallCard } from '@/types/scryfall'
 
 describe('Decklist utility functions', () => {
     describe('parseDecklist', () => {
