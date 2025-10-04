@@ -2,98 +2,55 @@
 
 ## Project Overview
 
-**Purpose**: A Next.js web application that converts Magic: The Gathering decklists to PNG images. Users can paste a decklist, the app fetches card images from the Scryfall API, and generates a composite PNG image for sharing or printing.
+A Next.js 14 web app that converts MTG decklists to PNG images using Scryfall API. Built with React 18, TypeScript, Chakra UI.
 
-**Tech Stack**: Next.js 14 (App Router), React 18, TypeScript, Chakra UI, Vitest (unit tests), Cypress (E2E tests)  
-**Repository Size**: ~122 source files, ~1,540 lines of core application code  
-**Node Version**: >= 22.0.0 required (package.json), though Node 20.x works with warnings  
-**Package Manager**: npm (lock file present)
+**Tech**: Next.js 14 App Router, React 18, TypeScript, Chakra UI, Vitest, Cypress  
+**Size**: ~122 source files, ~1,540 lines  
+**Node**: >= 22.0.0 (works with 20.x + warnings)  
+**Package Manager**: npm
 
 ## Critical Build and Test Information
 
 ### Installation
 
-**ALWAYS run this first:**
+**ALWAYS run:** `CYPRESS_INSTALL_BINARY=0 npm install`
 
-```bash
-CYPRESS_INSTALL_BINARY=0 npm install
-```
+**Why**: Cypress binary may fail in restricted networks. This skips binary but installs npm package. Use `npm run validate:e2e` without binary.
 
-**Why**: The Cypress binary download may fail in restricted network environments. Setting `CYPRESS_INSTALL_BINARY=0` skips the binary installation while still installing the npm package. E2E tests can still be validated via the `validate:e2e` script which doesn't require the binary.
+### Building
 
-### Building the Application
+**Known Issue**: Build fails - Cypress files included in TypeScript compilation.  
+**Error**: Type error in `cypress/support/commands.ts` about global augmentations.
 
-**Known Issue**: TypeScript compilation fails during `npm run build` because Cypress test files are inadvertently included in the TypeScript compilation.
+**Workaround**:
+1. Add `"exclude": ["node_modules", "cypress"]` to `tsconfig.json`, OR
+2. Add `export {}` at top of `cypress/support/commands.ts`
 
-**Error**: `Type error: Augmentations for the global scope can only be directly nested in external modules or ambient module declarations.` in `cypress/support/commands.ts`
+Then: `npm run build` (~60-90s)
 
-**Workaround**: The `tsconfig.json` needs to exclude Cypress files but currently doesn't. If you need to build:
+### Testing
 
-1. Temporarily add `"exclude": ["node_modules", "cypress"]` to `tsconfig.json`, OR
-2. Add `export {}` at the top of `cypress/support/commands.ts` to make it a module
+**Unit Tests (Vitest)**:
+- `npm run test:run` - Run once (~25-30s)
+- `npm test` - Watch mode
+- `npm run test:coverage` - With coverage
 
-**Build command** (after fix):
+**Current**: 3 tests fail (Accordion.test.tsx, decklist.test.ts) - pre-existing, don't fix unless required.
 
-```bash
-npm run build  # Takes ~60-90 seconds
-```
+**E2E (Cypress)**:
+- `npm run validate:e2e` - Validate without binary (~2s)
+- `npm run e2e` - Run tests (needs binary + dev server, 2-5min)
 
-### Running Tests
+**Note**: Cypress binary may be unavailable. Validate with unit tests.
 
-**Unit Tests** (Vitest):
+### Linting, Formatting, Dev
 
-```bash
-npm run test:run  # Run all tests once (~25-30 seconds)
-npm test          # Run in watch mode
-npm run test:coverage  # With coverage report
-```
+- `npm run lint` - May prompt for ESLint setup
+- `npm run format` - Auto-fix (always before commit)
+- `npm run format -- --check` - Check only
+- `npm run dev` - Dev server at http://localhost:3000 (~5-10s)
 
-**Current Status**: 3 tests are failing (known issues in Accordion.test.tsx and decklist.test.ts). These are pre-existing failures - do not fix them unless your task requires it.
-
-**E2E Tests** (Cypress):
-
-```bash
-npm run validate:e2e  # Validates Cypress setup without binary (~2 seconds)
-npm run e2e           # Runs E2E tests (requires Cypress binary + dev server)
-npm run e2e:open      # Opens Cypress UI (requires Cypress binary + dev server)
-```
-
-**Note**: E2E tests require the Cypress binary which may not be available. Always validate your changes with unit tests. E2E tests take 2-5 minutes to run.
-
-### Linting and Formatting
-
-**Lint**:
-
-```bash
-npm run lint  # May prompt for interactive ESLint setup on first run
-```
-
-**Format** (Prettier):
-
-```bash
-npm run format        # Auto-fix formatting
-npm run format -- --check  # Check only (won't modify files)
-```
-
-**Note**: Many files currently have formatting issues. Always run `npm run format` before committing.
-
-### Development Server
-
-```bash
-npm run dev  # Starts on http://localhost:3000
-```
-
-**Startup time**: ~5-10 seconds
-
-### Git Hooks
-
-**Important**: Git hooks are NOT automatically installed. To enable pre-commit hooks:
-
-```bash
-cp .githooks/* .git/hooks/
-```
-
-The pre-commit hook runs `npx lint-staged` which lints and formats staged files.
+**Git Hooks**: NOT auto-installed. Run `cp .githooks/* .git/hooks/` to enable lint-staged pre-commit.
 
 ## Project Architecture
 
@@ -142,60 +99,36 @@ The pre-commit hook runs `npx lint-staged` which lints and formats staged files.
 
 ### Configuration Files
 
-- `next.config.js`: Next.js config (ESLint ignored during builds, images unoptimized)
-- `tsconfig.json`: TypeScript config (paths alias `@/*` → `./`)
-- `eslint.config.mjs`: ESLint config (uses `unused-imports` plugin)
-- `vitest.config.ts`: Vitest config (jsdom environment, coverage thresholds: 60%)
-- `cypress.config.ts`: Cypress config (baseURL: localhost:3000, no video recording)
-- `.prettierrc`: Prettier config
-- `netlify.toml`: Netlify deployment config (Node 22)
+- `next.config.js`: ESLint ignored during builds, images unoptimized
+- `tsconfig.json`: Paths alias `@/*` → `./`
+- `eslint.config.mjs`: Uses `unused-imports` plugin
+- `vitest.config.ts`: jsdom environment, 60% coverage threshold
+- `cypress.config.ts`: baseURL localhost:3000, no video
+- `netlify.toml`: Node 22
 
 ### Key Source Files
 
-**Main Application Entry**:
+- `app/create/page.tsx` (277 lines): Main deck creation UI
+- `hooks/useCards.ts`, `useCollections.ts`, `useDeckPng.ts` (167-194 lines each): Core business logic  
+- `app/api/cards/route.ts`: Fetch 1-by-1 (max 75)
+- `app/api/collections/route.ts`: Batch fetch (max 150, 24hr cache)
+- `app/api/deck-png/route.ts`: Image generation (Sharp)
+- `components/DropZone.tsx` (104 lines): Decklist input
+- `components/FilterItem.tsx` (134 lines): Card filtering
+- `components/Navbar.tsx` (149 lines): Navigation
 
-- `app/create/page.tsx` (277 lines): Main UI for deck creation - handles decklist upload, card fetching, image generation, and download
+## CI/CD
 
-**Custom Hooks** (core business logic):
+`.github/workflows/ci.yml`: Runs on push to `main` + PRs. Node 20 (not 22). Steps: `npm ci` → `npm run lint`. Tests disabled.
 
-- `hooks/useCards.ts` (167 lines): Fetches cards one-by-one via `/api/cards`
-- `hooks/useCollections.ts` (167 lines): Fetches cards in batches via `/api/collections`
-- `hooks/useDeckPng.ts` (194 lines): Generates deck image via `/api/deck-png`
+## Common Pitfalls
 
-**API Routes**:
-
-- `app/api/cards/route.ts`: Named card API (max 75 cards)
-- `app/api/collections/route.ts`: Collections API with batching (max 150 cards, 24hr cache)
-- `app/api/deck-png/route.ts`: Image generation with Sharp library
-
-**Components**:
-
-- `components/DropZone.tsx` (104 lines): Drag-drop file upload and textarea for decklist input
-- `components/FilterItem.tsx` (134 lines): Card filtering and selection UI
-- `components/Navbar.tsx` (149 lines): Navigation with responsive design
-
-## CI/CD Pipeline
-
-**GitHub Actions** (`.github/workflows/ci.yml`):
-
-- Triggers: Push to `main`, all pull requests
-- Node version: 20 (not 22 as specified in package.json - known discrepancy)
-- Steps: `npm ci` → `npm run lint`
-- **Tests are commented out** in CI (`npm run test:coverage` is disabled)
-
-## Common Pitfalls and Workarounds
-
-1. **Build Failure**: If `npm run build` fails with TypeScript error about Cypress files, exclude cypress from `tsconfig.json` or add `export {}` to `cypress/support/commands.ts`
-
-2. **Cypress Install Failure**: Always use `CYPRESS_INSTALL_BINARY=0 npm install` in restricted environments
-
-3. **Node Version Warning**: Package.json requires Node >=22 but CI uses Node 20. Both work, ignore the EBADENGINE warning
-
-4. **Formatting Issues**: Run `npm run format` before committing - many files have existing formatting issues
-
-5. **Failing Tests**: 3 tests currently fail (Accordion component, decklist parsing). These are pre-existing - don't fix unless your task requires it
-
-6. **Lint Interactive Setup**: If `npm run lint` prompts for configuration, it means ESLint isn't fully configured. The eslint.config.mjs exists but Next.js may need additional setup
+1. **Build Failure**: Exclude cypress from `tsconfig.json` or add `export {}` to `cypress/support/commands.ts`
+2. **Cypress Install**: Always use `CYPRESS_INSTALL_BINARY=0 npm install`
+3. **Node Version**: Ignore EBADENGINE warning (package.json says >=22, CI uses 20, both work)
+4. **Formatting**: Run `npm run format` before commit
+5. **3 Failing Tests**: Pre-existing (Accordion, decklist) - don't fix unless required
+6. **Lint Setup**: May prompt interactively - eslint.config.mjs exists but Next.js needs setup
 
 ## Validation Checklist
 
@@ -208,16 +141,12 @@ Before finalizing changes, **always** run these commands in order:
 
 ## Additional Notes
 
-- **Scryfall API**: The app uses Scryfall's API for card data. Rate limits apply (10 requests/sec recommended)
-- **Image Generation**: Uses Sharp library for compositing card images into a deck image
-- **Overlays**: Quantity overlays (x2-x100) can be regenerated with `npm run generate:overlays`
-- **Caching**: Collections API caches responses for 24 hours in memory
-- **TODO**: DropZone.tsx has a TODO to add .dek file format support
+- Scryfall API rate limit: 10 req/sec recommended
+- Image generation: Sharp library
+- Overlays: Regenerate with `npm run generate:overlays` (x2-x100)
+- Caching: 24hr in-memory for Collections API
+- TODO in DropZone.tsx: add .dek file support
 
 ## Trust These Instructions
 
-These instructions are the result of thorough exploration and validation. Trust them and only search for additional information if:
-
-- The instructions are incomplete for your specific task
-- You encounter an error not documented here
-- You need to understand implementation details beyond what's provided
+Thoroughly validated through testing. Only search for more info if: instructions incomplete for your task, undocumented error, or need deeper implementation details.
