@@ -67,7 +67,7 @@ describe('getUniqueCards', () => {
     it('should parse a simple decklist correctly', () => {
         const decklist = '4 Lightning Bolt\n2 Counterspell'
         const result = getUniqueCards(decklist, 'main')
-        
+
         expect(result).toHaveLength(2)
         expect(result[0]).toEqual({
             name: 'Lightning Bolt',
@@ -75,7 +75,7 @@ describe('getUniqueCards', () => {
             type: 'main'
         })
     })
-    
+
     it('should handle edge cases', () => {
         const result = getUniqueCards('', 'main')
         expect(result).toHaveLength(0)
@@ -95,18 +95,18 @@ import { useFetchState } from '../hooks/useFetchState'
 describe('useFetchState', () => {
     it('should initialize with default values', () => {
         const { result } = renderHook(() => useFetchState<string>())
-        
+
         expect(result.current.data).toBeNull()
         expect(result.current.isLoading).toBe(false)
     })
-    
+
     it('should update state correctly', () => {
         const { result } = renderHook(() => useFetchState<string>())
-        
+
         act(() => {
             result.current.setData('test')
         })
-        
+
         expect(result.current.data).toBe('test')
     })
 })
@@ -200,6 +200,7 @@ it('should handle timeouts', async () => {
 ### 2. Test Coverage
 
 Focus on testing:
+
 - **Critical paths**: Core functionality like deck parsing and image generation
 - **Edge cases**: Empty inputs, invalid data, error conditions
 - **User interactions**: Button clicks, form submissions, file uploads
@@ -228,12 +229,13 @@ Focus on testing:
 ### 6. Error Handling
 
 Test error scenarios:
+
 ```typescript
 it('should handle API errors gracefully', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    
+
     // trigger error condition
-    
+
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Error'))
     consoleSpy.mockRestore()
 })
@@ -242,14 +244,17 @@ it('should handle API errors gracefully', () => {
 ## Configuration Files
 
 ### vitest.config.ts
+
 Main configuration for Vitest with React support and path aliases.
 
 ### test-setup.ts
+
 Global test setup including jest-dom matchers and cleanup configuration.
 
 ## Continuous Integration
 
 Tests run automatically on:
+
 - Every commit to any branch
 - Pull request creation and updates
 - Before deployment

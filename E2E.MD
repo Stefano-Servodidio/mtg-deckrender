@@ -93,6 +93,7 @@ cypress/
 #### Main Flow Tests (`deck-to-png-flow.cy.ts`)
 
 Tests the complete user workflow:
+
 1. Upload decklist (60x Island, 15x Plains)
 2. Generate image with default options
 3. Download generated image
@@ -101,6 +102,7 @@ Tests the complete user workflow:
 #### Navigation Tests (`navigation.cy.ts`)
 
 Tests UI navigation and responsive design:
+
 - Page navigation
 - Responsive behavior across viewports
 - Keyboard navigation
@@ -255,8 +257,8 @@ Store test data in `cypress/fixtures/`:
 ```json
 // cypress/fixtures/sample-decklists.json
 {
-  "basicLands": "60x Island\n15x Plains",
-  "complexDeck": "4x Lightning Bolt\n4x Counterspell\n..."
+    "basicLands": "60x Island\n15x Plains",
+    "complexDeck": "4x Lightning Bolt\n4x Counterspell\n..."
 }
 ```
 
@@ -275,7 +277,7 @@ For dynamic test data, generate it within tests:
 ```typescript
 const generateRandomDecklist = () => {
     const cards = ['Lightning Bolt', 'Counterspell', 'Island']
-    return cards.map(card => `4x ${card}`).join('\n')
+    return cards.map((card) => `4x ${card}`).join('\n')
 }
 ```
 
@@ -356,16 +358,16 @@ name: E2E Tests
 on: [push, pull_request]
 
 jobs:
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-      - run: npm ci
-      - run: npm run build
-      - run: npm run e2e
+    e2e:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '22'
+            - run: npm ci
+            - run: npm run build
+            - run: npm run e2e
 ```
 
 ### Test Reports
@@ -375,12 +377,12 @@ Configure test reporting for CI:
 ```typescript
 // cypress.config.ts
 export default defineConfig({
-  e2e: {
-    reporter: 'junit',
-    reporterOptions: {
-      mochaFile: 'cypress/results/test-results-[hash].xml'
+    e2e: {
+        reporter: 'junit',
+        reporterOptions: {
+            mochaFile: 'cypress/results/test-results-[hash].xml'
+        }
     }
-  }
 })
 ```
 
@@ -402,7 +404,7 @@ cy.intercept('GET', '**/scryfall.com/**', { fixture: 'cards.json' })
 Test image generation without actually downloading large files:
 
 ```typescript
-cy.intercept('POST', '/api/deck-png', { 
+cy.intercept('POST', '/api/deck-png', {
     statusCode: 200,
     headers: { 'content-type': 'image/png' },
     body: 'mock-image-data'
@@ -414,8 +416,10 @@ cy.intercept('POST', '/api/deck-png', {
 Validate that card data is properly formatted:
 
 ```typescript
-cy.window().its('localStorage').invoke('getItem', 'cardData')
-  .should('contain', 'image_uris')
+cy.window()
+    .its('localStorage')
+    .invoke('getItem', 'cardData')
+    .should('contain', 'image_uris')
 ```
 
 #### 4. Performance Testing
