@@ -23,6 +23,7 @@ A Next.js 14 web app that converts MTG decklists to PNG images using Scryfall AP
 **Error**: Type error in `cypress/support/commands.ts` about global augmentations.
 
 **Workaround**:
+
 1. Add `"exclude": ["node_modules", "cypress"]` to `tsconfig.json`, OR
 2. Add `export {}` at top of `cypress/support/commands.ts`
 
@@ -31,6 +32,7 @@ Then: `npm run build` (~60-90s)
 ### Testing
 
 **Unit Tests (Vitest)**:
+
 - `npm run test:run` - Run once (~25-30s)
 - `npm test` - Watch mode
 - `npm run test:coverage` - With coverage
@@ -38,6 +40,7 @@ Then: `npm run build` (~60-90s)
 **Current**: 3 tests fail (Accordion.test.tsx, decklist.test.ts) - pre-existing, don't fix unless required.
 
 **E2E (Cypress)**:
+
 - `npm run validate:e2e` - Validate without binary (~2s)
 - `npm run e2e` - Run tests (needs binary + dev server, 2-5min)
 
@@ -109,7 +112,7 @@ Then: `npm run build` (~60-90s)
 ### Key Source Files
 
 - `app/create/page.tsx` (277 lines): Main deck creation UI
-- `hooks/useCards.ts`, `useCollections.ts`, `useDeckPng.ts` (167-194 lines each): Core business logic  
+- `hooks/useCards.ts`, `useCollections.ts`, `useDeckPng.ts` (167-194 lines each): Core business logic
 - `app/api/cards/route.ts`: Fetch 1-by-1 (max 75)
 - `app/api/collections/route.ts`: Batch fetch (max 150, 24hr cache)
 - `app/api/deck-png/route.ts`: Image generation (Sharp)
