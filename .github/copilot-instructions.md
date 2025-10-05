@@ -19,15 +19,7 @@ A Next.js 14 web app that converts MTG decklists to PNG images using Scryfall AP
 
 ### Building
 
-**Known Issue**: Build fails - Cypress files included in TypeScript compilation.  
-**Error**: Type error in `cypress/support/commands.ts` about global augmentations.
-
-**Workaround**:
-
-1. Add `"exclude": ["node_modules", "cypress"]` to `tsconfig.json`, OR
-2. Add `export {}` at top of `cypress/support/commands.ts`
-
-Then: `npm run build` (~60-90s)
+Build command: `npm run build` (~60-90s)
 
 ### Testing
 
@@ -37,7 +29,7 @@ Then: `npm run build` (~60-90s)
 - `npm test` - Watch mode
 - `npm run test:coverage` - With coverage
 
-**Current**: 3 tests fail (Accordion.test.tsx, decklist.test.ts) - pre-existing, don't fix unless required.
+All tests pass.
 
 **E2E (Cypress)**:
 
@@ -126,20 +118,18 @@ Then: `npm run build` (~60-90s)
 
 ## Common Pitfalls
 
-1. **Build Failure**: Exclude cypress from `tsconfig.json` or add `export {}` to `cypress/support/commands.ts`
-2. **Cypress Install**: Always use `CYPRESS_INSTALL_BINARY=0 npm install`
-3. **Node Version**: Ignore EBADENGINE warning (package.json says >=22, CI uses 20, both work)
-4. **Formatting**: Run `npm run format` before commit
-5. **3 Failing Tests**: Pre-existing (Accordion, decklist) - don't fix unless required
-6. **Lint Setup**: May prompt interactively - eslint.config.mjs exists but Next.js needs setup
+1. **Cypress Install**: Always use `CYPRESS_INSTALL_BINARY=0 npm install`
+2. **Node Version**: Ignore EBADENGINE warning (package.json says >=22, CI uses 20, both work)
+3. **Formatting**: Run `npm run format` before commit
+4. **Lint Setup**: May prompt interactively - eslint.config.mjs exists but Next.js needs setup
 
 ## Validation Checklist
 
 Before finalizing changes, **always** run these commands in order:
 
 1. `npm run format` - Fix formatting
-2. `npm run test:run` - Run unit tests (expect 3 pre-existing failures)
-3. `npm run build` - Build the app (may fail due to Cypress - see workaround above)
+2. `npm run test:run` - Run unit tests (all should pass)
+3. `npm run build` - Build the app
 4. Manually test in browser with `npm run dev` if changing UI or API logic
 
 ## Additional Notes

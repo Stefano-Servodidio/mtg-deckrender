@@ -8,6 +8,8 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
+export {}
+
 // Custom command to upload a decklist
 Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
     // Navigate to the create page
