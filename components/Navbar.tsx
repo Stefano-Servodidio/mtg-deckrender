@@ -7,6 +7,7 @@ import {
     Heading,
     Button,
     useColorModeValue,
+    useColorMode,
     HStack,
     MenuButton,
     IconButton
@@ -16,12 +17,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
-import { useThemeMode } from '@/hooks/useThemeMode'
+import { useEffect } from 'react'
 
 export function Navbar() {
-    const { themeMode, toggleThemeMode } = useThemeMode()
+    const { colorMode, toggleColorMode } = useColorMode()
     const bg = useColorModeValue('white', 'gray.800')
     const borderColor = useColorModeValue('gray.200', 'gray.700')
+
+    // Sync color mode with our custom localStorage key
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('mtg-deck-theme-mode', colorMode)
+        }
+    }, [colorMode])
 
     return (
         <Box
@@ -108,8 +116,8 @@ export function Navbar() {
                         <IconButton
                             data-testid="theme-toggle-button"
                             aria-label="Toggle theme"
-                            icon={themeMode === 'light' ? <FaMoon /> : <FaSun />}
-                            onClick={toggleThemeMode}
+                            icon={colorMode === 'light' ? <FaMoon /> : <FaSun />}
+                            onClick={toggleColorMode}
                             variant="ghost"
                             size="md"
                         />
@@ -122,8 +130,8 @@ export function Navbar() {
                             <IconButton
                                 data-testid="theme-toggle-button-mobile"
                                 aria-label="Toggle theme"
-                                icon={themeMode === 'light' ? <FaMoon /> : <FaSun />}
-                                onClick={toggleThemeMode}
+                                icon={colorMode === 'light' ? <FaMoon /> : <FaSun />}
+                                onClick={toggleColorMode}
                                 variant="ghost"
                                 size="md"
                             />

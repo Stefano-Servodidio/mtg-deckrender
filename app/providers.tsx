@@ -2,34 +2,30 @@
 
 import theme from '@/theme'
 import { ChakraProvider, ColorModeScript } from '@chakra-ui/react'
-import { useThemeMode } from '@/hooks/useThemeMode'
 import { useEffect } from 'react'
 
-function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const { themeMode, isLoaded } = useThemeMode()
-
+function ColorModeManager({ children }: { children: React.ReactNode }) {
     useEffect(() => {
-        if (isLoaded && typeof document !== 'undefined') {
-            document.documentElement.setAttribute('data-theme', themeMode)
-            // Set Chakra UI color mode class
-            if (themeMode === 'dark') {
-                document.documentElement.classList.add('chakra-ui-dark')
-                document.documentElement.classList.remove('chakra-ui-light')
-            } else {
-                document.documentElement.classList.add('chakra-ui-light')
-                document.documentElement.classList.remove('chakra-ui-dark')
+        // Load theme from localStorage and sync with Chakra UI
+        if (typeof window !== 'undefined') {
+            const savedTheme = localStorage.getItem('mtg-deck-theme-mode')
+            if (savedTheme === 'dark' || savedTheme === 'light') {
+                // Set Chakra's localStorage
+                localStorage.setItem('chakra-ui-color-mode', savedTheme)
             }
         }
-    }, [themeMode, isLoaded])
+    }, [])
 
     return <>{children}</>
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
-        <ChakraProvider theme={theme}>
+        <>
             <ColorModeScript initialColorMode={theme.config.initialColorMode} />
-            <ThemeProvider>{children}</ThemeProvider>
-        </ChakraProvider>
+            <ChakraProvider theme={theme}>
+                <ColorModeManager>{children}</ColorModeManager>
+            </ChakraProvider>
+        </>
     )
 }
