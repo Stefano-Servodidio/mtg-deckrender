@@ -1,26 +1,27 @@
+'use client'
+
 import {
     Box,
     Container,
     Flex,
     Heading,
     Button,
-    // useColorModeValue,
+    useColorModeValue,
     HStack,
-    MenuButton
+    MenuButton,
+    IconButton
 } from '@chakra-ui/react'
-import { FaHome, FaImage } from 'react-icons/fa'
+import { FaHome, FaImage, FaMoon, FaSun } from 'react-icons/fa'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
+import { Menu, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
+import { useThemeMode } from '@/hooks/useThemeMode'
 
 export function Navbar() {
-    // const pathname = window?.location?.pathname
-    // const bg = useColorModeValue('white', 'gray.800')
-    // const borderColor = useColorModeValue('gray.200', 'gray.700')
-    // const menuHighlightBg = useColorModeValue('purple.50', 'purple.900')
-    const bg = 'white'
-    const borderColor = 'gray.200'
+    const { themeMode, toggleThemeMode } = useThemeMode()
+    const bg = useColorModeValue('white', 'gray.800')
+    const borderColor = useColorModeValue('gray.200', 'gray.700')
 
     return (
         <Box
@@ -82,8 +83,8 @@ export function Navbar() {
                                 leftIcon={<FaHome />}
                                 size="md"
                                 _hover={{
-                                    bg: 'purple.50',
-                                    color: 'purple.600'
+                                    bg: useColorModeValue('purple.50', 'purple.900'),
+                                    color: useColorModeValue('purple.600', 'purple.200')
                                 }}
                             >
                                 Home
@@ -104,43 +105,61 @@ export function Navbar() {
                                 Create
                             </Button>
                         </Link>
+                        <IconButton
+                            data-testid="theme-toggle-button"
+                            aria-label="Toggle theme"
+                            icon={themeMode === 'light' ? <FaMoon /> : <FaSun />}
+                            onClick={toggleThemeMode}
+                            variant="ghost"
+                            size="md"
+                        />
                     </HStack>
                     <Box
                         data-testid="navbar-links-mobile"
                         display={{ base: 'block', md: 'none' }}
                     >
-                        <Menu autoSelect={false}>
-                            <MenuButton
-                                data-testid="navbar-mobile-menu-button"
-                                as={IconButton}
-                                icon={<FaBars />}
-                                variant="outline"
-                                aria-label="Open menu"
-                                border={'none'}
+                        <HStack spacing={2}>
+                            <IconButton
+                                data-testid="theme-toggle-button-mobile"
+                                aria-label="Toggle theme"
+                                icon={themeMode === 'light' ? <FaMoon /> : <FaSun />}
+                                onClick={toggleThemeMode}
+                                variant="ghost"
+                                size="md"
                             />
-                            <MenuList>
-                                <Link href="/" passHref>
-                                    <MenuItem
-                                        icon={<FaHome />}
-                                        fontWeight="bold"
-                                        color={'purple.600'}
-                                        _hover={{ bg: 'purple.50' }}
-                                    >
-                                        Home
-                                    </MenuItem>
-                                </Link>
-                                <Link href="/create" passHref>
-                                    <MenuItem
-                                        icon={<FaImage />}
-                                        fontWeight="bold"
-                                        color={'orange.600'}
-                                        _hover={{ bg: 'orange.50' }}
-                                    >
-                                        Create
-                                    </MenuItem>
-                                </Link>
-                            </MenuList>
-                        </Menu>
+                            <Menu autoSelect={false}>
+                                <MenuButton
+                                    data-testid="navbar-mobile-menu-button"
+                                    as={IconButton}
+                                    icon={<FaBars />}
+                                    variant="outline"
+                                    aria-label="Open menu"
+                                    border={'none'}
+                                />
+                                <MenuList>
+                                    <Link href="/" passHref>
+                                        <MenuItem
+                                            icon={<FaHome />}
+                                            fontWeight="bold"
+                                            color={useColorModeValue('purple.600', 'purple.200')}
+                                            _hover={{ bg: useColorModeValue('purple.50', 'purple.900') }}
+                                        >
+                                            Home
+                                        </MenuItem>
+                                    </Link>
+                                    <Link href="/create" passHref>
+                                        <MenuItem
+                                            icon={<FaImage />}
+                                            fontWeight="bold"
+                                            color={useColorModeValue('orange.600', 'orange.200')}
+                                            _hover={{ bg: useColorModeValue('orange.50', 'orange.900') }}
+                                        >
+                                            Create
+                                        </MenuItem>
+                                    </Link>
+                                </MenuList>
+                            </Menu>
+                        </HStack>
                     </Box>
                 </Flex>
             </Container>

@@ -1,8 +1,14 @@
-import { extendTheme, withDefaultColorScheme } from '@chakra-ui/react'
+import { extendTheme, withDefaultColorScheme, type ThemeConfig } from '@chakra-ui/react'
+
+const config: ThemeConfig = {
+    initialColorMode: 'light',
+    useSystemColorMode: false
+}
 
 export const theme = extendTheme(
     withDefaultColorScheme({ colorScheme: 'purple' }),
     {
+        config,
         colors: {
             brand: {
                 50: '#f7fafc',
