@@ -226,10 +226,15 @@ export default function Create() {
         }
     ]
 
+    const bgGradient = useColorModeValue(
+        gradients.background.orange.light,
+        gradients.background.orange.dark
+    )
+
     return (
         <Box
             minH="100vh"
-            bgGradient={gradients.background.orange}
+            bgGradient={bgGradient}
             display="flex"
             flexDirection="column"
         >

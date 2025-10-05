@@ -1,4 +1,12 @@
-import { Box, Heading, IconProps, Stack, Text, VStack } from '@chakra-ui/react'
+import {
+    Box,
+    Heading,
+    IconProps,
+    Stack,
+    Text,
+    VStack,
+    useColorModeValue
+} from '@chakra-ui/react'
 import React from 'react'
 
 const FeatureCard: React.FC<{
@@ -6,14 +14,19 @@ const FeatureCard: React.FC<{
     title: React.ReactNode
     description: React.ReactNode
 }> = ({ icon, title, description }) => {
+    const bg = useColorModeValue('white', 'gray.700')
+    const textColor = useColorModeValue('gray.600', 'gray.300')
+    const shadow = useColorModeValue('md', 'dark-lg')
+    const hoverShadow = useColorModeValue('lg', 'dark-xl')
+
     return (
         <Box
-            bg="white"
+            bg={bg}
             p={8}
             borderRadius="lg"
-            shadow="md"
+            shadow={shadow}
             flex={1}
-            _hover={{ shadow: 'lg' }}
+            _hover={{ shadow: hoverShadow }}
             transition="shadow 0.2s"
         >
             <VStack spacing={4} align="start">
@@ -25,7 +38,7 @@ const FeatureCard: React.FC<{
                     {icon}
                     <Heading size="md">{title}</Heading>
                 </Stack>
-                <Text color="gray.600">{description}</Text>
+                <Text color={textColor}>{description}</Text>
             </VStack>
         </Box>
     )

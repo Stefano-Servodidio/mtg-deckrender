@@ -6,12 +6,16 @@ import { useEffect } from 'react'
 
 function ColorModeManager({ children }: { children: React.ReactNode }) {
     useEffect(() => {
-        // Load theme from localStorage and sync with Chakra UI
+        // Sync our custom localStorage key with Chakra UI's key
         if (typeof window !== 'undefined') {
             const savedTheme = localStorage.getItem('mtg-deck-theme-mode')
-            if (savedTheme === 'dark' || savedTheme === 'light') {
-                // Set Chakra's localStorage
+            const chakraTheme = localStorage.getItem('chakra-ui-color-mode')
+            
+            // If we have a saved theme but Chakra doesn't, sync it
+            if (savedTheme && !chakraTheme) {
                 localStorage.setItem('chakra-ui-color-mode', savedTheme)
+                // Force a re-render by dispatching a storage event
+                window.dispatchEvent(new Event('storage'))
             }
         }
     }, [])
@@ -22,7 +26,10 @@ function ColorModeManager({ children }: { children: React.ReactNode }) {
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <>
-            <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+            <ColorModeScript 
+                initialColorMode={theme.config.initialColorMode}
+                storageKey="chakra-ui-color-mode"
+            />
             <ChakraProvider theme={theme}>
                 <ColorModeManager>{children}</ColorModeManager>
             </ChakraProvider>
