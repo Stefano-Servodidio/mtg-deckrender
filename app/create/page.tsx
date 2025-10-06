@@ -17,6 +17,7 @@ import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 // import { useCards } from '@/hooks/useCards'
 import { useDeckPng } from '@/hooks/useDeckPng'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { gradients } from '@/theme/gradients'
 import UploadIcon from '@/components/icons/UploadIcon'
 import ImageIcon from '@/components/icons/ImageIcon'
@@ -32,6 +33,7 @@ export default function Create() {
     const [decklistText, setDecklistText] = useState('')
     const [accordionIndex, setAccordionIndex] = useState<number[]>([0])
     const toast = useToast()
+    const analytics = useAnalytics()
 
     // Use the custom hooks
     // const {
@@ -65,6 +67,14 @@ export default function Create() {
     // Handle cards fetch completion
     React.useEffect(() => {
         if (cardsData && !isLoadingCards && !cardsError) {
+            // Track successful card fetch
+            analytics.trackCardsFetch({
+                cards_requested: cardsData.cards?.length || 0,
+                cards_found: cardsData.cards?.length || 0,
+                cards_missing: cardsData.errors?.length || 0,
+                fetch_method: 'collection'
+            })
+
             if (cardsData?.errors?.length) {
                 toast({
                     title: 'Some cards were not found',
@@ -89,6 +99,12 @@ export default function Create() {
             }
             setAccordionIndex([1])
         } else if (cardsError && !isLoadingCards) {
+            // Track error
+            analytics.trackError(
+                cardsError.message || 'Card fetch failed',
+                false
+            )
+
             toast({
                 title: 'Upload failed',
                 description: cardsError.message || 'Failed to fetch card data.',
@@ -97,7 +113,7 @@ export default function Create() {
                 isClosable: true
             })
         }
-    }, [cardsData, cardsError, isLoadingCards, toast])
+    }, [cardsData, cardsError, isLoadingCards, toast, analytics])
 
     // Handle image generation completion
     React.useEffect(() => {
@@ -112,6 +128,12 @@ export default function Create() {
             // Move to download section after successful generation
             setAccordionIndex([2])
         } else if (imageError && !isGenerating) {
+            // Track error
+            analytics.trackError(
+                imageError.message || 'Image generation failed',
+                false
+            )
+
             toast({
                 title: 'Generation failed',
                 description:
@@ -123,7 +145,7 @@ export default function Create() {
             })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [generatedImage, imageError, isGenerating, toast])
+    }, [generatedImage, imageError, isGenerating, toast, analytics])
 
     /* Handlers */
     const handleUpload = async () => {
@@ -138,6 +160,10 @@ export default function Create() {
             return
         }
 
+        // Track deck upload
+        const lineCount = decklistText.trim().split('\n').length
+        analytics.trackDeckUpload(lineCount)
+
         await fetchCards(decklistText.trim())
     }
 
@@ -145,6 +171,9 @@ export default function Create() {
         (files: File[]) => {
             const file = files[0]
             if (file && file.type === 'text/plain') {
+                // Track file upload
+                analytics.trackFileUpload(file.name, file.type)
+
                 const reader = new FileReader()
                 reader.onload = (e) => {
                     const content = e.target?.result as string
@@ -168,7 +197,7 @@ export default function Create() {
                 })
             }
         },
-        [toast]
+        [toast, analytics]
     )
 
     const handleGenerateImage = async (options: DeckPngOptions) => {
@@ -182,6 +211,15 @@ export default function Create() {
             })
             return
         }
+
+        // Track image generation
+        analytics.trackImageGeneration({
+            image_variant: options.imageVariant || 'grid',
+            image_size: options.imageSize || 'ig_square',
+            image_format: options.fileType || 'png',
+            card_count: cardsData.cards.length,
+            sort_by: options.sortBy
+        })
 
         await generateImage(cardsData.cards, options)
     }
@@ -222,7 +260,12 @@ export default function Create() {
             title: 'Download Deck Image',
             description: 'Download your generated deck image',
             icon: <DownloadIcon w={6} h={6} />,
-            content: <DownloadSection generatedImage={generatedImage} />
+            content: (
+                <DownloadSection
+                    generatedImage={generatedImage}
+                    cardCount={cardsData?.cards?.length || 0}
+                />
+            )
         }
     ]
 

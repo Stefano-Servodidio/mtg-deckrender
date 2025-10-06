@@ -1,3 +1,5 @@
+'use client'
+
 import {
     Box,
     Container,
@@ -13,8 +15,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export function Navbar() {
+    const analytics = useAnalytics()
     // const pathname = window?.location?.pathname
     // const bg = useColorModeValue('white', 'gray.800')
     // const borderColor = useColorModeValue('gray.200', 'gray.700')
@@ -81,6 +85,9 @@ export function Navbar() {
                                 variant="ghost"
                                 leftIcon={<FaHome />}
                                 size="md"
+                                onClick={() =>
+                                    analytics.trackLinkClick('Home', '/')
+                                }
                                 _hover={{
                                     bg: 'purple.50',
                                     color: 'purple.600'
@@ -95,6 +102,12 @@ export function Navbar() {
                                 colorScheme="orange"
                                 leftIcon={<FaImage />}
                                 size="md"
+                                onClick={() =>
+                                    analytics.trackLinkClick(
+                                        'Create',
+                                        '/create'
+                                    )
+                                }
                                 _hover={{
                                     transform: 'translateY(-1px)',
                                     boxShadow: 'md'
@@ -124,6 +137,12 @@ export function Navbar() {
                                         icon={<FaHome />}
                                         fontWeight="bold"
                                         color={'purple.600'}
+                                        onClick={() =>
+                                            analytics.trackLinkClick(
+                                                'Home (Mobile)',
+                                                '/'
+                                            )
+                                        }
                                         _hover={{ bg: 'purple.50' }}
                                     >
                                         Home
@@ -134,6 +153,12 @@ export function Navbar() {
                                         icon={<FaImage />}
                                         fontWeight="bold"
                                         color={'orange.600'}
+                                        onClick={() =>
+                                            analytics.trackLinkClick(
+                                                'Create (Mobile)',
+                                                '/create'
+                                            )
+                                        }
                                         _hover={{ bg: 'orange.50' }}
                                     >
                                         Create

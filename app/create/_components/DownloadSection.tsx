@@ -3,13 +3,22 @@ import { Box, Button, Text, VStack } from '@chakra-ui/react'
 import React from 'react'
 import { FaDownload } from 'react-icons/fa'
 import Image from 'next/image'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export interface DownloadSectionProps {
     generatedImage: string | null
+    cardCount?: number
 }
 const DownloadSection: React.FC<DownloadSectionProps> = ({
-    generatedImage
+    generatedImage,
+    cardCount = 0
 }) => {
+    const analytics = useAnalytics()
+
+    const handleDownload = () => {
+        analytics.trackImageDownload('png', cardCount)
+    }
+
     return (
         <VStack spacing={6}>
             {generatedImage ? (
@@ -48,6 +57,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                         size="lg"
                         colorScheme="green"
                         leftIcon={<FaDownload />}
+                        onClick={handleDownload}
                         w={{
                             base: 'full',
                             md: 'auto'
