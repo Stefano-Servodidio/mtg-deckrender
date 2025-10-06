@@ -1,5 +1,3 @@
-'use client'
-
 import {
     Box,
     Container,
@@ -8,8 +6,7 @@ import {
     Button,
     VStack,
     HStack,
-    Flex,
-    useColorModeValue
+    Flex
 } from '@chakra-ui/react'
 import Link from 'next/link'
 import { Footer } from '@/components/Footer'
@@ -21,17 +18,10 @@ import { gradients } from '@/theme/gradients'
 import FeatureCard from '@/components/FeatureCard'
 
 export default function Home() {
-    const bgGradient = useColorModeValue(
-        gradients.background.purple.light,
-        gradients.background.purple.dark
-    )
-    const textColor = useColorModeValue('gray.600', 'gray.300')
-    const secondaryTextColor = useColorModeValue('gray.500', 'gray.400')
-
     return (
         <Box
             minH="100vh"
-            bgGradient={bgGradient}
+            bgGradient={gradients.background.purple}
             display="flex"
             flexDirection="column"
         >
@@ -56,7 +46,7 @@ export default function Home() {
                         </Heading>
                         <Text
                             fontSize={{ base: 'lg', md: 'xl' }}
-                            color={textColor}
+                            color="gray.600"
                             maxW="2xl"
                         >
                             Transform your Magic: The Gathering decklists into
@@ -75,12 +65,10 @@ export default function Home() {
                     >
                         <VStack flex={1}>
                             <UploadIcon />
-                            <Text fontWeight="semibold" color={textColor}>
-                                Upload or Paste
-                            </Text>
+                            <Text fontWeight="semibold">Upload or Paste</Text>
                             <Text
                                 fontSize="sm"
-                                color={secondaryTextColor}
+                                color="gray.500"
                                 textAlign="center"
                                 minH="42px"
                             >
@@ -89,12 +77,10 @@ export default function Home() {
                         </VStack>
                         <VStack flex={1}>
                             <ImageIcon />
-                            <Text fontWeight="semibold" color={textColor}>
-                                Generate Image
-                            </Text>
+                            <Text fontWeight="semibold">Generate Image</Text>
                             <Text
                                 fontSize="sm"
-                                color={secondaryTextColor}
+                                color="gray.500"
                                 textAlign="center"
                                 minH="42px"
                             >
@@ -103,12 +89,10 @@ export default function Home() {
                         </VStack>
                         <VStack flex={1}>
                             <DownloadIcon />
-                            <Text fontWeight="semibold" color={textColor}>
-                                Download & Share
-                            </Text>
+                            <Text fontWeight="semibold">Download & Share</Text>
                             <Text
                                 fontSize="sm"
-                                color={secondaryTextColor}
+                                color="gray.500"
                                 textAlign="center"
                                 minH="42px"
                             >
@@ -140,11 +124,7 @@ export default function Home() {
             {/* Features Section */}
             <Container maxW="7xl" py={16}>
                 <VStack spacing={12}>
-                    <Heading
-                        size={{ base: 'lg', md: 'xl' }}
-                        textAlign="center"
-                        color={textColor}
-                    >
+                    <Heading size={{ base: 'lg', md: 'xl' }} textAlign="center">
                         A deck image generator for the Magic community
                     </Heading>
 

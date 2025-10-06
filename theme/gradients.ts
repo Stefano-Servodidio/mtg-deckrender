@@ -1,13 +1,7 @@
 export const gradients = {
     background: {
-        purple: {
-            light: 'linear(to-r, purple.50, blue.50)',
-            dark: 'linear(to-r, gray.900, gray.800)'
-        },
-        orange: {
-            light: 'linear(to-r, orange.50, purple.50)',
-            dark: 'linear(to-r, gray.900, gray.800)'
-        }
+        purple: 'linear(to-r, purple.50, blue.50)',
+        orange: 'linear(to-r, orange.50, purple.50)'
     },
     header: {
         purple: 'linear(to-r, purple.400, blue.400)',
