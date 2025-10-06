@@ -5,15 +5,15 @@ import {
     calculateCardDimensions,
     resizeImages,
     sortCards
-} from './_utils/processing'
+} from '../../../utils/processing'
 import {
     prepareCardOperations,
     createCanvas,
     createCompositeImage,
     prepareQuantityOverlayOperations
-} from './_utils/compositing'
+} from '../../../utils/compositing'
 import { DeckPngOptions, DeckPngRequest } from '@/types/api'
-import { downloadAllCardImages } from './_utils/api'
+import { downloadAllCardImages } from '../../../utils/api'
 
 const defaultOptions: DeckPngOptions = {
     imageSize: 'ig_square' as const,

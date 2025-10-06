@@ -6,7 +6,7 @@ import {
     createCardItem,
     createMockCardItem,
     sleep
-} from './_utils/decklist'
+} from '../../../utils/decklist'
 import { CardItem } from '@/types/api'
 import { cardCache } from '@/utils/cache'
 
@@ -272,6 +272,11 @@ export async function GET() {
         message: 'Card Images API',
         usage: 'POST with { "decklist": "4x Card Name 1\n4x Card Name 2" }',
         description:
-            'Fetches card information and images for the provided text decklist.'
+            'Fetches card information and images for the provided text decklist. Supports up to 75 unique cards.',
+        limits: {
+            maxCards: 75,
+            throttling: '50ms between requests to Scryfall',
+            cacheDuration: '24 hours'
+        }
     })
 }

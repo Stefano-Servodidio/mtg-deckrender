@@ -1,6 +1,5 @@
-import { CardItem } from '@/types/api'
+import { CardImageBuffer, CardItem, ProgressCallback } from '@/types/api'
 import chalk from 'chalk'
-import { CardImageBuffer, ProgressCallback } from '../_types'
 import { cardImageCache } from '@/utils/cache'
 
 /**

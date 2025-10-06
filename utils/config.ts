@@ -1,8 +1,7 @@
 // Configuration file for deck PNG generation dimensions and settings
 // This centralizes all layout calculations and makes them human-readable
 
-import { ImageSize } from '@/types/api'
-import { Dimensions } from '../_types'
+import { Dimensions, ImageSize } from '@/types/api'
 
 export const DECK_LAYOUT_CONFIG = {
     // Base card dimensions (from Scryfall small images)

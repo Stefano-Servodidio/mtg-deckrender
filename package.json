@@ -11,6 +11,7 @@
         "start": "next start",
         "lint": "next lint",
         "format": "prettier --write .",
+        "type:check": "tsc --noEmit",
         "test": "vitest",
         "test:run": "vitest run",
         "test:ui": "vitest --ui",

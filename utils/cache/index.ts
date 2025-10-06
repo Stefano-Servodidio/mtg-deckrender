@@ -1,6 +1,5 @@
-import { CardItem } from '@/types/api'
+import { CardImageBuffer, CardItem } from '@/types/api'
 import { CircularCache } from './circularCache'
-import { CardImageBuffer } from '@/app/api/deck-png/_types'
 
 // Create a singleton instance for overlay caching
 export const overlayCache = new CircularCache<Buffer>(200)

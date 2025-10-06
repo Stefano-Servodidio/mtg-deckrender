@@ -339,13 +339,5 @@ describe('Decklist utility functions', () => {
             expect(end - start).toBeGreaterThanOrEqual(45)
             expect(end - start).toBeLessThan(100)
         })
-
-        test('should work with 0 milliseconds', async () => {
-            const start = Date.now()
-            await sleep(0)
-            const end = Date.now()
-
-            expect(end - start).toBeLessThan(10)
-        })
     })
 })

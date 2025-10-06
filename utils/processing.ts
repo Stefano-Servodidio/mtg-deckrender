@@ -8,9 +8,10 @@ import {
     SORT_OPTION,
     ImageResolution,
     ImageSize,
-    ImageVariant
+    ImageVariant,
+    CardImageBuffer,
+    Dimensions
 } from '@/types/api'
-import { CardImageBuffer, Dimensions } from '../_types'
 import { DECK_LAYOUT_CONFIG, ROW_SIZE, CANVAS_SIZE } from './config'
 import sharp from 'sharp'
 

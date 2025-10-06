@@ -1,7 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { sortCards, resizeImages } from '../processing'
-import { CardItem } from '@/types/api'
-import { CardImageBuffer } from '../_types'
+import { CardImageBuffer, CardItem } from '@/types/api'
 
 // Mock sharp
 vi.mock('sharp', () => {

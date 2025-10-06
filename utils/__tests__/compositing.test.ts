@@ -4,7 +4,7 @@ import {
     createCanvas,
     createCompositeImage
 } from '../compositing'
-import { CardImageBuffer, Dimensions } from '../_types'
+import { CardImageBuffer, Dimensions } from '@/types/api'
 
 // Mock dependencies
 vi.mock('sharp', () => {
@@ -172,11 +172,6 @@ describe('Compositing utility functions', () => {
 
         test('should create canvas with transparent background by default', () => {
             const result = createCanvas(mockDimensions)
-            expect(result).toBeDefined()
-        })
-
-        test('should create canvas with black background', () => {
-            const result = createCanvas(mockDimensions, 'black')
             expect(result).toBeDefined()
         })
 

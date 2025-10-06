@@ -2,9 +2,14 @@
 // This file contains logic for positioning cards and quantity overlays on the canvas
 
 import sharp from 'sharp'
-import { CardImageBuffer, Dimensions } from '../_types'
 import { DECK_LAYOUT_CONFIG, ROW_SIZE } from './config'
-import { ImageSize, ImageVariant, BackgroundStyle } from '@/types/api'
+import {
+    ImageSize,
+    ImageVariant,
+    BackgroundStyle,
+    CardImageBuffer,
+    Dimensions
+} from '@/types/api'
 import { calculateRowHeight } from './processing'
 import { overlayCache } from '@/utils/cache'
 import { getAssetBuffer } from '@/utils/assets'

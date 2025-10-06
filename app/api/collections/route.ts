@@ -6,7 +6,7 @@ import {
     createCardItem,
     createMockCardItem,
     sleep
-} from '../cards/_utils/decklist'
+} from '../../../utils/decklist'
 import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
 
