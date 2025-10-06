@@ -70,8 +70,7 @@ describe('Decklist utility functions', () => {
 
         test('should handle empty decklist', () => {
             const result = parseDecklist('')
-            expect(result).toHaveLength(1)
-            expect(result[0]).toBe('')
+            expect(result).toHaveLength(0)
         })
 
         test('should trim whitespace', () => {

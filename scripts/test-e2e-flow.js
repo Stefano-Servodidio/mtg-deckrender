@@ -18,8 +18,14 @@ function makeRequest(url, options = {}) {
         const client = url.startsWith('https') ? https : http
         const req = client.request(url, options, (res) => {
             let data = ''
-            res.on('data', chunk => data += chunk)
-            res.on('end', () => resolve({ statusCode: res.statusCode, data, headers: res.headers }))
+            res.on('data', (chunk) => (data += chunk))
+            res.on('end', () =>
+                resolve({
+                    statusCode: res.statusCode,
+                    data,
+                    headers: res.headers
+                })
+            )
         })
         req.on('error', reject)
         if (options.body) {
@@ -59,12 +65,16 @@ async function testEndpoints() {
         try {
             console.log(`Testing: ${test.name}`)
             const response = await makeRequest(test.url)
-            const expectedCodes = Array.isArray(test.expected) ? test.expected : [test.expected]
-            
+            const expectedCodes = Array.isArray(test.expected)
+                ? test.expected
+                : [test.expected]
+
             if (expectedCodes.includes(response.statusCode)) {
                 console.log(`  ✅ Status: ${response.statusCode}`)
             } else {
-                console.log(`  ❌ Status: ${response.statusCode}, expected: ${expectedCodes.join(' or ')}`)
+                console.log(
+                    `  ❌ Status: ${response.statusCode}, expected: ${expectedCodes.join(' or ')}`
+                )
                 allPassed = false
             }
         } catch (error) {
@@ -78,17 +88,21 @@ async function testEndpoints() {
 
 async function testDeckPngAPI() {
     console.log('\n🎯 Testing Deck PNG API workflow...')
-    
+
     try {
         // Test GET request to see API documentation
         const getResponse = await makeRequest(`${baseUrl}/api/deck-png`)
         if (getResponse.statusCode === 200) {
             console.log('  ✅ API documentation endpoint works')
-            
+
             // Parse response to verify it contains expected fields
             try {
                 const apiInfo = JSON.parse(getResponse.data)
-                if (apiInfo.message && apiInfo.usage && apiInfo.expectedFormat) {
+                if (
+                    apiInfo.message &&
+                    apiInfo.usage &&
+                    apiInfo.expectedFormat
+                ) {
                     console.log('  ✅ API documentation has correct structure')
                 } else {
                     console.log('  ⚠️  API documentation structure incomplete')
@@ -97,7 +111,9 @@ async function testDeckPngAPI() {
                 console.log('  ⚠️  API documentation is not valid JSON')
             }
         } else {
-            console.log(`  ❌ API documentation endpoint failed: ${getResponse.statusCode}`)
+            console.log(
+                `  ❌ API documentation endpoint failed: ${getResponse.statusCode}`
+            )
             return false
         }
 
@@ -109,14 +125,19 @@ async function testDeckPngAPI() {
             },
             body: JSON.stringify({ invalid: 'data' })
         }
-        
-        const postResponse = await makeRequest(`${baseUrl}/api/deck-png`, postOptions)
+
+        const postResponse = await makeRequest(
+            `${baseUrl}/api/deck-png`,
+            postOptions
+        )
         if (postResponse.statusCode === 400) {
             console.log('  ✅ API correctly rejects invalid requests')
         } else {
-            console.log(`  ⚠️  API response to invalid data: ${postResponse.statusCode}`)
+            console.log(
+                `  ⚠️  API response to invalid data: ${postResponse.statusCode}`
+            )
         }
-        
+
         return true
     } catch (error) {
         console.log(`  ❌ Error testing API: ${error.message}`)
@@ -126,18 +147,20 @@ async function testDeckPngAPI() {
 
 async function main() {
     console.log(`Testing against server: ${baseUrl}\n`)
-    
+
     // First verify the server is running
     try {
         await makeRequest(baseUrl)
     } catch (error) {
-        console.log('❌ Server is not running. Please start it with: npm run dev')
+        console.log(
+            '❌ Server is not running. Please start it with: npm run dev'
+        )
         process.exit(1)
     }
-    
+
     const endpointsPass = await testEndpoints()
     const apiPass = await testDeckPngAPI()
-    
+
     console.log('\n' + '='.repeat(50))
     if (endpointsPass && apiPass) {
         console.log('🎉 All E2E flow validation tests passed!')

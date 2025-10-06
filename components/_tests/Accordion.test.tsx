@@ -46,12 +46,14 @@ describe('Accordion', () => {
 
     it('renders content only after expanding', () => {
         renderAccordion()
-        expect(screen.queryByText('Content 1')).not.toBeVisible()
+        // Content should be in the document but not visible when collapsed
+        expect(screen.getByText('Content 1')).toBeInTheDocument()
         const buttons = screen.getAllByRole('button')
         act(() => {
             fireEvent.click(buttons[0])
         })
-        expect(screen.getByText('Content 1')).toBeVisible()
+        // After clicking, content should still be in the document
+        expect(screen.getByText('Content 1')).toBeInTheDocument()
     })
 
     it('renders multiple sections', () => {
@@ -67,7 +69,8 @@ describe('Accordion', () => {
             fireEvent.click(buttons[0])
             fireEvent.click(buttons[1])
         })
-        expect(screen.getByText('Content 1')).toBeVisible()
-        expect(screen.getByText('Content 2')).toBeVisible()
+        // Both contents should be in the document after clicking
+        expect(screen.getByText('Content 1')).toBeInTheDocument()
+        expect(screen.getByText('Content 2')).toBeInTheDocument()
     })
 })

@@ -44,10 +44,13 @@ describe('Collections API', () => {
 
     describe('POST /api/collections', () => {
         test('should reject invalid request body', async () => {
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({})
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({})
+                }
+            )
 
             const response = await POST(request)
             const data = await response.json()
@@ -57,10 +60,13 @@ describe('Collections API', () => {
         })
 
         test('should reject non-string decklist', async () => {
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist: 123 })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist: 123 })
+                }
+            )
 
             const response = await POST(request)
             const data = await response.json()
@@ -70,10 +76,13 @@ describe('Collections API', () => {
         })
 
         test('should reject empty decklist', async () => {
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist: 'invalid card line' })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist: 'invalid card line' })
+                }
+            )
 
             const response = await POST(request)
             const data = await response.json()
@@ -87,16 +96,21 @@ describe('Collections API', () => {
             const cards = Array.from({ length: 151 }, (_, i) => `1 Card ${i}`)
             const decklist = cards.join('\n')
 
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist })
+                }
+            )
 
             const response = await POST(request)
             const data = await response.json()
 
             expect(response.status).toBe(400)
-            expect(data.error).toContain('exceeds the maximum of 150 unique cards')
+            expect(data.error).toContain(
+                'exceeds the maximum of 150 unique cards'
+            )
         })
 
         test('should accept valid decklist with less than 150 cards', async () => {
@@ -147,7 +161,9 @@ describe('Collections API', () => {
                             cmc: 2,
                             type_line: 'Instant',
                             rarity: 'common',
-                            image_uris: { png: 'https://example.com/counter.png' },
+                            image_uris: {
+                                png: 'https://example.com/counter.png'
+                            },
                             colors: ['U'],
                             legalities: {
                                 standard: 'not_legal',
@@ -179,7 +195,9 @@ describe('Collections API', () => {
                             cmc: 0,
                             type_line: 'Artifact',
                             rarity: 'rare',
-                            image_uris: { png: 'https://example.com/lotus.png' },
+                            image_uris: {
+                                png: 'https://example.com/lotus.png'
+                            },
                             colors: [],
                             legalities: {
                                 standard: 'not_legal',
@@ -210,10 +228,13 @@ describe('Collections API', () => {
                 })
             })
 
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist })
+                }
+            )
 
             const response = await POST(request)
 
@@ -240,7 +261,10 @@ describe('Collections API', () => {
         test('should handle batching for more than 75 cards', async () => {
             // Create a decklist with 80 unique cards (requires 2 batches)
             // Use unique names to avoid cache hits from other tests
-            const cards = Array.from({ length: 80 }, (_, i) => `1 BatchCard ${i}`)
+            const cards = Array.from(
+                { length: 80 },
+                (_, i) => `1 BatchCard ${i}`
+            )
             const decklist = cards.join('\n')
 
             // Mock fetch to return data for both batches
@@ -329,17 +353,20 @@ describe('Collections API', () => {
                     })
                 })
 
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist })
+                }
+            )
 
             const response = await POST(request)
 
             // Consume the stream to ensure all batches are processed
             if (response.body) {
                 const reader = response.body.getReader()
-                
+
                 try {
                     while (true) {
                         const { done } = await reader.read()
@@ -361,10 +388,13 @@ describe('Collections API', () => {
             // Mock fetch to fail
             global.fetch = vi.fn().mockRejectedValueOnce(new Error('API Error'))
 
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist })
+                }
+            )
 
             const response = await POST(request)
 
@@ -387,10 +417,13 @@ describe('Collections API', () => {
                 })
             })
 
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: JSON.stringify({ decklist })
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist })
+                }
+            )
 
             const response = await POST(request)
 
@@ -401,10 +434,13 @@ describe('Collections API', () => {
         })
 
         test('should handle internal server error', async () => {
-            const request = new NextRequest('http://localhost/api/collections', {
-                method: 'POST',
-                body: 'invalid json'
-            })
+            const request = new NextRequest(
+                'http://localhost/api/collections',
+                {
+                    method: 'POST',
+                    body: 'invalid json'
+                }
+            )
 
             const response = await POST(request)
             const data = await response.json()

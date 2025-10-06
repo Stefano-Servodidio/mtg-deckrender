@@ -267,11 +267,7 @@ describe('Compositing utility functions', () => {
         })
 
         test('should handle empty operations arrays', async () => {
-            const result = await createCompositeImage(
-                mockCanvas,
-                [],
-                []
-            )
+            const result = await createCompositeImage(mockCanvas, [], [])
 
             expect(mockCanvas.composite).toHaveBeenCalledWith([])
             expect(result).toEqual(Buffer.from('composite-result'))
@@ -307,14 +303,18 @@ describe('Compositing utility functions', () => {
             const errorCanvas = {
                 composite: vi.fn().mockReturnThis(),
                 png: vi.fn().mockReturnThis(),
-                toBuffer: vi.fn().mockRejectedValue(new Error('Compositing failed'))
+                toBuffer: vi
+                    .fn()
+                    .mockRejectedValue(new Error('Compositing failed'))
             } as any
 
-            await expect(createCompositeImage(
-                errorCanvas,
-                mockCardOperations,
-                mockOverlayOperations
-            )).rejects.toThrow('Compositing failed')
+            await expect(
+                createCompositeImage(
+                    errorCanvas,
+                    mockCardOperations,
+                    mockOverlayOperations
+                )
+            ).rejects.toThrow('Compositing failed')
         })
     })
 })

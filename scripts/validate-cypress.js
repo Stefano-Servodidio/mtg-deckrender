@@ -25,7 +25,7 @@ const requiredFiles = [
 let allFilesExist = true
 
 console.log('📁 Checking required files:')
-requiredFiles.forEach(file => {
+requiredFiles.forEach((file) => {
     const filePath = path.join(__dirname, '..', file)
     if (fs.existsSync(filePath)) {
         console.log(`  ✅ ${file}`)
@@ -40,12 +40,12 @@ console.log('\n📦 Checking package.json:')
 const packageJsonPath = path.join(__dirname, '..', 'package.json')
 if (fs.existsSync(packageJsonPath)) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
-    
+
     // Check dependencies
     const requiredDeps = ['cypress', '@cypress/react', 'start-server-and-test']
     const devDeps = packageJson.devDependencies || {}
-    
-    requiredDeps.forEach(dep => {
+
+    requiredDeps.forEach((dep) => {
         if (devDeps[dep]) {
             console.log(`  ✅ ${dep} (${devDeps[dep]})`)
         } else {
@@ -53,13 +53,13 @@ if (fs.existsSync(packageJsonPath)) {
             allFilesExist = false
         }
     })
-    
+
     // Check scripts
     const requiredScripts = ['cypress:open', 'cypress:run', 'e2e', 'e2e:open']
     const scripts = packageJson.scripts || {}
-    
+
     console.log('\n🚀 Checking npm scripts:')
-    requiredScripts.forEach(script => {
+    requiredScripts.forEach((script) => {
         if (scripts[script]) {
             console.log(`  ✅ ${script}: ${scripts[script]}`)
         } else {
@@ -74,7 +74,7 @@ console.log('\n⚙️  Checking Cypress configuration:')
 const cypressConfigPath = path.join(__dirname, '..', 'cypress.config.ts')
 if (fs.existsSync(cypressConfigPath)) {
     const configContent = fs.readFileSync(cypressConfigPath, 'utf8')
-    
+
     // Check for required configuration elements
     const requiredConfigs = [
         'baseUrl',
@@ -83,8 +83,8 @@ if (fs.existsSync(cypressConfigPath)) {
         'viewportWidth',
         'viewportHeight'
     ]
-    
-    requiredConfigs.forEach(config => {
+
+    requiredConfigs.forEach((config) => {
         if (configContent.includes(config)) {
             console.log(`  ✅ ${config} configured`)
         } else {
@@ -96,13 +96,19 @@ if (fs.existsSync(cypressConfigPath)) {
 
 // Check test fixtures
 console.log('\n🎯 Checking test fixtures:')
-const fixturesPath = path.join(__dirname, '..', 'cypress', 'fixtures', 'sample-decklists.json')
+const fixturesPath = path.join(
+    __dirname,
+    '..',
+    'cypress',
+    'fixtures',
+    'sample-decklists.json'
+)
 if (fs.existsSync(fixturesPath)) {
     try {
         const fixtures = JSON.parse(fs.readFileSync(fixturesPath, 'utf8'))
         const expectedFixtures = ['basicLands', 'mixedDeck', 'withSideboard']
-        
-        expectedFixtures.forEach(fixture => {
+
+        expectedFixtures.forEach((fixture) => {
             if (fixtures[fixture]) {
                 console.log(`  ✅ ${fixture} fixture exists`)
             } else {
@@ -127,6 +133,8 @@ if (allFilesExist) {
     console.log('  4. Or run headless: npm run e2e')
     process.exit(0)
 } else {
-    console.log('❌ Some validation checks failed. Please review the missing items above.')
+    console.log(
+        '❌ Some validation checks failed. Please review the missing items above.'
+    )
     process.exit(1)
 }

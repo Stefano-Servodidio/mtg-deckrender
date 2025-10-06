@@ -69,7 +69,10 @@ describe('Processing utility functions', () => {
         })
 
         test('should scale dimensions for high resolution', () => {
-            const standardResult = calculateCanvasDimensions('ig_square', 'standard')
+            const standardResult = calculateCanvasDimensions(
+                'ig_square',
+                'standard'
+            )
             const highResult = calculateCanvasDimensions('ig_square', 'high')
 
             expect(highResult.width).toBe(standardResult.width * 1.5)
@@ -127,9 +130,18 @@ describe('Processing utility functions', () => {
         test('should have correct canvas size values', () => {
             expect(CANVAS_SIZE.ig_square).toEqual({ width: 1080, height: 1080 })
             expect(CANVAS_SIZE.ig_story).toEqual({ width: 1080, height: 1920 })
-            expect(CANVAS_SIZE.ig_portrait).toEqual({ width: 1080, height: 1350 })
-            expect(CANVAS_SIZE.facebook_post).toEqual({ width: 1200, height: 630 })
-            expect(CANVAS_SIZE.twitter_post).toEqual({ width: 1200, height: 675 })
+            expect(CANVAS_SIZE.ig_portrait).toEqual({
+                width: 1080,
+                height: 1350
+            })
+            expect(CANVAS_SIZE.facebook_post).toEqual({
+                width: 1200,
+                height: 630
+            })
+            expect(CANVAS_SIZE.twitter_post).toEqual({
+                width: 1200,
+                height: 675
+            })
         })
     })
 

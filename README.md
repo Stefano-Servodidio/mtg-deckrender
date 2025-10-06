@@ -52,9 +52,10 @@ Fetches card information using Scryfall's named card API (one request per card).
 **Limits:** Maximum 75 unique cards
 
 **Request:**
+
 ```json
 {
-  "decklist": "4x Lightning Bolt\n2x Counterspell\n1x Jace, the Mind Sculptor"
+    "decklist": "4x Lightning Bolt\n2x Counterspell\n1x Jace, the Mind Sculptor"
 }
 ```
 
@@ -67,13 +68,15 @@ Fetches card information using Scryfall's Collections API (batch requests).
 **Limits:** Maximum 150 unique cards (2 batches × 75 cards)
 
 **Request:**
+
 ```json
 {
-  "decklist": "4x Lightning Bolt\n2x Counterspell\n1x Jace, the Mind Sculptor"
+    "decklist": "4x Lightning Bolt\n2x Counterspell\n1x Jace, the Mind Sculptor"
 }
 ```
 
 **Features:**
+
 - Batching: Automatically splits requests into batches of 75 cards
 - Throttling: 50ms delay between batch requests
 - Caching: 24-hour in-memory cache for fetched cards
