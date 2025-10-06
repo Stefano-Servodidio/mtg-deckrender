@@ -28,6 +28,31 @@ describe('Collections API', () => {
         vi.clearAllMocks()
     })
 
+    describe('Maintenance mode', () => {
+        test('GET should return 503 when maintenance mode is enabled', async () => {
+            process.env.NEXT_PUBLIC_MAINTENANCE = 'true'
+            const response = await GET()
+            expect(response.status).toBe(503)
+            const data = await response.json()
+            expect(data.error).toBe('Service Unavailable - Maintenance mode')
+        })
+
+        test('POST should return 503 when maintenance mode is enabled', async () => {
+            process.env.NEXT_PUBLIC_MAINTENANCE = 'true'
+            const request = new NextRequest(
+                'http://localhost:3000/api/collections',
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ decklist: '4x Lightning Bolt' })
+                }
+            )
+            const response = await POST(request)
+            expect(response.status).toBe(503)
+            const data = await response.json()
+            expect(data.error).toBe('Service Unavailable - Maintenance mode')
+        })
+    })
+
     describe('GET /api/collections', () => {
         test('should return API documentation', async () => {
             const response = await GET()
