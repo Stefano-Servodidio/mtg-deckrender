@@ -36,6 +36,7 @@ export default function NotFound() {
                     </Text>
                     <Link href="/" style={{ textDecoration: 'none' }}>
                         <Button
+                            data-testid="404-home-button"
                             size="lg"
                             colorScheme="orange"
                             px={8}

@@ -108,6 +108,7 @@ export default function Home() {
 
                     <Link href="/create" style={{ textDecoration: 'none' }}>
                         <Button
+                            data-testid="hero-cta-button"
                             size="xl"
                             colorScheme="orange"
                             px={8}
