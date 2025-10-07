@@ -11,6 +11,7 @@ import {
     Progress
 } from '@chakra-ui/react'
 import { FaUpload } from 'react-icons/fa'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface ProgressInfo {
     current: number
@@ -36,6 +37,15 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     handleFileUpload,
     progress
 }) => {
+    const analytics = useAnalytics()
+
+    const handleUploadClick = () => {
+        analytics.trackButtonClick('Upload Decklist', {
+            event_label: 'upload_section'
+        })
+        handleUpload()
+    }
+
     return (
         <VStack spacing={6} w="full">
             <HStack
@@ -135,7 +145,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 data-testid="upload-button"
                 size="lg"
                 leftIcon={<FaUpload />}
-                onClick={handleUpload}
+                onClick={handleUploadClick}
                 isLoading={isLoadingCards}
                 colorScheme="orange"
                 loadingText="Uploading..."

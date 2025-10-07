@@ -1,3 +1,5 @@
+'use client'
+
 import {
     Box,
     Container,
@@ -16,8 +18,11 @@ import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadIcon from '@/components/icons/UploadIcon'
 import { gradients } from '@/theme/gradients'
 import FeatureCard from '@/components/FeatureCard'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function Home() {
+    const analytics = useAnalytics()
+
     return (
         <Box
             minH="100vh"
@@ -109,6 +114,15 @@ export default function Home() {
                             py={6}
                             fontSize="xl"
                             fontWeight={'bold'}
+                            onClick={() =>
+                                analytics.trackButtonClick(
+                                    'Create Deck Image (Hero CTA)',
+                                    {
+                                        click_url: '/create',
+                                        event_label: 'hero_cta'
+                                    }
+                                )
+                            }
                             _hover={{
                                 transform: 'translateY(-2px)',
                                 boxShadow: 'xl'

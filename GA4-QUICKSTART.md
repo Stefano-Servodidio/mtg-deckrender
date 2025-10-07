@@ -20,6 +20,7 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 ```
 
 **That's it!** The integration will automatically:
+
 - Load GA4 script on page load
 - Track page views on navigation
 - Track all implemented events
@@ -31,11 +32,11 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 1. Start the dev server: `npm run dev`
 2. Open browser console (F12)
 3. Look for `[GA4]` messages:
-   ```
-   [GA4] Initialized with ID: G-XXXXXXXXXX
-   [GA4] Page View: { page_path: "/", ... }
-   [GA4] Event: button_click { click_text: "...", ... }
-   ```
+    ```
+    [GA4] Initialized with ID: G-XXXXXXXXXX
+    [GA4] Page View: { page_path: "/", ... }
+    [GA4] Event: button_click { click_text: "...", ... }
+    ```
 
 ### Production Testing
 
@@ -50,22 +51,22 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 
 These events are tracked automatically without any code changes:
 
-| Event | When Tracked |
-|-------|-------------|
+| Event       | When Tracked       |
+| ----------- | ------------------ |
 | `page_view` | Every route change |
 
 ### Implemented Events
 
 These events are already integrated in the app:
 
-| Event | Location | Tracks |
-|-------|----------|--------|
-| `link_click` | Navbar | Navigation clicks (Home, Create) |
-| `deck_upload` | Create page | Deck text submission |
-| `file_upload` | Create page | File drag & drop |
-| `cards_fetch` | Create page | Card API fetching |
-| `image_generate` | Create page | Image generation |
-| `image_download` | Create page | PNG download |
+| Event            | Location    | Tracks                           |
+| ---------------- | ----------- | -------------------------------- |
+| `link_click`     | Navbar      | Navigation clicks (Home, Create) |
+| `deck_upload`    | Create page | Deck text submission             |
+| `file_upload`    | Create page | File drag & drop                 |
+| `cards_fetch`    | Create page | Card API fetching                |
+| `image_generate` | Create page | Image generation                 |
+| `image_download` | Create page | PNG download                     |
 
 ### Custom Events
 
@@ -80,7 +81,7 @@ function MyComponent() {
     const handleAction = () => {
         // Track the event
         analytics.trackButtonClick('My Action Button')
-        
+
         // Your logic here
         doSomething()
     }
@@ -126,25 +127,26 @@ analytics.trackTiming('operation_name', durationMs, 'category')
 ### Recommended Reports
 
 1. **Realtime Overview**
-   - Path: Reports → Realtime
-   - See: Active users, page views, events in real-time
+    - Path: Reports → Realtime
+    - See: Active users, page views, events in real-time
 
 2. **User Engagement**
-   - Path: Reports → Engagement → Events
-   - Filter by custom events: `deck_upload`, `cards_fetch`, `image_generate`, `image_download`
+    - Path: Reports → Engagement → Events
+    - Filter by custom events: `deck_upload`, `cards_fetch`, `image_generate`, `image_download`
 
 3. **Conversion Funnel**
    Create a custom funnel:
-   - Step 1: `page_view` (path: `/`)
-   - Step 2: `page_view` (path: `/create`)
-   - Step 3: `deck_upload`
-   - Step 4: `cards_fetch`
-   - Step 5: `image_generate`
-   - Step 6: `image_download`
+    - Step 1: `page_view` (path: `/`)
+    - Step 2: `page_view` (path: `/create`)
+    - Step 3: `deck_upload`
+    - Step 4: `cards_fetch`
+    - Step 5: `image_generate`
+    - Step 6: `image_download`
 
 ### Custom Dimensions
 
 Consider creating custom dimensions for:
+
 - `card_count` - Number of cards in deck
 - `image_variant` - Type of image (grid, spoiler, stacks)
 - `fetch_method` - API fetch method (individual, collection)
@@ -154,6 +156,7 @@ Consider creating custom dimensions for:
 ### Events not showing in GA4
 
 **Wait 24-48 hours** for initial data to appear. For immediate feedback:
+
 - Check **Realtime** reports
 - Verify `NEXT_PUBLIC_GA_ID` is set correctly
 - Check browser console for `[GA4]` messages
@@ -161,6 +164,7 @@ Consider creating custom dimensions for:
 ### Console shows "not tracked"
 
 This is normal in development when:
+
 - GA script is blocked by ad blocker
 - User has Do Not Track enabled
 - `NEXT_PUBLIC_GA_ID` is a dummy value
@@ -170,6 +174,7 @@ Events are still logged to console for debugging.
 ### TypeScript errors
 
 Ensure you're importing types correctly:
+
 ```typescript
 import { useAnalytics } from '@/hooks/useAnalytics'
 import type { GAEventParams } from '@/types/analytics'
@@ -215,7 +220,7 @@ const startTime = Date.now()
 try {
     const response = await fetch('/api/cards')
     const duration = Date.now() - startTime
-    
+
     analytics.trackAPIRequest({
         api_endpoint: '/api/cards',
         api_method: 'POST',
@@ -250,6 +255,7 @@ trackEvent(GA_EVENTS.BUTTON_CLICK, {
 ## Support
 
 For issues or questions:
+
 1. Check [ANALYTICS.md](./ANALYTICS.md)
 2. Review browser console for `[GA4]` messages
 3. Verify environment variable is set

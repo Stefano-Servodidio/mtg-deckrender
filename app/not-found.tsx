@@ -1,9 +1,14 @@
+'use client'
+
 import { Box, Container, Heading, Text, VStack, Button } from '@chakra-ui/react'
 import Link from 'next/link'
 import { gradients } from '@/theme/gradients'
 import AlertIcon from '@/components/icons/AlertIcon'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 export default function NotFound() {
+    const analytics = useAnalytics()
+
     return (
         <Box
             minH="100vh"
@@ -37,6 +42,12 @@ export default function NotFound() {
                             py={6}
                             fontSize="lg"
                             fontWeight="bold"
+                            onClick={() =>
+                                analytics.trackButtonClick('Go to Home (404)', {
+                                    click_url: '/',
+                                    event_label: '404_recovery'
+                                })
+                            }
                             _hover={{
                                 transform: 'translateY(-2px)',
                                 boxShadow: 'xl'
