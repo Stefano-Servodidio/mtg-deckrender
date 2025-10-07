@@ -5,7 +5,7 @@
  * Handles GA4 script injection and initialization
  */
 
-import { useEffect, Suspense } from 'react'
+import { useEffect, useRef, Suspense } from 'react'
 import Script from 'next/script'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { initGA, trackPageView } from '@/utils/analytics'
@@ -14,10 +14,17 @@ function GoogleAnalyticsContent() {
     const pathname = usePathname()
     const searchParams = useSearchParams()
     const gaId = process.env.NEXT_PUBLIC_GA_ID
+    const isFirstLoad = useRef(true)
 
     // Track page views on route change
     useEffect(() => {
         if (!gaId) return
+
+        // Skip the first page view as it's handled by GA config
+        if (isFirstLoad.current) {
+            isFirstLoad.current = false
+            return
+        }
 
         const url =
             pathname +

@@ -52,7 +52,7 @@ export const initGA = (measurementId: string): void => {
 
     // Configure GA4
     window.gtag('config', measurementId, {
-        send_page_view: false, // We'll handle page views manually
+        send_page_view: true, // Let GA handle the initial page view
         cookie_flags: 'SameSite=None;Secure', // GDPR consideration
         anonymize_ip: true // GDPR compliance
     })
