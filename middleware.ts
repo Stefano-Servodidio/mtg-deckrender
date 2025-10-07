@@ -6,7 +6,11 @@ export function middleware(request: NextRequest) {
 
     // Skip middleware for site-down page and its assets
     if (pathname.startsWith('/site-down')) {
-        return NextResponse.next()
+        // If maintenance mode is enabled, allow access to site-down page
+        if (isMaintenanceMode) {
+            return NextResponse.next()
+        }
+        return NextResponse.redirect(new URL('/', request.url))
     }
 
     // If maintenance mode is enabled, redirect to site-down
