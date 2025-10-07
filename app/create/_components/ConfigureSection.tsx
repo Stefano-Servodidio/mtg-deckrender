@@ -86,6 +86,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
 
             {/* Generate Button */}
             <Button
+                data-testid="generate-button"
                 size="lg"
                 colorScheme="blue"
                 leftIcon={<FaImage />}

@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
                                 )
 
                                 const response = await fetch(
-                                    'https://api.scryfall.com/cards/collection',
+                                    `${process.env.NEXT_PUBLIC_API_URL_SCRYFALL}cards/collection`,
                                     {
                                         method: 'POST',
                                         headers: {

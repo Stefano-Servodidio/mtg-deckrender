@@ -16,6 +16,9 @@ do
 
         # Run Vitest (unit tests)
         npx vitest run || exit 1
+
+        # Run Cypress tests
+        npx cypress run || exit 1
     fi
 done
 
