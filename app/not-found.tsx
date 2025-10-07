@@ -1,6 +1,7 @@
 import { Box, Container, Heading, Text, VStack, Button } from '@chakra-ui/react'
 import Link from 'next/link'
 import { gradients } from '@/theme/gradients'
+import AlertIcon from '@/components/icons/AlertIcon'
 
 export default function NotFound() {
     return (
@@ -14,6 +15,7 @@ export default function NotFound() {
         >
             <Container maxW="2xl" centerContent>
                 <VStack spacing={6} textAlign="center">
+                    <AlertIcon boxSize={12} color="orange.500" />
                     <Heading
                         size="2xl"
                         bgGradient={gradients.header.purple}

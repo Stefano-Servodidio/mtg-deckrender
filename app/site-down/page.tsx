@@ -1,6 +1,6 @@
-import { Box, Container, Heading, Text, VStack, Icon } from '@chakra-ui/react'
+import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react'
 import { gradients } from '@/theme/gradients'
-import { FaExclamationCircle } from 'react-icons/fa'
+import WrenchIcon from '@/components/icons/WrenchIcon'
 
 export default function SiteDown() {
     return (
@@ -14,6 +14,7 @@ export default function SiteDown() {
         >
             <Container maxW="2xl" centerContent>
                 <VStack spacing={6} textAlign="center">
+                    <WrenchIcon boxSize={12} color="gray.500" />
                     <Heading
                         size="2xl"
                         bgGradient={gradients.header.purple}
