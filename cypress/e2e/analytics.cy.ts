@@ -210,7 +210,7 @@ describe('Google Analytics 4 Integration', () => {
             // This test verifies that without GA ID, gtag is not defined
             // In actual app, GA component won't render without NEXT_PUBLIC_GA_ID
             // Note: This would require a separate test environment without GA_ID set
-            
+
             cy.window().then((win) => {
                 // If GA is configured, gtag should exist (either real or stubbed)
                 // If not configured, the GoogleAnalytics component won't render
@@ -258,7 +258,8 @@ describe('Google Analytics 4 Integration', () => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const linkClickCall = calls.find(
                     (call: any) =>
-                        call.args[0] === 'event' && call.args[1] === 'link_click'
+                        call.args[0] === 'event' &&
+                        call.args[1] === 'link_click'
                 )
 
                 expect(linkClickCall).to.exist

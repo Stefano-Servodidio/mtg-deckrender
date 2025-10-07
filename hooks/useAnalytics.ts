@@ -3,7 +3,7 @@
  * Provides convenient methods for tracking events in React components
  */
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { trackEvent, trackError, trackTiming } from '@/utils/analytics'
 import {
     GA_EVENTS,
@@ -151,18 +151,35 @@ export function useAnalytics() {
         []
     )
 
-    return {
-        trackButtonClick,
-        trackLinkClick,
-        trackFormSubmit,
-        trackFileUpload,
-        trackDeckUpload,
-        trackCardsFetch,
-        trackImageGeneration,
-        trackImageDownload,
-        trackAPIRequest,
-        trackAPIError,
-        trackError: trackErrorEvent,
-        trackTiming: trackTimingEvent
-    }
+    // Memoize the returned object to prevent infinite loops in useEffect
+    return useMemo(
+        () => ({
+            trackButtonClick,
+            trackLinkClick,
+            trackFormSubmit,
+            trackFileUpload,
+            trackDeckUpload,
+            trackCardsFetch,
+            trackImageGeneration,
+            trackImageDownload,
+            trackAPIRequest,
+            trackAPIError,
+            trackError: trackErrorEvent,
+            trackTiming: trackTimingEvent
+        }),
+        [
+            trackButtonClick,
+            trackLinkClick,
+            trackFormSubmit,
+            trackFileUpload,
+            trackDeckUpload,
+            trackCardsFetch,
+            trackImageGeneration,
+            trackImageDownload,
+            trackAPIRequest,
+            trackAPIError,
+            trackErrorEvent,
+            trackTimingEvent
+        ]
+    )
 }
