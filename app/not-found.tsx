@@ -1,12 +1,4 @@
-import {
-    Box,
-    Container,
-    Heading,
-    Text,
-    VStack,
-    Icon,
-    Button
-} from '@chakra-ui/react'
+import { Box, Container, Heading, Text, VStack, Button } from '@chakra-ui/react'
 import Link from 'next/link'
 import { gradients } from '@/theme/gradients'
 
@@ -22,17 +14,12 @@ export default function NotFound() {
         >
             <Container maxW="2xl" centerContent>
                 <VStack spacing={6} textAlign="center">
-                    <Icon viewBox="0 0 24 24" boxSize={20} color="orange.500">
-                        <path
-                            fill="currentColor"
-                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-                        />
-                    </Icon>
                     <Heading
                         size="2xl"
                         bgGradient={gradients.header.purple}
                         bgClip="text"
                         fontWeight="bold"
+                        lineHeight={{ base: '1.3', md: '1.4' }}
                     >
                         404 - Page Not Found
                     </Heading>
