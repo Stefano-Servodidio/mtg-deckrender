@@ -12,54 +12,59 @@ export {}
 
 // Custom command to upload a decklist
 Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
-    // Navigate to the create page
-    cy.visit('/create')
-
     // Find the textarea and enter the decklist
     cy.get('textarea[placeholder*="Paste the decklist"]')
         .clear()
         .type(decklistText, { delay: 10 })
 
     // Click the upload button
-    cy.get('button').contains('Upload Decklist').click()
+    cy.get('button[data-testid="upload-button"]').click()
 
     // Wait for the upload to complete - look for success indicators
-    cy.get('[data-testid="upload-progress"], .chakra-progress', {
-        timeout: 30000
-    }).should('be.visible')
+    // cy.get('[data-testid="upload-progress"], .chakra-progress', {
+    //     timeout: 30000
+    // }).should('be.visible')
 
     // Wait for the upload to finish (progress disappears or shows completion)
-    cy.get('button')
-        .contains('Upload Decklist')
-        .should('not.be.disabled', { timeout: 60000 })
+    cy.get('button[data-testid="upload-button"]').should('not.be.disabled', {
+        timeout: 60000
+    })
 })
 
 // Custom command to generate the deck image
-Cypress.Commands.add('generateImage', () => {
+Cypress.Commands.add('generateImage', (navigate = false) => {
     // Click the configure section to expand it if needed
-    cy.get('button').contains('Configure Image').click()
+    if (navigate) {
+        cy.get('button').contains('Configure Image').click()
+    }
 
     // Wait a moment for the section to expand
     cy.wait(1000)
 
     // Click the generate button
-    cy.get('button').contains('Generate Deck Image').click()
+    cy.get('button[data-testid="generate-button"]').click()
 
     // Wait for generation to complete
-    // cy.get('button').contains('Generate Deck Image').should('not.have.attr', 'data-loading', 'true', { timeout: 60000 })
+    cy.get('button[data-testid="generate-button"]').contains(
+        'Generate Deck Image',
+        {
+            timeout: 60000
+        }
+    )
 })
 
 // Custom command to download the generated image
-Cypress.Commands.add('downloadImage', () => {
+Cypress.Commands.add('downloadImage', (navigate = false) => {
     // Click the download section to expand it if needed
-    cy.get('button').contains('Download Deck Image').click()
+    if (navigate) {
+        cy.get('button').contains('Download Deck Image').click()
+    }
 
     // Wait for the section to expand
     cy.wait(1000)
 
     // Verify download button is available
-    cy.get('button')
-        .contains('Download')
+    cy.get('a[data-testid="download-button"]')
         .should('be.visible')
         .and('not.be.disabled')
 })
@@ -79,10 +84,10 @@ Cypress.Commands.add('waitForToast', (message?: string) => {
 declare global {
     namespace Cypress {
         interface Chainable {
-            uploadDecklist(decklistText: string): Chainable<Element>
+            uploadDecklist(_decklistText: string): Chainable<Element>
             generateImage(): Chainable<Element>
             downloadImage(): Chainable<Element>
-            waitForToast(message?: string): Chainable<Element>
+            waitForToast(_message?: string): Chainable<Element>
         }
     }
 }

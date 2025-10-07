@@ -9,8 +9,13 @@ import {
 } from '../../../utils/decklist'
 import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
+import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
 
 export async function POST(request: NextRequest) {
+    if (isMaintenanceMode()) {
+        return maintenanceResponse()
+    }
+
     try {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/collections')))
 
@@ -149,7 +154,7 @@ export async function POST(request: NextRequest) {
                                 )
 
                                 const response = await fetch(
-                                    'https://api.scryfall.com/cards/collection',
+                                    `${process.env.NEXT_PUBLIC_API_URL_SCRYFALL}cards/collection`,
                                     {
                                         method: 'POST',
                                         headers: {
@@ -374,6 +379,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+    if (isMaintenanceMode()) {
+        return maintenanceResponse()
+    }
+
     return NextResponse.json({
         message: 'Collections API',
         usage: 'POST with { "decklist": "4x Card Name 1\n4x Card Name 2" }',

@@ -42,6 +42,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 
                     {/* Download Button */}
                     <Button
+                        data-testid="download-button"
                         as="a"
                         href={generatedImage}
                         download="mtg-deck.png"

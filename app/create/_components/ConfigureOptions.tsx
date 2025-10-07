@@ -53,6 +53,7 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                     <Text>Configuration</Text>
                 </Heading>
                 <IconButton
+                    data-testid="configure-options-button"
                     aria-label="Configure options"
                     isRound
                     variant={editing ? 'solid' : 'outline'}
@@ -63,13 +64,14 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
             </HStack>
             {!editing && (
                 <SimpleGrid
+                    data-testid="configuration-summary"
                     columns={{ base: 1, md: 2 }}
                     spacing={{ base: 2, md: 4 }}
                 >
                     <Text fontSize="sm">
                         <strong>Sort by:</strong> {form.sortBy}
                     </Text>
-                    <Text fontSize="sm">
+                    <Text fontSize="sm" data-testid="configuration-image-size">
                         <strong>Image size:</strong>{' '}
                         {form.imageSize ? imageSizes[form.imageSize] : 'N/A'}
                     </Text>

@@ -84,6 +84,42 @@ Fetches card information using Scryfall's Collections API (batch requests).
 
 **Response:** Streaming text/plain with Server-Sent Events for progress updates
 
+## Maintenance Mode
+
+The application supports a maintenance mode that can be enabled via an environment variable.
+
+### Configuration
+
+Set the `NEXT_PUBLIC_MAINTENANCE` environment variable to `true` to enable maintenance mode:
+
+```bash
+# .env.local or environment configuration
+NEXT_PUBLIC_MAINTENANCE=true
+```
+
+### Behavior
+
+When maintenance mode is enabled:
+
+- All page requests (except `/site-down`) are automatically redirected to the maintenance page
+- All API routes return a `503 Service Unavailable` status with the following JSON response:
+  ```json
+  {
+    "error": "Service Unavailable - Maintenance mode"
+  }
+  ```
+- The `/site-down` page displays a user-friendly maintenance message
+
+### Disabling Maintenance Mode
+
+To disable maintenance mode, either:
+- Remove the `NEXT_PUBLIC_MAINTENANCE` environment variable
+- Set it to `false`
+
+```bash
+NEXT_PUBLIC_MAINTENANCE=false
+```
+
 ## License
 
 MIT
