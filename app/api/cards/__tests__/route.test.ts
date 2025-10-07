@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { POST, GET } from '../route'
 import { NextRequest } from 'next/server'
 import * as decklistUtils from '@/utils/decklist'
@@ -12,8 +12,35 @@ function createRequest(body: any) {
 }
 
 describe('Collections API route', () => {
+    let originalEnv: NodeJS.ProcessEnv
+
     beforeEach(() => {
         vi.clearAllMocks()
+        originalEnv = process.env
+        process.env = { ...originalEnv }
+    })
+
+    afterEach(() => {
+        process.env = originalEnv
+    })
+
+    describe('Maintenance mode', () => {
+        it('GET returns 503 when maintenance mode is enabled', async () => {
+            process.env.NEXT_PUBLIC_MAINTENANCE = 'true'
+            const res = await GET()
+            expect(res.status).toBe(503)
+            const json = await res.json()
+            expect(json.error).toBe('Service Unavailable - Maintenance mode')
+        })
+
+        it('POST returns 503 when maintenance mode is enabled', async () => {
+            process.env.NEXT_PUBLIC_MAINTENANCE = 'true'
+            const req = createRequest({ decklist: '4x Lightning Bolt' })
+            const res = await POST(req)
+            expect(res.status).toBe(503)
+            const json = await res.json()
+            expect(json.error).toBe('Service Unavailable - Maintenance mode')
+        })
     })
 
     it('GET returns usage info', async () => {

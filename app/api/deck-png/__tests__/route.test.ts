@@ -1,4 +1,4 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest'
+import { describe, expect, test, vi, beforeEach, afterEach } from 'vitest'
 import { POST, GET } from '../route'
 import { NextRequest } from 'next/server'
 
@@ -54,8 +54,50 @@ vi.mock('@/utils/api', () => ({
 }))
 
 describe('POST /api/deck-png', () => {
+    let originalEnv: NodeJS.ProcessEnv
+
     beforeEach(() => {
         vi.clearAllMocks()
+        originalEnv = process.env
+        process.env = { ...originalEnv }
+    })
+
+    afterEach(() => {
+        process.env = originalEnv
+    })
+
+    describe('Maintenance mode', () => {
+        test('GET should return 503 when maintenance mode is enabled', async () => {
+            process.env.NEXT_PUBLIC_MAINTENANCE = 'true'
+            const response = await GET()
+            expect(response.status).toBe(503)
+            const data = await response.json()
+            expect(data.error).toBe('Service Unavailable - Maintenance mode')
+        })
+
+        test('POST should return 503 when maintenance mode is enabled', async () => {
+            process.env.NEXT_PUBLIC_MAINTENANCE = 'true'
+            const request = new NextRequest('http://localhost/api/deck-png', {
+                method: 'POST',
+                body: JSON.stringify({
+                    cards: [
+                        {
+                            card: {
+                                name: 'Test Card',
+                                image_uris: {
+                                    png: 'http://example.com/test.png'
+                                }
+                            },
+                            quantity: 1
+                        }
+                    ]
+                })
+            })
+            const response = await POST(request)
+            expect(response.status).toBe(503)
+            const data = await response.json()
+            expect(data.error).toBe('Service Unavailable - Maintenance mode')
+        })
     })
 
     describe('Request validation', () => {

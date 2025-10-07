@@ -118,6 +118,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                                 </Text>
                             </HStack>
                             <Progress
+                                data-testid="upload-progress"
                                 value={progress.percentage}
                                 colorScheme="orange"
                                 size="md"
@@ -131,6 +132,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
 
             {/* Upload Button */}
             <Button
+                data-testid="upload-button"
                 size="lg"
                 leftIcon={<FaUpload />}
                 onClick={handleUpload}

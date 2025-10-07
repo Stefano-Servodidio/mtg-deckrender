@@ -14,6 +14,7 @@ import {
 } from '../../../utils/compositing'
 import { DeckPngOptions, DeckPngRequest } from '@/types/api'
 import { downloadAllCardImages } from '../../../utils/api'
+import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
 
 const defaultOptions: DeckPngOptions = {
     imageSize: 'ig_square' as const,
@@ -27,6 +28,10 @@ const defaultOptions: DeckPngOptions = {
 }
 
 export async function POST(request: NextRequest) {
+    if (isMaintenanceMode()) {
+        return maintenanceResponse()
+    }
+
     try {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/deck-png')))
 
@@ -315,6 +320,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+    if (isMaintenanceMode()) {
+        return maintenanceResponse()
+    }
+
     return NextResponse.json({
         message: 'Deck PNG Generator API',
         usage: 'POST with { "cards": [{ "card": ScryfallCard, "quantity": number }], "options": {} }',

@@ -20,7 +20,7 @@ import './commands'
 // require('./commands')
 
 // Configure global test settings
-Cypress.on('uncaught:exception', (err, runnable) => {
+Cypress.on('uncaught:exception', (_err, _runnable) => {
     // Returning false here prevents Cypress from failing the test
     // when dealing with certain expected exceptions
     return false
@@ -30,10 +30,10 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 declare global {
     namespace Cypress {
         interface Chainable {
-            uploadDecklist(decklistText: string): Chainable<Element>
+            uploadDecklist(_decklistText: string): Chainable<Element>
             generateImage(): Chainable<Element>
             downloadImage(): Chainable<Element>
-            waitForToast(message?: string): Chainable<Element>
+            waitForToast(_message?: string): Chainable<Element>
         }
     }
 }

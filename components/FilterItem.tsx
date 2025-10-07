@@ -29,7 +29,7 @@ const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
     ...props
 }) => {
     return (
-        <RadioGroup {...props}>
+        <RadioGroup data-testid={'filter-radio-group-' + props.name} {...props}>
             <HStack flexWrap={'wrap'} spacing={2}>
                 {options?.map((option) => (
                     <Box
@@ -55,6 +55,12 @@ const Radio: React.FC<FilterItemProps & Omit<RadioGroupProps, 'children'>> = ({
                         }
                     >
                         <ChakraRadio
+                            data-testid={
+                                'filter-radio-' +
+                                props.name +
+                                '-' +
+                                option.value
+                            }
                             value={option.value}
                             name={props.name + '-' + option.value}
                             padding={2}
@@ -80,10 +86,17 @@ const Select: React.FC<FilterItemProps & SelectProps> = ({
     ...props
 }) => {
     return (
-        <ChakraSelect placeholder={placeholder || 'Select option'} {...props}>
+        <ChakraSelect
+            data-testid={'filter-select-' + props.name}
+            placeholder={placeholder || 'Select option'}
+            {...props}
+        >
             {options?.map((option) => (
                 <option
                     key={option.value}
+                    data-testid={
+                        'filter-select-' + props.name + '-' + option.value
+                    }
                     value={option.value}
                     disabled={option.disabled}
                 >
@@ -100,10 +113,14 @@ const Toggle: React.FC<FilterItemProps & SwitchProps> = ({
 }) => {
     return (
         <FormControl display="flex" alignItems="center">
-            <FormLabel htmlFor="email-alerts" mb="0">
+            <FormLabel htmlFor={'filter-toggle-' + props.name} mb="0">
                 {label || 'Toggle Option'}
             </FormLabel>
-            <Switch id="email-alerts" {...props} />
+            <Switch
+                id={'filter-toggle-' + props.name}
+                data-testid={'filter-toggle-' + props.name}
+                {...props}
+            />
         </FormControl>
     )
 }
