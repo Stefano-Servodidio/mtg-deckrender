@@ -35,15 +35,6 @@ export default function Create() {
     const toast = useToast()
     const analytics = useAnalytics()
 
-    // Use the custom hooks
-    // const {
-    //     data: cardsData,
-    //     error: cardsError,
-    //     isLoading: isLoadingCards,
-    //     progress: cardsProgress,
-    //     fetchCards
-    // } = useCards()
-
     const {
         data: cardsData,
         error: cardsError,

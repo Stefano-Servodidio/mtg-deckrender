@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
 
     try {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/collections')))
+        console.log(process.env.API_URL_SCRYFALL)
 
         // decklist is a string with one card name per line
         const { decklist } = await request.json()
@@ -154,14 +155,13 @@ export async function POST(request: NextRequest) {
                                 )
 
                                 const response = await fetch(
-                                    `${process.env.NEXT_PUBLIC_API_URL_SCRYFALL}cards/collection`,
+                                    `${process.env.API_URL_SCRYFALL}/cards/collection`,
                                     {
                                         method: 'POST',
                                         headers: {
                                             'Content-Type': 'application/json',
                                             'User-Agent':
-                                                process.env
-                                                    .NEXT_PUBLIC_API_USER_AGENT ||
+                                                process.env.API_USER_AGENT ||
                                                 'mtg-deck-to-png/1.0'
                                         },
                                         body: JSON.stringify({ identifiers })

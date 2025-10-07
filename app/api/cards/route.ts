@@ -120,14 +120,13 @@ export async function POST(request: NextRequest) {
 
                         try {
                             const response = await fetch(
-                                process.env.NEXT_PUBLIC_API_URL_SCRYFALL +
-                                    `cards/named?fuzzy=${encodeURIComponent(name)}`,
+                                process.env.API_URL_SCRYFALL +
+                                    `/cards/named?fuzzy=${encodeURIComponent(name)}`,
                                 {
                                     method: 'GET',
                                     headers: {
                                         'User-Agent':
-                                            process.env
-                                                .NEXT_PUBLIC_API_USER_AGENT ||
+                                            process.env.API_USER_AGENT ||
                                             'mtg-deck-to-png/1.0'
                                     }
                                 }
