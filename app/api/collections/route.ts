@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        if (uniqueCards.length > 150) {
+        if (uniqueCards.length > 100) {
             return NextResponse.json(
-                { error: 'Decklist exceeds the maximum of 150 unique cards.' },
+                { error: 'Decklist exceeds the maximum of 100 unique cards.' },
                 { status: 400 }
             )
         }

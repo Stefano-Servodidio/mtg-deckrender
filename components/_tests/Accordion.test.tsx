@@ -1,6 +1,6 @@
 // tests for the Accordion component
 import React from 'react'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import Accordion, { AccordionSection } from '../Accordion'
 import { ChakraProvider } from '@chakra-ui/react'
@@ -46,14 +46,10 @@ describe('Accordion', () => {
 
     it('renders content only after expanding', () => {
         renderAccordion()
-        // Content should be in the document but not visible when collapsed
-        expect(screen.getByText('Content 1')).toBeInTheDocument()
-        const buttons = screen.getAllByRole('button')
-        act(() => {
-            fireEvent.click(buttons[0])
-        })
-        // After clicking, content should still be in the document
-        expect(screen.getByText('Content 1')).toBeInTheDocument()
+        expect(screen.queryByText('Content 1')).not.toBeVisible()
+        const firstButton = screen.getByTestId('accordion-section1')
+        fireEvent.click(firstButton)
+        expect(screen.getByText('Content 1')).toBeVisible()
     })
 
     it('renders multiple sections', () => {
@@ -64,13 +60,11 @@ describe('Accordion', () => {
 
     it('handles custom props', () => {
         renderAccordion({ allowMultiple: true })
-        const buttons = screen.getAllByRole('button')
-        act(() => {
-            fireEvent.click(buttons[0])
-            fireEvent.click(buttons[1])
-        })
-        // Both contents should be in the document after clicking
-        expect(screen.getByText('Content 1')).toBeInTheDocument()
-        expect(screen.getByText('Content 2')).toBeInTheDocument()
+        const firstButton = screen.getByTestId('accordion-section1')
+        const secondButton = screen.getByTestId('accordion-section2')
+        fireEvent.click(firstButton)
+        fireEvent.click(secondButton)
+        expect(screen.getByText('Content 1')).toBeVisible()
+        expect(screen.getByText('Content 2')).toBeVisible()
     })
 })

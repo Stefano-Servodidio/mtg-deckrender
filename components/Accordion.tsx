@@ -26,8 +26,9 @@ interface AccordionProps extends ChakraAccordionProps {
 const Accordion: React.FC<AccordionProps> = ({ sections, ...props }) => (
     <ChakraAccordion {...props}>
         {sections.map((section, idx) => (
-            <AccordionItem key={'accordion-' + section.id + '-' + idx}>
+            <AccordionItem key={'accordion-' + section.id}>
                 <AccordionButton
+                    data-testid={'accordion-' + section.id}
                     py={{ base: 3, md: 6 }}
                     px={{ base: 4, md: 8 }}
                 >

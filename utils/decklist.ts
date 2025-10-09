@@ -33,6 +33,8 @@ const decklistSeparators = [
     '\n\n--\n'
 ]
 
+const cardNameSeparators = ['/', '-']
+
 const decklistSeparatorRegex = new RegExp(decklistSeparators.join('|'), 'g')
 /**
  * Parse a decklist string and split it into main deck and sideboard sections
@@ -78,7 +80,35 @@ export function getUniqueCards(
         if (!line) {
             return acc
         }
-        const [quantityStr, name] = line.split('#')
+        const [quantityStr, rawName] = line.split('#')
+
+        if (!rawName) {
+            return acc
+        }
+
+        const rawChars = rawName.split('')
+
+        // extract name until a separator character is found
+        // e.g. "Card Side 1 / Card Side 2" -> "Card Side 1"
+        // this prevents issues finding cards that have multiple faces or variants in the name
+        const nameChars = rawChars.reduce<string[]>((nameAcc, char) => {
+            // Stop at first separator character
+            if (!cardNameSeparators.includes(nameAcc[nameAcc.length - 1])) {
+                nameAcc.push(char)
+            }
+            return nameAcc
+        }, [])
+
+        //remove last char if it's a separator
+        if (
+            nameChars.length > 0 &&
+            cardNameSeparators.includes(nameChars[nameChars.length - 1])
+        ) {
+            nameChars.pop()
+        }
+
+        const name = nameChars.join('')
+
         const quantity = parseInt(quantityStr.replace('x', ''), 10)
         if (!isNaN(quantity) && quantity > 0 && name) {
             acc.push({ name, quantity, groupId })
@@ -95,12 +125,14 @@ export function createCardItem(
     quantity: number,
     groupId: number
 ): CardItem {
-    let imageUri = null
-    if (scryfallData.card_faces && scryfallData.card_faces.length > 0) {
+    let imageUri = scryfallData?.image_uris?.png || null
+    if (
+        !imageUri &&
+        scryfallData.card_faces &&
+        scryfallData.card_faces.length > 0
+    ) {
         // If the card has multiple faces, use the front face's image
         imageUri = scryfallData.card_faces[0].image_uris?.png || null
-    } else {
-        imageUri = scryfallData.image_uris?.png || null
     }
     return {
         id: scryfallData.id,
