@@ -134,7 +134,7 @@ describe('Collections API', () => {
 
             expect(response.status).toBe(400)
             expect(data.error).toContain(
-                'exceeds the maximum of 150 unique cards'
+                'exceeds the maximum of 100 unique cards'
             )
         })
 
