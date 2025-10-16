@@ -210,12 +210,30 @@ export async function POST(request: NextRequest) {
                                     // Process each card in the fetch list
                                     for (const card of cardsToFetch) {
                                         const cacheKey = card.name.toLowerCase()
-                                        const scryfallData = foundCards.find(
-                                            (c: any) =>
-                                                c.name
+                                        let scryfallData = null
+
+                                        for (const foundCard of foundCards) {
+                                            // Exact match first
+                                            if (
+                                                foundCard.name.toLowerCase() ===
+                                                cacheKey
+                                            ) {
+                                                scryfallData = foundCard
+                                                break
+                                            } else if (
+                                                foundCard.name
                                                     .toLowerCase()
-                                                    .includes(cacheKey)
-                                        )
+                                                    .includes(cacheKey) &&
+                                                !cards.find(
+                                                    (c) =>
+                                                        c.name.toLowerCase() ===
+                                                        foundCard.name.toLowerCase()
+                                                )
+                                            ) {
+                                                // Partial match if no exact match and not already added
+                                                scryfallData = foundCard
+                                            }
+                                        }
 
                                         if (scryfallData) {
                                             const cardData = createCardItem(

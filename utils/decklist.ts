@@ -33,8 +33,6 @@ const decklistSeparators = [
     '\n\n--\n'
 ]
 
-const cardNameSeparators = ['/', '-']
-
 const decklistSeparatorRegex = new RegExp(decklistSeparators.join('|'), 'g')
 /**
  * Parse a decklist string and split it into main deck and sideboard sections
@@ -86,28 +84,11 @@ export function getUniqueCards(
             return acc
         }
 
-        const rawChars = rawName.split('')
+        let name = rawName.trim()
 
-        // extract name until a separator character is found
-        // e.g. "Card Side 1 / Card Side 2" -> "Card Side 1"
-        // this prevents issues finding cards that have multiple faces or variants in the name
-        const nameChars = rawChars.reduce<string[]>((nameAcc, char) => {
-            // Stop at first separator character
-            if (!cardNameSeparators.includes(nameAcc[nameAcc.length - 1])) {
-                nameAcc.push(char)
-            }
-            return nameAcc
-        }, [])
-
-        //remove last char if it's a separator
-        if (
-            nameChars.length > 0 &&
-            cardNameSeparators.includes(nameChars[nameChars.length - 1])
-        ) {
-            nameChars.pop()
+        if (rawName.includes('/')) {
+            name = rawName.split('/')[0].trim()
         }
-
-        const name = nameChars.join('')
 
         const quantity = parseInt(quantityStr.replace('x', ''), 10)
         if (!isNaN(quantity) && quantity > 0 && name) {
