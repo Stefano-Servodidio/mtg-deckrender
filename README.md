@@ -103,16 +103,17 @@ When maintenance mode is enabled:
 
 - All page requests (except `/site-down`) are automatically redirected to the maintenance page
 - All API routes return a `503 Service Unavailable` status with the following JSON response:
-  ```json
-  {
-    "error": "Service Unavailable - Maintenance mode"
-  }
-  ```
+    ```json
+    {
+        "error": "Service Unavailable - Maintenance mode"
+    }
+    ```
 - The `/site-down` page displays a user-friendly maintenance message
 
 ### Disabling Maintenance Mode
 
 To disable maintenance mode, either:
+
 - Remove the `NEXT_PUBLIC_MAINTENANCE` environment variable
 - Set it to `false`
 

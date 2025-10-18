@@ -5,6 +5,7 @@ import React from 'react'
 import { FaImage } from 'react-icons/fa'
 import ConfigureOptions from './ConfigureOptions'
 import { DeckPngOptions, CardsResponse, ImageResolution } from '@/types/api'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface ProgressInfo {
     current: number
@@ -26,6 +27,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
     cardsData,
     progress
 }) => {
+    const analytics = useAnalytics()
     const [form, setForm] = React.useState<DeckPngOptions>({
         sortBy: 'name',
         sortDirection: 'asc',
@@ -45,6 +47,13 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
             ...prev,
             [id]: value
         }))
+    }
+
+    const handleGenerate = () => {
+        analytics.trackButtonClick('Generate Deck Image', {
+            event_label: 'configure_section'
+        })
+        handleGenerateImage(form)
     }
 
     return (
@@ -90,7 +99,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                 size="lg"
                 colorScheme="blue"
                 leftIcon={<FaImage />}
-                onClick={() => handleGenerateImage(form)}
+                onClick={handleGenerate}
                 isLoading={isGenerating}
                 loadingText="Generating..."
                 w={{ base: 'full', md: 'auto' }}

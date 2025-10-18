@@ -82,14 +82,109 @@ Cypress.Commands.add('waitForToast', (message?: string) => {
     }
 })
 
+// Google Analytics 4 Testing Commands
+
+// Spy on GA4 events by stubbing the gtag function
+Cypress.Commands.add('spyOnGA', () => {
+    cy.window().then((win) => {
+        // Initialize gtag as a stub if it doesn't exist
+        if (!win.gtag) {
+            win.gtag = cy.stub().as('gtag')
+        } else {
+            cy.stub(win, 'gtag').as('gtag')
+        }
+        // Initialize dataLayer if it doesn't exist
+        if (!win.dataLayer) {
+            win.dataLayer = []
+        }
+    })
+})
+
+// Assert that a GA event was called with specific parameters
+Cypress.Commands.add(
+    'assertGAEvent',
+    (eventName: string, params?: Record<string, unknown>) => {
+        cy.get('@gtag').should('have.been.called')
+
+        if (params) {
+            // Check if gtag was called with the event and matching parameters
+            cy.get('@gtag').should((stub) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const calls = (stub as any).getCalls()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const eventCall = calls.find(
+                    (call: any) =>
+                        call.args[0] === 'event' && call.args[1] === eventName
+                )
+
+                expect(
+                    eventCall,
+                    `Expected GA event "${eventName}" to be called`
+                ).to.exist
+
+                if (eventCall && params) {
+                    const eventParams = eventCall.args[2] || {}
+                    Object.keys(params).forEach((key) => {
+                        expect(
+                            eventParams[key],
+                            `Expected ${key} to be ${params[key]}`
+                        ).to.equal(params[key])
+                    })
+                }
+            })
+        } else {
+            // Just check if the event was called
+            cy.get('@gtag').should((stub) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const calls = (stub as any).getCalls()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const eventCall = calls.find(
+                    (call: any) =>
+                        call.args[0] === 'event' && call.args[1] === eventName
+                )
+                expect(
+                    eventCall,
+                    `Expected GA event "${eventName}" to be called`
+                ).to.exist
+            })
+        }
+    }
+)
+
+// Assert that GA page view was tracked
+Cypress.Commands.add('assertGAPageView', (pagePath?: string) => {
+    cy.get('@gtag').should((stub) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const calls = (stub as any).getCalls()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pageViewCall = calls.find(
+            (call: any) =>
+                call.args[0] === 'event' && call.args[1] === 'page_view'
+        )
+
+        expect(pageViewCall, 'Expected page_view event to be called').to.exist
+
+        if (pageViewCall && pagePath) {
+            const eventParams = pageViewCall.args[2] || {}
+            expect(eventParams.page_path).to.include(pagePath)
+        }
+    })
+})
+
 // Override default commands if needed
 declare global {
     namespace Cypress {
         interface Chainable {
             uploadDecklist(_decklistText: string): Chainable<Element>
-            generateImage(): Chainable<Element>
-            downloadImage(): Chainable<Element>
+            generateImage(_navigate?: boolean): Chainable<Element>
+            downloadImage(_navigate?: boolean): Chainable<Element>
             waitForToast(_message?: string): Chainable<Element>
+            spyOnGA(): Chainable<void>
+            assertGAEvent(
+                _eventName: string,
+                _params?: Record<string, unknown>
+            ): Chainable<void>
+            assertGAPageView(_pagePath?: string): Chainable<void>
         }
     }
 }

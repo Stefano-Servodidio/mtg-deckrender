@@ -17,8 +17,8 @@ describe('Collections API', () => {
         originalEnv = process.env
         process.env = {
             ...originalEnv,
-            NEXT_PUBLIC_API_USER_AGENT: 'test-agent/1.0',
-            NEXT_PUBLIC_API_URL_SCRYFALL: 'https://api.scryfall.com/'
+            API_USER_AGENT: 'test-agent/1.0',
+            API_URL_SCRYFALL: 'https://api.scryfall.com'
         }
         // Reset fetch mock before each test
         vi.restoreAllMocks()

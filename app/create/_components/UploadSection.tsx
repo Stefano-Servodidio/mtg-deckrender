@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react'
 import { useCallback, useState } from 'react'
 import { FaUpload } from 'react-icons/fa'
+import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface ProgressInfo {
     current: number
@@ -34,9 +35,13 @@ const UploadSection: React.FC<UploadSectionProps> = ({
 }) => {
     const [decklistText, setDecklistText] = useState('')
     const toast = useToast()
+    const analytics = useAnalytics()
 
     /* Handlers */
     const handleUpload = async () => {
+        analytics.trackButtonClick('Upload Decklist', {
+            event_label: 'upload_section'
+        })
         if (!decklistText.trim()) {
             toast({
                 title: 'No decklist provided',
@@ -47,6 +52,9 @@ const UploadSection: React.FC<UploadSectionProps> = ({
             })
             return
         }
+        // Track deck upload
+        const lineCount = decklistText.trim().split('\n').length
+        analytics.trackDeckUpload(lineCount)
 
         await fetchCards(decklistText.trim())
     }
@@ -55,6 +63,9 @@ const UploadSection: React.FC<UploadSectionProps> = ({
         (files: File[]) => {
             const file = files[0]
             if (file && file.type === 'text/plain') {
+                // Track file upload
+                analytics.trackFileUpload(file.name, file.type)
+
                 const reader = new FileReader()
                 reader.onload = (e) => {
                     const content = e.target?.result as string
