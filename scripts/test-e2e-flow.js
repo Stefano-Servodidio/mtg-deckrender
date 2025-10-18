@@ -107,7 +107,7 @@ async function testDeckPngAPI() {
                 } else {
                     console.log('  ⚠️  API documentation structure incomplete')
                 }
-            } catch (e) {
+            } catch (_error) {
                 console.log('  ⚠️  API documentation is not valid JSON')
             }
         } else {
@@ -151,7 +151,7 @@ async function main() {
     // First verify the server is running
     try {
         await makeRequest(baseUrl)
-    } catch (error) {
+    } catch (_error) {
         console.log(
             '❌ Server is not running. Please start it with: npm run dev'
         )

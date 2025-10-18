@@ -59,7 +59,12 @@ export async function downloadAllCardImages(
         const cached = cardImageCache.get(cacheKey)
 
         if (cached) {
-            successfulImages.push(cached)
+            successfulImages.push({
+                name: card.name,
+                groupId: card.groupId,
+                buffer: cached.buffer,
+                quantity: card.quantity
+            })
             console.log(chalk.cyan(`Cache hit for card image: ${card.name}`))
             continue
         }

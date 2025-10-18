@@ -39,12 +39,14 @@ export async function POST(request: NextRequest) {
             await request.json()
 
         const options = { ...defaultOptions, ...(requestOptions || {}) }
-        console.log(
-            chalk.yellow(
-                'Options:',
-                chalk.cyan(JSON.stringify(options, null, 2))
+        if (process.env.NODE_ENV === 'development') {
+            console.log(
+                chalk.yellow(
+                    'Options:',
+                    chalk.cyan(JSON.stringify(options, null, 2))
+                )
             )
-        )
+        }
 
         if (!cards || !Array.isArray(cards)) {
             return NextResponse.json(
@@ -80,7 +82,16 @@ export async function POST(request: NextRequest) {
                     const validCards = cards.filter(
                         (card) => card.image_uri && card.quantity > 0
                     )
-
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log(
+                            chalk.green(
+                                ' cards:',
+                                cards
+                                    .map((c) => `${c.quantity}x ${c.name}`)
+                                    .join(', ')
+                            )
+                        )
+                    }
                     //Sort cards for processing
                     const validCardImages = sortCards(
                         validCards,
@@ -88,18 +99,29 @@ export async function POST(request: NextRequest) {
                         options.sortDirection
                     )
 
-                    if (validCardImages.length === 0) {
-                        controller.enqueue(
-                            new TextEncoder().encode(
-                                `data: ${JSON.stringify({
-                                    type: 'error',
-                                    error: 'No valid images found.',
-                                    message: 'No valid card images found'
-                                })}\n\n`
-                            )
+                    console.log(
+                        chalk.yellow(
+                            'Valid cards:',
+                            validCardImages
+                                .map((c) => `${c.quantity}x ${c.name}`)
+                                .join(', ')
                         )
-                        controller.close()
-                        return
+                    )
+
+                    if (process.env.NODE_ENV === 'development') {
+                        if (validCardImages.length === 0) {
+                            controller.enqueue(
+                                new TextEncoder().encode(
+                                    `data: ${JSON.stringify({
+                                        type: 'error',
+                                        error: 'No valid images found.',
+                                        message: 'No valid card images found'
+                                    })}\n\n`
+                                )
+                            )
+                            controller.close()
+                            return
+                        }
                     }
 
                     controller.enqueue(

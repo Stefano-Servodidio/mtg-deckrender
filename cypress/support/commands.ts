@@ -1,3 +1,5 @@
+export {} // Make this file an external module
+
 // ***********************************************
 // This example commands.ts shows you how to
 // create various custom commands and overwrite

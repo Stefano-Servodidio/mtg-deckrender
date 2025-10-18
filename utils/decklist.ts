@@ -78,7 +78,18 @@ export function getUniqueCards(
         if (!line) {
             return acc
         }
-        const [quantityStr, name] = line.split('#')
+        const [quantityStr, rawName] = line.split('#')
+
+        if (!rawName) {
+            return acc
+        }
+
+        let name = rawName.trim()
+
+        if (rawName.includes('/')) {
+            name = rawName.split('/')[0].trim()
+        }
+
         const quantity = parseInt(quantityStr.replace('x', ''), 10)
         if (!isNaN(quantity) && quantity > 0 && name) {
             acc.push({ name, quantity, groupId })
@@ -95,12 +106,14 @@ export function createCardItem(
     quantity: number,
     groupId: number
 ): CardItem {
-    let imageUri = null
-    if (scryfallData.card_faces && scryfallData.card_faces.length > 0) {
+    let imageUri = scryfallData?.image_uris?.png || null
+    if (
+        !imageUri &&
+        scryfallData.card_faces &&
+        scryfallData.card_faces.length > 0
+    ) {
         // If the card has multiple faces, use the front face's image
         imageUri = scryfallData.card_faces[0].image_uris?.png || null
-    } else {
-        imageUri = scryfallData.image_uris?.png || null
     }
     return {
         id: scryfallData.id,

@@ -116,7 +116,7 @@ if (fs.existsSync(fixturesPath)) {
                 allFilesExist = false
             }
         })
-    } catch (error) {
+    } catch (_error) {
         console.log(`  ❌ Invalid JSON in fixtures file`)
         allFilesExist = false
     }

@@ -11,7 +11,7 @@ function createRequest(body: any) {
     } as unknown as NextRequest
 }
 
-describe('Collections API route', () => {
+describe('Cards API route', () => {
     let originalEnv: NodeJS.ProcessEnv
 
     beforeEach(() => {
