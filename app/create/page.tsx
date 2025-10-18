@@ -11,7 +11,7 @@ import {
     CardBody,
     useToast
 } from '@chakra-ui/react'
-import { useState, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import React from 'react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
@@ -29,7 +29,6 @@ import { DeckPngOptions } from '../../types/api'
 import { useCollections } from '@/hooks/useCollections'
 
 export default function Create() {
-    const [decklistText, setDecklistText] = useState('')
     const [accordionIndex, setAccordionIndex] = useState<number[]>([0])
     const toast = useToast()
 
@@ -126,105 +125,72 @@ export default function Create() {
     }, [generatedImage, imageError, isGenerating, toast])
 
     /* Handlers */
-    const handleUpload = async () => {
-        if (!decklistText.trim()) {
-            toast({
-                title: 'No decklist provided',
-                description: 'Please paste or upload a decklist first.',
-                status: 'warning',
-                duration: 3000,
-                isClosable: true
-            })
-            return
-        }
-
-        await fetchCards(decklistText.trim())
-    }
-
-    const handleFileUpload = useCallback(
-        (files: File[]) => {
-            const file = files[0]
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                    const content = e.target?.result as string
-                    setDecklistText(content)
-                    toast({
-                        title: 'File uploaded successfully',
-                        description: 'Your decklist has been loaded.',
-                        status: 'success',
-                        duration: 3000,
-                        isClosable: true
-                    })
-                }
-                reader.readAsText(file)
-            } else {
+    const handleGenerateImage = useCallback(
+        async (options: DeckPngOptions) => {
+            if (!cardsData?.cards || cardsData.cards.length === 0) {
                 toast({
-                    title: 'Invalid file type',
-                    description: 'Please upload a text file (.txt).',
-                    status: 'error',
+                    title: 'No cards available',
+                    description: 'Please upload and fetch cards first.',
+                    status: 'warning',
                     duration: 3000,
                     isClosable: true
                 })
+                return
             }
+
+            await generateImage(cardsData.cards, options)
         },
-        [toast]
+        [cardsData?.cards, generateImage, toast]
     )
 
-    const handleGenerateImage = async (options: DeckPngOptions) => {
-        if (!cardsData?.cards || cardsData.cards.length === 0) {
-            toast({
-                title: 'No cards available',
-                description: 'Please upload and fetch cards first.',
-                status: 'warning',
-                duration: 3000,
-                isClosable: true
-            })
-            return
-        }
-
-        await generateImage(cardsData.cards, options)
-    }
-
-    const sections: AccordionSection[] = [
-        {
-            id: 'upload',
-            title: 'Upload Decklist',
-            description: 'Paste your decklist or upload a text file',
-            icon: <UploadIcon w={6} h={6} />,
-            content: (
-                <UploadSection
-                    decklistText={decklistText}
-                    setDecklistText={setDecklistText}
-                    handleUpload={handleUpload}
-                    isLoadingCards={isLoadingCards}
-                    handleFileUpload={handleFileUpload}
-                    progress={cardsProgress}
-                />
-            )
-        },
-        {
-            id: 'configure',
-            title: 'Configure Image',
-            description: 'Adjust the settings for your deck image',
-            icon: <ImageIcon w={6} h={6} />,
-            content: (
-                <ConfigureSection
-                    handleGenerateImage={handleGenerateImage}
-                    isGenerating={isGenerating}
-                    progress={imageProgress}
-                    cardsData={cardsData}
-                />
-            )
-        },
-        {
-            id: 'download',
-            title: 'Download Deck Image',
-            description: 'Download your generated deck image',
-            icon: <DownloadIcon w={6} h={6} />,
-            content: <DownloadSection generatedImage={generatedImage} />
-        }
-    ]
+    const sections: AccordionSection[] = useMemo(
+        () => [
+            {
+                id: 'upload',
+                title: 'Upload Decklist',
+                description: 'Paste your decklist or upload a text file',
+                icon: <UploadIcon w={6} h={6} />,
+                content: (
+                    <UploadSection
+                        fetchCards={fetchCards}
+                        isLoadingCards={isLoadingCards}
+                        progress={cardsProgress}
+                    />
+                )
+            },
+            {
+                id: 'configure',
+                title: 'Configure Image',
+                description: 'Adjust the settings for your deck image',
+                icon: <ImageIcon w={6} h={6} />,
+                content: (
+                    <ConfigureSection
+                        handleGenerateImage={handleGenerateImage}
+                        isGenerating={isGenerating}
+                        progress={imageProgress}
+                        cardsData={cardsData}
+                    />
+                )
+            },
+            {
+                id: 'download',
+                title: 'Download Deck Image',
+                description: 'Download your generated deck image',
+                icon: <DownloadIcon w={6} h={6} />,
+                content: <DownloadSection generatedImage={generatedImage} />
+            }
+        ],
+        [
+            fetchCards,
+            isLoadingCards,
+            cardsProgress,
+            handleGenerateImage,
+            isGenerating,
+            imageProgress,
+            cardsData,
+            generatedImage
+        ]
+    )
 
     return (
         <Box

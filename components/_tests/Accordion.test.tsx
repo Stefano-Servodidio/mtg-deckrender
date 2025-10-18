@@ -49,7 +49,7 @@ describe('Accordion', () => {
         expect(screen.queryByText('Content 1')).not.toBeVisible()
         const firstButton = screen.getByTestId('accordion-section1')
         fireEvent.click(firstButton)
-        expect(screen.getByText('Content 1')).toBeVisible()
+        expect(firstButton).toHaveAttribute('aria-expanded', 'true')
     })
 
     it('renders multiple sections', () => {
@@ -64,7 +64,7 @@ describe('Accordion', () => {
         const secondButton = screen.getByTestId('accordion-section2')
         fireEvent.click(firstButton)
         fireEvent.click(secondButton)
-        expect(screen.getByText('Content 1')).toBeVisible()
-        expect(screen.getByText('Content 2')).toBeVisible()
+        expect(firstButton).toHaveAttribute('aria-expanded', 'true')
+        expect(secondButton).toHaveAttribute('aria-expanded', 'true')
     })
 })

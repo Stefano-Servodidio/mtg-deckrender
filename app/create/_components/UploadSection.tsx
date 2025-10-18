@@ -8,8 +8,10 @@ import {
     Textarea,
     useColorModeValue,
     VStack,
-    Progress
+    Progress,
+    useToast
 } from '@chakra-ui/react'
+import { useCallback, useState } from 'react'
 import { FaUpload } from 'react-icons/fa'
 
 interface ProgressInfo {
@@ -20,22 +22,65 @@ interface ProgressInfo {
 }
 
 export interface UploadSectionProps {
-    decklistText: string
-    setDecklistText: (_text: string) => void
-    handleUpload: () => void
+    fetchCards: (_decklistText: string) => Promise<void>
     isLoadingCards: boolean
-    handleFileUpload: (_files: File[]) => void
     progress?: ProgressInfo | null
 }
 
 const UploadSection: React.FC<UploadSectionProps> = ({
-    decklistText,
-    setDecklistText,
-    handleUpload,
+    fetchCards,
     isLoadingCards,
-    handleFileUpload,
     progress
 }) => {
+    const [decklistText, setDecklistText] = useState('')
+    const toast = useToast()
+
+    /* Handlers */
+    const handleUpload = async () => {
+        if (!decklistText.trim()) {
+            toast({
+                title: 'No decklist provided',
+                description: 'Please paste or upload a decklist first.',
+                status: 'warning',
+                duration: 3000,
+                isClosable: true
+            })
+            return
+        }
+
+        await fetchCards(decklistText.trim())
+    }
+
+    const handleFileUpload = useCallback(
+        (files: File[]) => {
+            const file = files[0]
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                    const content = e.target?.result as string
+                    setDecklistText(content)
+                    toast({
+                        title: 'File uploaded successfully',
+                        description: 'Your decklist has been loaded.',
+                        status: 'success',
+                        duration: 3000,
+                        isClosable: true
+                    })
+                }
+                reader.readAsText(file)
+            } else {
+                toast({
+                    title: 'Invalid file type',
+                    description: 'Please upload a text file (.txt).',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true
+                })
+            }
+        },
+        [toast]
+    )
+
     return (
         <VStack spacing={6} w="full">
             <HStack
