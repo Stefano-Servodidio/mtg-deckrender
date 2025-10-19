@@ -7,7 +7,8 @@ export const DECK_LAYOUT_CONFIG = {
     // Base card dimensions (from Scryfall small images)
     card: {
         baseWidth: 745, // PNG image width from Scryfall
-        baseHeight: 1040 // PNG image height from Scryfall
+        baseHeight: 1040, // PNG image height from Scryfall
+        cornerRadius: 20 // Corner radius in pixels for rounded corners
     },
 
     // Layout spacing
