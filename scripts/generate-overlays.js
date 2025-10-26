@@ -12,7 +12,7 @@ async function generateOverlays() {
 
     console.log('🎨 Generating overlay images...')
 
-    const totalOverlays = 100
+    const totalOverlays = 150
 
     // Generate overlays for quantities 2-100
     for (let count = 2; count <= totalOverlays; count++) {
@@ -22,11 +22,11 @@ async function generateOverlays() {
             continue
         }
         const svg = `
-            <svg xmlns="http://www.w3.org/2000/svg" width="125" height="125" viewBox="0 0 125 125">
+            <svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 110 110">
                 <rect width="100%" height="100%" rx="5%" fill="#000000" stroke="#474747ff" stroke-width="2" />
                 <text x="50%" y="50%" 
                       fill="#FFFFFF" 
-                      font-size=${count > 99 ? '"48"' : count > 9 ? '"60"' : '"72"'}
+                      font-size=${count > 99 ? '"40"' : count > 9 ? '"52"' : '"64"'}
                       font-family="Arial, Helvetica, sans-serif"
                       font-weight="bold"
                       text-anchor="middle"

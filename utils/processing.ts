@@ -175,21 +175,57 @@ export function sortCards(
 }
 
 /**
- * resize downloaded images to target dimensions
+ * resize downloaded images to target dimensions and apply rounded corners
  */
 export async function resizeImages(
     images: CardImageBuffer[],
     cardDimensions: Dimensions
 ): Promise<CardImageBuffer[]> {
+    const { card } = DECK_LAYOUT_CONFIG
+    const targetWidth = Math.round(cardDimensions.width)
+    const targetHeight = Math.round(cardDimensions.height)
+
+    // Scale corner radius proportionally with card dimensions
+    const scaledCornerRadius = cardDimensions.scale
+        ? Math.round(card.cornerRadius * cardDimensions.scale)
+        : card.cornerRadius
+
     return Promise.all(
         images.map(async (img) => {
             if (!img.buffer) return img
+
+            // Create an SVG rounded rectangle mask
+            const roundedCornerSvg = `
+                <svg width="${targetWidth}" height="${targetHeight}">
+                    <rect
+                        x="0"
+                        y="0"
+                        width="${targetWidth}"
+                        height="${targetHeight}"
+                        rx="${scaledCornerRadius}"
+                        ry="${scaledCornerRadius}"
+                        fill="white"
+                    />
+                </svg>
+            `
+
+            // Apply rounded corners by compositing with mask
+            // The 'dest-in' blend mode keeps only the parts of the card that overlap with the mask
             const resizedBuffer = await sharp(img.buffer)
                 .resize({
-                    width: Math.round(cardDimensions.width),
-                    height: Math.round(cardDimensions.height)
+                    width: targetWidth,
+                    height: targetHeight
                 })
+                .ensureAlpha() // Ensure alpha channel for proper compositing
+                .composite([
+                    {
+                        input: Buffer.from(roundedCornerSvg),
+                        blend: 'dest-in'
+                    }
+                ])
+                .png()
                 .toBuffer()
+
             return {
                 ...img,
                 buffer: resizedBuffer
