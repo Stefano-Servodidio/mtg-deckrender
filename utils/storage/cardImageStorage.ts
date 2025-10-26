@@ -2,7 +2,11 @@ import { getStore } from '@netlify/blobs'
 import chalk from 'chalk'
 
 // Initialize the blob store
-const cardImageStore = getStore('card-images')
+const cardImageStore = getStore({
+    name: 'card-images',
+    siteID: process.env.NETLIFY_SITE_ID!,
+    token: process.env.NETLIFY_AUTH_TOKEN!
+})
 
 interface StoredImageMetadata {
     scryfallUri: string
