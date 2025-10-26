@@ -194,12 +194,6 @@ export async function resizeImages(
         images.map(async (img) => {
             if (!img.buffer) return img
 
-            // Resize the card image
-            const resizedImage = sharp(img.buffer).resize({
-                width: targetWidth,
-                height: targetHeight
-            })
-
             // Create an SVG rounded rectangle mask
             const roundedCornerSvg = `
                 <svg width="${targetWidth}" height="${targetHeight}">
@@ -217,7 +211,11 @@ export async function resizeImages(
 
             // Apply rounded corners by compositing with mask
             // The 'dest-in' blend mode keeps only the parts of the card that overlap with the mask
-            const resizedBuffer = await resizedImage
+            const resizedBuffer = await sharp(img.buffer)
+                .resize({
+                    width: targetWidth,
+                    height: targetHeight
+                })
                 .ensureAlpha() // Ensure alpha channel for proper compositing
                 .composite([
                     {
@@ -225,6 +223,7 @@ export async function resizeImages(
                         blend: 'dest-in'
                     }
                 ])
+                .png()
                 .toBuffer()
 
             return {
