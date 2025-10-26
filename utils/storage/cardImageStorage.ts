@@ -15,13 +15,19 @@ interface StoredImageMetadata {
 }
 
 const REVALIDATION_PERIOD = 90 * 24 * 60 * 60 * 1000 // 90 days
-
+const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && true
 /**
  * Get image from Netlify Blobs
  */
 export async function getImageFromBlobs(
     cardId: string
 ): Promise<Buffer | null> {
+    if (DEV_DEBUG_DISABLE_BLOBS) {
+        console.log(
+            chalk.yellow(`(Dev Mode) Skipping fetch from Blobs: ${cardId}`)
+        )
+        return null
+    }
     try {
         const imageData = await cardImageStore.get(cardId, {
             type: 'arrayBuffer'
@@ -47,6 +53,12 @@ export async function saveImageToBlobs(
     scryfallUri: string,
     contentType: string = 'image/jpeg'
 ): Promise<void> {
+    if (DEV_DEBUG_DISABLE_BLOBS) {
+        console.log(
+            chalk.yellow(`(Dev Mode) Skipping save to Blobs: ${cardId}`)
+        )
+        return
+    }
     try {
         // Store the image
         await cardImageStore.set(cardId, buffer)
@@ -69,6 +81,12 @@ export async function saveImageToBlobs(
  * Check if image needs revalidation
  */
 export async function needsRevalidation(cardId: string): Promise<boolean> {
+    if (DEV_DEBUG_DISABLE_BLOBS) {
+        console.log(
+            chalk.yellow(`(Dev Mode) Skipping revalidation check: ${cardId}`)
+        )
+        return true
+    }
     try {
         const metadata = (await cardImageStore.get(`${cardId}-metadata`, {
             type: 'json'
@@ -85,6 +103,10 @@ export async function needsRevalidation(cardId: string): Promise<boolean> {
  * List all stored card images (useful for debugging)
  */
 export async function listStoredCards(): Promise<string[]> {
+    if (DEV_DEBUG_DISABLE_BLOBS) {
+        console.log(chalk.yellow(`(Dev Mode) Skipping list stored cards: `))
+        return []
+    }
     const { blobs } = await cardImageStore.list()
     return blobs
         .map((blob) => blob.key)
