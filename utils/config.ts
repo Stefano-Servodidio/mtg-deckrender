@@ -6,8 +6,8 @@ import { Dimensions, ImageSize } from '@/types/api'
 export const DECK_LAYOUT_CONFIG = {
     // Base card dimensions (from Scryfall small images)
     card: {
-        baseWidth: 745, // PNG image width from Scryfall
-        baseHeight: 1040 // PNG image height from Scryfall
+        baseWidth: 488, // 'normal' image width from Scryfall
+        baseHeight: 680 // 'normal' image height from Scryfall
     },
 
     // Layout spacing
