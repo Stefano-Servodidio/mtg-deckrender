@@ -1,12 +1,19 @@
 import { getStore } from '@netlify/blobs'
 import chalk from 'chalk'
 
-// Initialize the blob store for overlays
-const overlayImageStore = getStore({
-    name: 'overlay-images',
-    siteID: process.env.NETLIFY_SITE_ID!,
-    token: process.env.NETLIFY_AUTH_TOKEN!
-})
+// Lazy initialization of the blob store
+let overlayStore: ReturnType<typeof getStore> | null = null
+
+function getOverlayStore() {
+    if (!overlayStore) {
+        overlayStore = getStore({
+            name: 'overlay-images',
+            siteID: process.env.NETLIFY_SITE_ID!,
+            token: process.env.NETLIFY_AUTH_TOKEN!
+        })
+    }
+    return overlayStore
+}
 
 interface StoredOverlayMetadata {
     quantity: number
@@ -16,9 +23,8 @@ interface StoredOverlayMetadata {
 
 const REVALIDATION_PERIOD = 90 * 24 * 60 * 60 * 1000 // 90 days
 const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && true
-
 /**
- * Get overlay image from Netlify Blobs
+ * Get overlay from Netlify Blobs
  */
 export async function getOverlayFromBlobs(
     overlayKey: string
@@ -30,7 +36,7 @@ export async function getOverlayFromBlobs(
         return null
     }
     try {
-        const result = await overlayImageStore.getWithMetadata(overlayKey, {
+        const result = await getOverlayStore().getWithMetadata(overlayKey, {
             type: 'arrayBuffer'
         })
         if (!result) return null
@@ -38,7 +44,7 @@ export async function getOverlayFromBlobs(
         return Buffer.from(result.data)
     } catch (error) {
         console.error(
-            chalk.red(`Error retrieving overlay from Blobs: ${overlayKey}`),
+            chalk.red(`Error retrieving from Blobs: ${overlayKey}`),
             error
         )
         return null
@@ -46,7 +52,7 @@ export async function getOverlayFromBlobs(
 }
 
 /**
- * Save overlay image to Netlify Blobs with metadata
+ * Save overlay to Netlify Blobs with metadata
  */
 export async function saveOverlayToBlobs(
     overlayKey: string,
@@ -67,14 +73,11 @@ export async function saveOverlayToBlobs(
             svgSource,
             storedAt: Date.now()
         }
-        await overlayImageStore.set(overlayKey, buffer, { metadata })
+        await getOverlayStore().set(overlayKey, buffer, { metadata })
 
-        console.log(chalk.green(`Saved overlay to Blobs: ${overlayKey}`))
+        console.log(chalk.green(`Saved to Blobs: ${overlayKey}`))
     } catch (error) {
-        console.error(
-            chalk.red(`Error saving overlay to Blobs: ${overlayKey}`),
-            error
-        )
+        console.error(chalk.red(`Error saving to Blobs: ${overlayKey}`), error)
     }
 }
 
@@ -91,7 +94,7 @@ export async function needsRevalidation(overlayKey: string): Promise<boolean> {
         return true
     }
     try {
-        const result = await overlayImageStore.getMetadata(overlayKey)
+        const result = await getOverlayStore().getMetadata(overlayKey)
         if (!result || !result.metadata) return true
 
         const metadata = result.metadata as StoredOverlayMetadata
@@ -108,9 +111,16 @@ export async function needsRevalidation(overlayKey: string): Promise<boolean> {
  */
 export async function listStoredOverlays(): Promise<string[]> {
     if (DEV_DEBUG_DISABLE_BLOBS) {
-        console.log(chalk.yellow(`(Dev Mode) Skipping list stored overlays`))
+        console.log(chalk.yellow(`(Dev Mode) Skipping list stored overlays: `))
         return []
     }
-    const { blobs } = await overlayImageStore.list()
+    const { blobs } = await getOverlayStore().list()
     return blobs.map((blob) => blob.key)
+}
+
+// Export for testing
+export const __testing__ = {
+    resetStore: () => {
+        overlayStore = null
+    }
 }

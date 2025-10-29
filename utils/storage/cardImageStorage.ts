@@ -1,12 +1,19 @@
 import { getStore } from '@netlify/blobs'
 import chalk from 'chalk'
 
-// Initialize the blob store
-const cardImageStore = getStore({
-    name: 'card-images',
-    siteID: process.env.NETLIFY_SITE_ID!,
-    token: process.env.NETLIFY_AUTH_TOKEN!
-})
+// Lazy initialization of the blob store
+let cardImageStore: ReturnType<typeof getStore> | null = null
+
+function getCardImageStore() {
+    if (!cardImageStore) {
+        cardImageStore = getStore({
+            name: 'card-images',
+            siteID: process.env.NETLIFY_SITE_ID!,
+            token: process.env.NETLIFY_AUTH_TOKEN!
+        })
+    }
+    return cardImageStore
+}
 
 interface StoredImageMetadata {
     scryfallUri: string
@@ -29,7 +36,7 @@ export async function getImageFromBlobs(
         return null
     }
     try {
-        const result = await cardImageStore.getWithMetadata(cardId, {
+        const result = await getCardImageStore().getWithMetadata(cardId, {
             type: 'arrayBuffer'
         })
         if (!result) return null
@@ -66,7 +73,7 @@ export async function saveImageToBlobs(
             contentType,
             storedAt: Date.now()
         }
-        await cardImageStore.set(cardId, buffer, { metadata })
+        await getCardImageStore().set(cardId, buffer, { metadata })
 
         console.log(chalk.green(`Saved to Blobs: ${cardId}`))
     } catch (error) {
@@ -85,7 +92,7 @@ export async function needsRevalidation(cardId: string): Promise<boolean> {
         return true
     }
     try {
-        const result = await cardImageStore.getMetadata(cardId)
+        const result = await getCardImageStore().getMetadata(cardId)
         if (!result || !result.metadata) return true
 
         const metadata = result.metadata as StoredImageMetadata
@@ -105,6 +112,13 @@ export async function listStoredCards(): Promise<string[]> {
         console.log(chalk.yellow(`(Dev Mode) Skipping list stored cards: `))
         return []
     }
-    const { blobs } = await cardImageStore.list()
+    const { blobs } = await getCardImageStore().list()
     return blobs.map((blob) => blob.key)
+}
+
+// Export for testing
+export const __testing__ = {
+    resetStore: () => {
+        cardImageStore = null
+    }
 }
