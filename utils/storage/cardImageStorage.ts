@@ -21,6 +21,24 @@ interface StoredImageMetadata {
     storedAt: number
 }
 
+/**
+ * Type guard to check if metadata is StoredImageMetadata
+ */
+function isStoredImageMetadata(
+    metadata: unknown
+): metadata is StoredImageMetadata {
+    return (
+        typeof metadata === 'object' &&
+        metadata !== null &&
+        'scryfallUri' in metadata &&
+        'contentType' in metadata &&
+        'storedAt' in metadata &&
+        typeof (metadata as any).scryfallUri === 'string' &&
+        typeof (metadata as any).contentType === 'string' &&
+        typeof (metadata as any).storedAt === 'number'
+    )
+}
+
 const REVALIDATION_PERIOD = 90 * 24 * 60 * 60 * 1000 // 90 days
 const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && true
 /**
@@ -97,7 +115,12 @@ export async function needsRevalidation(cardId: string): Promise<boolean> {
         const result = await getCardImageStore().getMetadata(cardId)
         if (!result || !result.metadata) return true
 
-        const metadata = result.metadata as unknown as StoredImageMetadata
+        if (!isStoredImageMetadata(result.metadata)) {
+            console.warn(`Invalid metadata structure for ${cardId}`)
+            return true
+        }
+
+        const metadata = result.metadata
         if (!metadata.storedAt) return true
 
         return Date.now() - metadata.storedAt > REVALIDATION_PERIOD

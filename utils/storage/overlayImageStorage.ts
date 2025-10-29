@@ -21,6 +21,24 @@ interface StoredOverlayMetadata {
     storedAt: number
 }
 
+/**
+ * Type guard to check if metadata is StoredOverlayMetadata
+ */
+function isStoredOverlayMetadata(
+    metadata: unknown
+): metadata is StoredOverlayMetadata {
+    return (
+        typeof metadata === 'object' &&
+        metadata !== null &&
+        'quantity' in metadata &&
+        'svgSource' in metadata &&
+        'storedAt' in metadata &&
+        typeof (metadata as any).quantity === 'number' &&
+        typeof (metadata as any).svgSource === 'string' &&
+        typeof (metadata as any).storedAt === 'number'
+    )
+}
+
 const REVALIDATION_PERIOD = 90 * 24 * 60 * 60 * 1000 // 90 days
 const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && true
 /**
@@ -99,7 +117,12 @@ export async function needsRevalidation(overlayKey: string): Promise<boolean> {
         const result = await getOverlayStore().getMetadata(overlayKey)
         if (!result || !result.metadata) return true
 
-        const metadata = result.metadata as unknown as StoredOverlayMetadata
+        if (!isStoredOverlayMetadata(result.metadata)) {
+            console.warn(`Invalid metadata structure for ${overlayKey}`)
+            return true
+        }
+
+        const metadata = result.metadata
         if (!metadata.storedAt) return true
 
         return Date.now() - metadata.storedAt > REVALIDATION_PERIOD
