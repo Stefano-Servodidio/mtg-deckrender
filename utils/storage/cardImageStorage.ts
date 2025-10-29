@@ -73,7 +73,9 @@ export async function saveImageToBlobs(
             contentType,
             storedAt: Date.now()
         }
-        await getCardImageStore().set(cardId, buffer, { metadata })
+        await getCardImageStore().set(cardId, buffer as any, {
+            metadata: metadata as any
+        })
 
         console.log(chalk.green(`Saved to Blobs: ${cardId}`))
     } catch (error) {
@@ -95,7 +97,7 @@ export async function needsRevalidation(cardId: string): Promise<boolean> {
         const result = await getCardImageStore().getMetadata(cardId)
         if (!result || !result.metadata) return true
 
-        const metadata = result.metadata as StoredImageMetadata
+        const metadata = result.metadata as unknown as StoredImageMetadata
         if (!metadata.storedAt) return true
 
         return Date.now() - metadata.storedAt > REVALIDATION_PERIOD

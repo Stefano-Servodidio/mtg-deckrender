@@ -73,7 +73,9 @@ export async function saveOverlayToBlobs(
             svgSource,
             storedAt: Date.now()
         }
-        await getOverlayStore().set(overlayKey, buffer, { metadata })
+        await getOverlayStore().set(overlayKey, buffer as any, {
+            metadata: metadata as any
+        })
 
         console.log(chalk.green(`Saved to Blobs: ${overlayKey}`))
     } catch (error) {
@@ -97,7 +99,7 @@ export async function needsRevalidation(overlayKey: string): Promise<boolean> {
         const result = await getOverlayStore().getMetadata(overlayKey)
         if (!result || !result.metadata) return true
 
-        const metadata = result.metadata as StoredOverlayMetadata
+        const metadata = result.metadata as unknown as StoredOverlayMetadata
         if (!metadata.storedAt) return true
 
         return Date.now() - metadata.storedAt > REVALIDATION_PERIOD
