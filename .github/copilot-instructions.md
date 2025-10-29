@@ -2,12 +2,13 @@
 
 ## Project Overview
 
-A Next.js 14 web app that converts MTG decklists to PNG images using Scryfall API. Built with React 18, TypeScript, Chakra UI.
+A Next.js 14 web app that converts MTG decklists to PNG images using Scryfall API. Built with React 18, TypeScript, Chakra UI, deployed on Netlify.
 
-**Tech**: Next.js 14 App Router, React 18, TypeScript, Chakra UI, Vitest, Cypress  
-**Size**: ~122 source files, ~1,540 lines  
-**Node**: >= 22.0.0 (works with 20.x + warnings)  
-**Package Manager**: npm
+**Tech**: Next.js 14 App Router, React 18, TypeScript, Chakra UI, Sharp (image processing), Netlify Blobs (storage), Google Analytics 4  
+**Size**: ~130+ source files  
+**Node**: >= 22.12.0 (works with 20.x in CI)  
+**Package Manager**: npm  
+**Deployment**: Netlify with Blobs enabled
 
 ## Critical Build and Test Information
 
@@ -49,6 +50,55 @@ All tests pass.
 
 ## Project Architecture
 
+### Core Data Flow (Request → Image)
+
+1. **User Input** → `components/DropZone.tsx`: Parse decklist text
+2. **Fetch Cards** → `hooks/useCollections.ts` → `/api/collections`: Batch fetch card data from Scryfall (max 150 cards, 75/batch)
+3. **Generate Image** → `hooks/useDeckPng.ts` → `/api/deck-png`: Download images + composite into PNG
+4. **Download**: User receives final deck image
+
+### 3-Tier Image Caching Strategy
+
+**Critical**: Card images use a 3-layer cache to minimize Scryfall API calls:
+
+1. **Memory Cache** (`utils/cache/index.ts`): In-process CircularCache (200 images), fastest
+2. **Netlify Blobs** (`utils/storage/cardImageStorage.ts`): Persistent cloud storage (90-day revalidation)
+3. **Scryfall API** (`utils/api.ts`): Last resort, saves to Blobs + memory
+
+**Flow** (`utils/api.ts::downloadCardImage`):
+- Check memory → Check Blobs → Download from Scryfall → Save to Blobs + memory
+- Dev mode: `DEV_DEBUG_DISABLE_BLOBS=true` skips Blobs (forces Scryfall downloads)
+
+**Environment Variables** (Netlify only):
+- `NETLIFY_SITE_ID`: Required for Blobs
+- `NETLIFY_AUTH_TOKEN`: Required for Blobs
+- Set in Netlify dashboard, NOT in `.env.local`
+
+### Image Processing Pipeline
+
+**Separation of Concerns**:
+- `utils/processing.ts`: Math/dimensions (canvas size, card size, sorting, resizing)
+- `utils/compositing.ts`: Sharp operations (positioning, overlays, canvas creation)
+
+**Key Steps** (`app/api/deck-png/route.ts`):
+1. Sort cards by CMC/name/color (`sortCards`)
+2. Download all card images (`downloadAllCardImages` → 3-tier cache)
+3. Calculate canvas dimensions (`calculateCanvasDimensions` based on `imageSize`)
+4. Calculate card dimensions (`calculateCardDimensions` based on card count + groups)
+5. Resize images (`resizeImages` using Sharp)
+6. Prepare composite operations (`prepareCardOperations`, `prepareQuantityOverlayOperations`)
+7. Create canvas and composite (`createCanvas`, `createCompositeImage`)
+
+**Layout Config** (`utils/config.ts`):
+- `DECK_LAYOUT_CONFIG`: Card spacing, group separators, overlay positions
+- `CANVAS_SIZE`: Dimensions for each social platform (IG, Twitter, TikTok, etc.)
+- `ROW_SIZE`: Cards per row for each size
+
+**Quantity Overlays**:
+- Pre-generated PNGs in `/public/overlays` (x2.png - x100.png)
+- Generated via `npm run generate:overlays` (uses `scripts/generate-overlays.js`)
+- Positioned via `DECK_LAYOUT_CONFIG.overlay`
+
 ### Directory Structure
 
 ```
@@ -77,7 +127,18 @@ All tests pass.
   /_tests             # Hook unit tests
 /utils                  # Utility functions
   assets.ts            # Asset path helpers
-  /cache              # In-memory caching for API responses
+  api.ts               # Card image downloading with 3-tier caching
+  compositing.ts       # Sharp compositing operations (positioning, canvas)
+  processing.ts        # Image processing math (dimensions, sorting, resizing)
+  config.ts            # Layout constants (spacing, canvas sizes, row sizes)
+  decklist.ts          # Decklist parsing (main deck vs sideboard)
+  maintenance.ts       # Maintenance mode helpers
+  analytics.ts         # Google Analytics 4 event tracking
+  /cache              # In-memory caching (CircularCache)
+    circularCache.ts   # LRU cache implementation
+    index.ts           # Cache instances (overlay, cardImage, card, collectionCard)
+  /storage            # Netlify Blobs integration
+    cardImageStorage.ts # Get/save/revalidate images in Blobs
 /cypress                # E2E tests (Cypress)
   /e2e                 # E2E test specs
   /fixtures            # Test data (sample-decklists.json)
@@ -99,7 +160,8 @@ All tests pass.
 - `eslint.config.mjs`: Uses `unused-imports` plugin
 - `vitest.config.ts`: jsdom environment, 60% coverage threshold
 - `cypress.config.ts`: baseURL localhost:3000, no video
-- `netlify.toml`: Node 22
+- `netlify.toml`: Node 22, Blobs enabled for production/deploy-preview
+- `middleware.ts`: Maintenance mode redirects (site-down page + 503 for APIs)
 
 ### Key Source Files
 
@@ -114,7 +176,15 @@ All tests pass.
 
 ## CI/CD
 
-`.github/workflows/ci.yml`: Runs on push to `main` + PRs. Node 20 (not 22). Steps: `npm ci` → `npm run lint`. Tests disabled.
+`.github/workflows/ci.yml`: Runs on push to `main` + PRs. Node 20 (not 22). Steps: `npm ci` → `npm run type:check` → `npm run lint`. Tests disabled.
+
+## Maintenance Mode
+
+Set `NEXT_PUBLIC_MAINTENANCE=true` to enable maintenance mode:
+- `middleware.ts` redirects all non-`/site-down` routes to `/site-down`
+- API routes return 503 with JSON error
+- `utils/maintenance.ts` provides `isMaintenanceMode()` and `maintenanceResponse()` helpers
+- All API routes check maintenance mode at start
 
 ## Common Pitfalls
 
