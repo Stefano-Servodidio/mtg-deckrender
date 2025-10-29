@@ -66,10 +66,12 @@ All tests pass.
 3. **Scryfall API** (`utils/api.ts`): Last resort, saves to Blobs + memory
 
 **Flow** (`utils/api.ts::downloadCardImage`):
+
 - Check memory → Check Blobs → Download from Scryfall → Save to Blobs + memory
 - Dev mode: `DEV_DEBUG_DISABLE_BLOBS=true` skips Blobs (forces Scryfall downloads)
 
 **Environment Variables** (Netlify only):
+
 - `NETLIFY_SITE_ID`: Required for Blobs
 - `NETLIFY_AUTH_TOKEN`: Required for Blobs
 - Set in Netlify dashboard, NOT in `.env.local`
@@ -77,10 +79,12 @@ All tests pass.
 ### Image Processing Pipeline
 
 **Separation of Concerns**:
+
 - `utils/processing.ts`: Math/dimensions (canvas size, card size, sorting, resizing)
 - `utils/compositing.ts`: Sharp operations (positioning, overlays, canvas creation)
 
 **Key Steps** (`app/api/deck-png/route.ts`):
+
 1. Sort cards by CMC/name/color (`sortCards`)
 2. Download all card images (`downloadAllCardImages` → 3-tier cache)
 3. Calculate canvas dimensions (`calculateCanvasDimensions` based on `imageSize`)
@@ -90,11 +94,13 @@ All tests pass.
 7. Create canvas and composite (`createCanvas`, `createCompositeImage`)
 
 **Layout Config** (`utils/config.ts`):
+
 - `DECK_LAYOUT_CONFIG`: Card spacing, group separators, overlay positions
 - `CANVAS_SIZE`: Dimensions for each social platform (IG, Twitter, TikTok, etc.)
 - `ROW_SIZE`: Cards per row for each size
 
 **Quantity Overlays**:
+
 - Pre-generated PNGs in `/public/overlays` (x2.png - x100.png)
 - Generated via `npm run generate:overlays` (uses `scripts/generate-overlays.js`)
 - Positioned via `DECK_LAYOUT_CONFIG.overlay`
@@ -181,6 +187,7 @@ All tests pass.
 ## Maintenance Mode
 
 Set `NEXT_PUBLIC_MAINTENANCE=true` to enable maintenance mode:
+
 - `middleware.ts` redirects all non-`/site-down` routes to `/site-down`
 - API routes return 503 with JSON error
 - `utils/maintenance.ts` provides `isMaintenanceMode()` and `maintenanceResponse()` helpers

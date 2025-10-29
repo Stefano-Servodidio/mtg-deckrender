@@ -29,12 +29,12 @@ export async function getImageFromBlobs(
         return null
     }
     try {
-        const imageData = await cardImageStore.get(cardId, {
+        const result = await cardImageStore.getWithMetadata(cardId, {
             type: 'arrayBuffer'
         })
-        if (!imageData) return null
+        if (!result) return null
 
-        return Buffer.from(imageData)
+        return Buffer.from(result.data)
     } catch (error) {
         console.error(
             chalk.red(`Error retrieving from Blobs: ${cardId}`),
@@ -60,16 +60,13 @@ export async function saveImageToBlobs(
         return
     }
     try {
-        // Store the image
-        await cardImageStore.set(cardId, buffer)
-
-        // Store metadata separately
+        // Store the image with metadata
         const metadata: StoredImageMetadata = {
             scryfallUri,
             contentType,
             storedAt: Date.now()
         }
-        await cardImageStore.setJSON(`${cardId}-metadata`, metadata)
+        await cardImageStore.set(cardId, buffer, { metadata })
 
         console.log(chalk.green(`Saved to Blobs: ${cardId}`))
     } catch (error) {
@@ -88,10 +85,11 @@ export async function needsRevalidation(cardId: string): Promise<boolean> {
         return true
     }
     try {
-        const metadata = (await cardImageStore.get(`${cardId}-metadata`, {
-            type: 'json'
-        })) as StoredImageMetadata | null
-        if (!metadata) return true
+        const result = await cardImageStore.getMetadata(cardId)
+        if (!result || !result.metadata) return true
+
+        const metadata = result.metadata as StoredImageMetadata
+        if (!metadata.storedAt) return true
 
         return Date.now() - metadata.storedAt > REVALIDATION_PERIOD
     } catch {
@@ -108,7 +106,5 @@ export async function listStoredCards(): Promise<string[]> {
         return []
     }
     const { blobs } = await cardImageStore.list()
-    return blobs
-        .map((blob) => blob.key)
-        .filter((key) => !key.endsWith('-metadata'))
+    return blobs.map((blob) => blob.key)
 }

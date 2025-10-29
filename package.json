@@ -24,6 +24,7 @@
         "validate:e2e": "node scripts/validate-cypress.js",
         "test:e2e-flow": "node scripts/test-e2e-flow.js",
         "generate:overlays": "node scripts/generate-overlays.js",
+        "generate:overlay-blobs": "node scripts/generate-overlay-blobs.js",
         "cleanup:overlays": "node scripts/cleanup-overlays.js",
         "bump:patch": "npm version patch && git push && git push --tags",
         "bump:minor": "npm version minor && git push && git push --tags",
