@@ -51,8 +51,8 @@ async function generateAndSaveOverlay(count, overlayStorage) {
         // Convert SVG to PNG buffer
         const buffer = await sharp(Buffer.from(svg)).png().toBuffer()
 
-        // Save to Netlify Blobs with metadata
-        await overlayStorage.saveOverlayToBlobs(overlayKey, buffer, count, svg)
+        // Save to Netlify Blobs
+        await overlayStorage.saveOverlayToBlobs(overlayKey, buffer)
 
         return true
     } catch (error) {
