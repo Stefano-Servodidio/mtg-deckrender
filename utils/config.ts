@@ -13,7 +13,7 @@ export const DECK_LAYOUT_CONFIG = {
 
     // Layout spacing
     spacing: {
-        betweenCards: 10, // Space between individual cards
+        betweenCards: 2, // Space between individual cards
         groupSeparator: 70, // Extra space between groups (e.g., main deck and sideboard)
         canvasPadding: 20 // Padding around the entire canvas (using spacing value)
     },
