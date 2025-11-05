@@ -1,23 +1,47 @@
 const sharp = require('sharp')
-const path = require('path')
-const chalk = require('chalk')
+const { getStore } = require('@netlify/blobs')
 
-// Import the overlay storage functions
-// Note: We need to use dynamic import for ES modules in CommonJS context
-let overlayStorage
+// Initialize Netlify Blobs store
+function getOverlayStore() {
+    const siteID = process.env.NETLIFY_SITE_ID
+    const token = process.env.NETLIFY_AUTH_TOKEN
 
-async function initializeStorage() {
-    // Dynamically import the ES module
-    const module = await import(
-        '../utils/storage/overlayImageStorage.js'
-    ).catch((err) => {
-        console.error('Error importing overlay storage:', err)
-        process.exit(1)
+    if (!siteID || !token) {
+        throw new Error(
+            'Missing required environment variables: NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN'
+        )
+    }
+
+    return getStore({
+        name: 'overlay-images',
+        siteID,
+        token
     })
+}
 
-    return {
-        saveOverlayToBlobs: module.saveOverlayToBlobs,
-        listStoredOverlays: module.listStoredOverlays
+/**
+ * Save overlay to Netlify Blobs
+ */
+async function saveOverlayToBlobs(overlayKey, buffer) {
+    try {
+        await getOverlayStore().set(overlayKey, buffer)
+        return true
+    } catch (error) {
+        console.error(`Error saving overlay to Blobs: ${overlayKey}`, error)
+        return false
+    }
+}
+
+/**
+ * List all stored overlay images
+ */
+async function listStoredOverlays() {
+    try {
+        const { blobs } = await getOverlayStore().list()
+        return blobs.map((blob) => blob.key)
+    } catch (error) {
+        console.error('Error listing stored overlays:', error)
+        return []
     }
 }
 
@@ -41,7 +65,7 @@ function generateOverlaySvg(count) {
 /**
  * Generate overlay blob and save to Netlify Blobs
  */
-async function generateAndSaveOverlay(count, overlayStorage) {
+async function generateAndSaveOverlay(count) {
     const overlayKey = `x${count}`
 
     try {
@@ -52,11 +76,11 @@ async function generateAndSaveOverlay(count, overlayStorage) {
         const buffer = await sharp(Buffer.from(svg)).png().toBuffer()
 
         // Save to Netlify Blobs
-        await overlayStorage.saveOverlayToBlobs(overlayKey, buffer)
+        const success = await saveOverlayToBlobs(overlayKey, buffer)
 
-        return true
+        return success
     } catch (error) {
-        console.error(chalk.red(`Error generating overlay x${count}:`), error)
+        console.error(`Error generating overlay x${count}:`, error)
         return false
     }
 }
@@ -65,46 +89,39 @@ async function generateAndSaveOverlay(count, overlayStorage) {
  * Main function to generate all overlay blobs
  */
 async function generateOverlayBlobs() {
-    console.log(chalk.blue('🎨 Generating overlay blobs for Netlify Blobs...'))
+    console.log('🎨 Generating overlay blobs for Netlify Blobs...')
 
-    // Initialize storage
-    overlayStorage = await initializeStorage()
-
-    const totalOverlays = 150
+    const totalOverlays = 200
     let successCount = 0
     let failCount = 0
 
-    // Generate overlays for quantities 2-150
+    // Generate overlays
     for (let count = 2; count <= totalOverlays; count++) {
-        const success = await generateAndSaveOverlay(count, overlayStorage)
+        const success = await generateAndSaveOverlay(count)
 
         if (success) {
             successCount++
             process.stdout.write(
-                `\r   ${chalk.green('✓')} Generated ${successCount}/${totalOverlays - 1} overlays`
+                `\r   ✓ Generated ${successCount}/${totalOverlays - 1} overlays`
             )
         } else {
             failCount++
         }
     }
 
-    console.log(
-        `\n${chalk.green('✅ Successfully generated')} ${successCount} overlay blobs`
-    )
+    console.log(`\n✅ Successfully generated ${successCount} overlay blobs`)
     if (failCount > 0) {
-        console.log(chalk.red(`❌ Failed to generate ${failCount} overlays`))
+        console.log(`❌ Failed to generate ${failCount} overlays`)
     }
 
     // List all stored overlays
-    console.log(chalk.blue('\n📋 Listing stored overlays...'))
-    const storedOverlays = await overlayStorage.listStoredOverlays()
-    console.log(
-        chalk.cyan(`Total overlays in storage: ${storedOverlays.length}`)
-    )
+    console.log('\n📋 Listing stored overlays...')
+    const storedOverlays = await listStoredOverlays()
+    console.log(`Total overlays in storage: ${storedOverlays.length}`)
 }
 
 // Run the script
 generateOverlayBlobs().catch((error) => {
-    console.error(chalk.red('❌ Error generating overlay blobs:'), error)
+    console.error('❌ Error generating overlay blobs:', error)
     process.exit(1)
 })
