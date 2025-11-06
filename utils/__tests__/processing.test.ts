@@ -8,6 +8,7 @@ vi.mock('sharp', () => {
         resize: vi.fn().mockReturnThis(),
         ensureAlpha: vi.fn().mockReturnThis(),
         composite: vi.fn().mockReturnThis(),
+        png: vi.fn().mockReturnThis(),
         toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized-image'))
     }
     return {
@@ -245,6 +246,7 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 ensureAlpha: vi.fn().mockReturnThis(),
                 composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi
                     .fn()
                     .mockResolvedValue(Buffer.from('resized-image'))
@@ -305,6 +307,7 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 ensureAlpha: vi.fn().mockReturnThis(),
                 composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
 
@@ -332,6 +335,7 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 ensureAlpha: vi.fn().mockReturnThis(),
                 composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
 
@@ -356,6 +360,7 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 ensureAlpha: vi.fn().mockReturnThis(),
                 composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi
                     .fn()
                     .mockRejectedValue(new Error('Sharp processing failed'))
@@ -374,6 +379,7 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 ensureAlpha: vi.fn().mockReturnThis(),
                 composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
 
@@ -397,7 +403,9 @@ describe('Processing utility functions', () => {
                 resize: vi.fn().mockReturnThis(),
                 ensureAlpha: vi.fn().mockReturnThis(),
                 composite: vi.fn().mockReturnThis(),
-                toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
+                png: vi.fn().mockReturnThis(),
+                toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized')),
+                toPng: vi.fn().mockReturnThis()
             }
 
             vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
@@ -418,9 +426,9 @@ describe('Processing utility functions', () => {
             const svgBuffer = compositeCall[0].input
             const svgString = svgBuffer.toString()
 
-            // Verify the corner radius was scaled (20 * 0.5 = 10)
-            expect(svgString).toContain('rx="10"')
-            expect(svgString).toContain('ry="10"')
+            // Verify the corner radius was scaled (35 * 0.5 = 17.5, rounds to 18)
+            expect(svgString).toContain('rx="18"')
+            expect(svgString).toContain('ry="18"')
         })
 
         test('should handle null buffers without applying rounded corners', async () => {

@@ -19,14 +19,21 @@ export async function downloadCardImage(
         // 1. Check in-memory cache first (fastest)
         const memCached = cardImageCache.get(cacheKey)
         if (memCached) {
-            console.log(chalk.cyan(`Memory cache hit: ${card.name}`))
-            return memCached
+            console.log(
+                chalk.blueBright(`Memory cache hit for card: ${card.name}`)
+            )
+            return {
+                name: card.name,
+                groupId: card.groupId,
+                buffer: memCached.buffer,
+                quantity: card.quantity
+            }
         }
 
         // 2. Check Netlify Blobs (persistent storage)
         const blobImage = await getImageFromBlobs(card.id)
         if (blobImage) {
-            console.log(chalk.green(`Blob cache hit: ${card.name}`))
+            console.log(chalk.grey(`Blob cache hit for card: ${card.name}`))
 
             const cardBuffer: CardImageBuffer = {
                 name: card.name,
@@ -113,25 +120,10 @@ export async function downloadAllCardImages(
             progressCallback(i + 1, totalImages, card.name)
         }
 
-        // Check cache first
-        const cacheKey = `${card.id}`
-        const cached = cardImageCache.get(cacheKey)
-
-        if (cached) {
-            successfulImages.push({
-                name: card.name,
-                groupId: card.groupId,
-                buffer: cached.buffer,
-                quantity: card.quantity
-            })
-            console.log(chalk.cyan(`Cache hit for card image: ${card.name}`))
-            continue
-        }
-
         const cardBuffer = await downloadCardImage(card)
+
         if (cardBuffer?.buffer) {
             successfulImages.push(cardBuffer)
-            cardImageCache.set(cacheKey, cardBuffer)
         } else {
             failedImages.push(cardBuffer)
         }

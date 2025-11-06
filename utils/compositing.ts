@@ -173,8 +173,8 @@ export async function prepareQuantityOverlayOperations(
             if (overlayCache.has(cacheKey)) {
                 const cachedBuffer = overlayCache.get(cacheKey)!
                 console.log(
-                    chalk.cyan(
-                        `Cache hit for overlay: x${imageData.quantity}, scale: ${cardDimensions.scale}`
+                    chalk.blueBright(
+                        `Memory Cache hit for overlay: x${imageData.quantity}, scale: ${cardDimensions.scale}`
                     )
                 )
                 return {
@@ -188,12 +188,15 @@ export async function prepareQuantityOverlayOperations(
                 )
                 if (!buffer) {
                     console.warn(
-                        chalk.yellow(
-                            `Overlay not found: x${imageData.quantity}`
-                        )
+                        chalk.red(`Overlay not found: x${imageData.quantity}`)
                     )
                     return null
                 }
+                console.log(
+                    chalk.grey(
+                        `Getting overlay from blob: x${imageData.quantity}, size: ${scaledOverlaySize}`
+                    )
+                )
                 const resizedBuffer = await sharp(buffer)
                     .resize(scaledOverlaySize, null)
                     .toBuffer()

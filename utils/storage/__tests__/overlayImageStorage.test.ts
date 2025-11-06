@@ -1,17 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock the store using a factory to avoid hoisting issues
-vi.mock('@netlify/blobs', () => {
-    const createMockStore = () => ({
-        get: vi.fn(),
-        set: vi.fn(),
-        list: vi.fn()
-    })
+const mockStoreInstance = {
+    get: vi.fn(),
+    set: vi.fn(),
+    list: vi.fn()
+}
 
-    return {
-        getStore: vi.fn(() => createMockStore())
-    }
-})
+vi.mock('@netlify/blobs', () => ({
+    getStore: vi.fn(() => mockStoreInstance)
+}))
 
 // Mock chalk to suppress console logs in tests
 vi.mock('chalk', () => ({
@@ -25,35 +23,30 @@ vi.mock('chalk', () => ({
 
 // Import after mocks are set up
 import * as storage from '../overlayImageStorage'
-import { getStore } from '@netlify/blobs'
 
 describe('overlayImageStorage', () => {
     const mockOverlayKey = 'x4'
     const mockBuffer = Buffer.from('test-overlay-data')
 
-    let mockStore: any
-
     beforeEach(() => {
         vi.clearAllMocks()
-        // Get the mock store instance
-        mockStore = (getStore as any)()
     })
 
     describe('getOverlayFromBlobs', () => {
         it('should return buffer when overlay exists', async () => {
             const mockArrayBuffer = new ArrayBuffer(16)
-            mockStore.get.mockResolvedValueOnce(mockArrayBuffer)
+            mockStoreInstance.get.mockResolvedValueOnce(mockArrayBuffer)
 
             const result = await storage.getOverlayFromBlobs(mockOverlayKey)
 
             expect(result).toBeInstanceOf(Buffer)
-            expect(mockStore.get).toHaveBeenCalledWith(mockOverlayKey, {
+            expect(mockStoreInstance.get).toHaveBeenCalledWith(mockOverlayKey, {
                 type: 'arrayBuffer'
             })
         })
 
         it('should return null when overlay does not exist', async () => {
-            mockStore.get.mockResolvedValueOnce(null)
+            mockStoreInstance.get.mockResolvedValueOnce(null)
 
             const result = await storage.getOverlayFromBlobs(mockOverlayKey)
 
@@ -61,31 +54,34 @@ describe('overlayImageStorage', () => {
         })
 
         it('should return null on error', async () => {
-            mockStore.get.mockRejectedValueOnce(new Error('Network error'))
+            mockStoreInstance.get.mockRejectedValueOnce(
+                new Error('Network error')
+            )
 
             const result = await storage.getOverlayFromBlobs(mockOverlayKey)
 
             expect(result).toBeNull()
         })
     })
-
     describe('saveOverlayToBlobs', () => {
         it('should save overlay', async () => {
-            mockStore.set.mockResolvedValueOnce({
+            mockStoreInstance.set.mockResolvedValueOnce({
                 modified: true,
                 etag: 'test-etag'
             })
 
             await storage.saveOverlayToBlobs(mockOverlayKey, mockBuffer)
 
-            expect(mockStore.set).toHaveBeenCalledWith(
+            expect(mockStoreInstance.set).toHaveBeenCalledWith(
                 mockOverlayKey,
                 expect.any(Object)
             )
         })
 
         it('should handle errors gracefully', async () => {
-            mockStore.set.mockRejectedValueOnce(new Error('Storage error'))
+            mockStoreInstance.set.mockRejectedValueOnce(
+                new Error('Storage error')
+            )
 
             await expect(
                 storage.saveOverlayToBlobs(mockOverlayKey, mockBuffer)
@@ -95,7 +91,7 @@ describe('overlayImageStorage', () => {
 
     describe('listStoredOverlays', () => {
         it('should return list of overlay keys', async () => {
-            mockStore.list.mockResolvedValueOnce({
+            mockStoreInstance.list.mockResolvedValueOnce({
                 blobs: [
                     { key: 'x2', etag: 'etag-1' },
                     { key: 'x3', etag: 'etag-2' }
@@ -109,7 +105,7 @@ describe('overlayImageStorage', () => {
         })
 
         it('should return empty array when no overlays stored', async () => {
-            mockStore.list.mockResolvedValueOnce({
+            mockStoreInstance.list.mockResolvedValueOnce({
                 blobs: [],
                 directories: []
             })
@@ -122,7 +118,7 @@ describe('overlayImageStorage', () => {
 
     describe('Integration scenarios', () => {
         it('no-cache and no-store: should return null', async () => {
-            mockStore.get.mockResolvedValueOnce(null)
+            mockStoreInstance.get.mockResolvedValueOnce(null)
 
             const result = await storage.getOverlayFromBlobs(mockOverlayKey)
 
@@ -131,7 +127,7 @@ describe('overlayImageStorage', () => {
 
         it('only-store: should retrieve from store', async () => {
             const mockArrayBuffer = new ArrayBuffer(16)
-            mockStore.get.mockResolvedValueOnce(mockArrayBuffer)
+            mockStoreInstance.get.mockResolvedValueOnce(mockArrayBuffer)
 
             const result = await storage.getOverlayFromBlobs(mockOverlayKey)
 
@@ -140,12 +136,12 @@ describe('overlayImageStorage', () => {
 
         it('save and retrieve workflow', async () => {
             // Save
-            mockStore.set.mockResolvedValueOnce({ modified: true })
+            mockStoreInstance.set.mockResolvedValueOnce({ modified: true })
             await storage.saveOverlayToBlobs(mockOverlayKey, mockBuffer)
-            expect(mockStore.set).toHaveBeenCalled()
+            expect(mockStoreInstance.set).toHaveBeenCalled()
 
             // Retrieve
-            mockStore.get.mockResolvedValueOnce(mockBuffer.buffer)
+            mockStoreInstance.get.mockResolvedValueOnce(mockBuffer.buffer)
 
             const result = await storage.getOverlayFromBlobs(mockOverlayKey)
             expect(result).toBeInstanceOf(Buffer)

@@ -1,18 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock the store using a factory to avoid hoisting issues
-vi.mock('@netlify/blobs', () => {
-    const createMockStore = () => ({
-        getWithMetadata: vi.fn(),
-        set: vi.fn(),
-        getMetadata: vi.fn(),
-        list: vi.fn()
-    })
+const mockStore = {
+    getWithMetadata: vi.fn(),
+    set: vi.fn(),
+    getMetadata: vi.fn(),
+    list: vi.fn()
+}
 
-    return {
-        getStore: vi.fn(() => createMockStore())
-    }
-})
+vi.mock('@netlify/blobs', () => ({
+    getStore: vi.fn(() => mockStore)
+}))
 
 // Mock chalk to suppress console logs in tests
 vi.mock('chalk', () => ({
@@ -26,7 +24,6 @@ vi.mock('chalk', () => ({
 
 // Import after mocks are set up
 import * as storage from '../cardImageStorage'
-import { getStore } from '@netlify/blobs'
 
 describe('cardImageStorage', () => {
     const mockCardId = 'test-card-123'
@@ -34,14 +31,10 @@ describe('cardImageStorage', () => {
     const mockScryfallUri = 'https://example.com/card.jpg'
     const mockContentType = 'image/jpeg'
 
-    let mockStore: any
-
     beforeEach(() => {
         vi.clearAllMocks()
-        // Get the mock store instance
-        mockStore = (getStore as any)()
+        vi.stubEnv('NODE_ENV', 'test')
     })
-
     describe('getImageFromBlobs', () => {
         it('should return buffer when image exists', async () => {
             const mockArrayBuffer = new ArrayBuffer(16)
