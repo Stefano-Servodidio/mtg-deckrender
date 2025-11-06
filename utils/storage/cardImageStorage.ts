@@ -40,7 +40,7 @@ function isStoredImageMetadata(
 }
 
 const REVALIDATION_PERIOD = 90 * 24 * 60 * 60 * 1000 // 90 days
-const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && true
+const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && false
 /**
  * Get image from Netlify Blobs
  */

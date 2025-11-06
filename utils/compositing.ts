@@ -12,8 +12,8 @@ import {
 } from '@/types/api'
 import { calculateRowHeight } from './processing'
 import { overlayCache } from '@/utils/cache'
-import { getAssetBuffer } from '@/utils/assets'
 import chalk from 'chalk'
+import { getOverlayFromBlobs } from './storage/overlayImageStorage'
 
 /**
  * Calculate position for a card in the grid based on layout settings
@@ -154,9 +154,12 @@ export async function prepareQuantityOverlayOperations(
                 topModifier,
                 leftModifier
             )
+            const scaledOverlaySize = Math.floor(
+                overlay.size * cardDimensions.scale!
+            )
 
             // In your prepareQuantityOverlayOperations function:
-            const cacheKey = `x${imageData.quantity}_${Math.floor(125 * cardDimensions.scale!)}`
+            const cacheKey = `x${imageData.quantity}_${scaledOverlaySize}`
 
             if (overlayCache.has(cacheKey)) {
                 const cachedBuffer = overlayCache.get(cacheKey)!
@@ -171,12 +174,19 @@ export async function prepareQuantityOverlayOperations(
                     top: Math.floor(top)
                 }
             } else {
-                const buffer = await getAssetBuffer(
-                    `public/overlays/x${imageData.quantity}.png`,
-                    'public/overlayError.png'
+                const buffer = await getOverlayFromBlobs(
+                    `x${imageData.quantity}`
                 )
+                if (!buffer) {
+                    console.warn(
+                        chalk.yellow(
+                            `Overlay not found: x${imageData.quantity}`
+                        )
+                    )
+                    return null
+                }
                 const resizedBuffer = await sharp(buffer)
-                    .resize(Math.floor(125 * cardDimensions.scale!), null)
+                    .resize(scaledOverlaySize, null)
                     .toBuffer()
 
                 // Cache the resized overlay

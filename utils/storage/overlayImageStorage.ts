@@ -15,7 +15,7 @@ function getOverlayStore() {
     return overlayStore
 }
 
-const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && true
+const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && false
 
 /**
  * Get overlay from Netlify Blobs

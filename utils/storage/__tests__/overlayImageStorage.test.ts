@@ -35,7 +35,6 @@ describe('overlayImageStorage', () => {
 
     beforeEach(() => {
         vi.clearAllMocks()
-        process.env.NODE_ENV = 'test'
         // Get the mock store instance
         mockStore = (getStore as any)()
     })

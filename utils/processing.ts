@@ -40,8 +40,10 @@ export function calculateCardDimensions(
     })
 
     // Calculate available space on canvas
-    // Subtract padding and space for group separators
-    const availableWidth = canvasWidth - 2 * spacing.canvasPadding
+    // Subtract padding for group separators
+    // add one extra spacing to account for the last column
+    const availableWidth =
+        canvasWidth - 2 * spacing.canvasPadding + spacing.betweenCards
 
     const availableHeight =
         canvasHeight -
