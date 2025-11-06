@@ -78,15 +78,21 @@ export async function POST(request: NextRequest) {
                         )
                     )
 
+                    console.log(
+                        chalk.yellow('Starting deck image generation...')
+                    )
+
                     // Filter out invalid cards
                     const validCards = cards.filter(
                         (card) => card.image_uri && card.quantity > 0
                     )
                     if (process.env.NODE_ENV === 'development') {
                         console.log(
-                            chalk.green(
-                                ' cards:',
-                                cards
+                            chalk.yellow(`${validCards.length} Valid Cards:`)
+                        )
+                        console.log(
+                            chalk.blueBright(
+                                validCards
                                     .map((c) => `${c.quantity}x ${c.name}`)
                                     .join(', ')
                             )
@@ -101,7 +107,11 @@ export async function POST(request: NextRequest) {
 
                     console.log(
                         chalk.yellow(
-                            'Valid cards:',
+                            `${validCardImages.length} Cards with valid images: `
+                        )
+                    )
+                    console.log(
+                        chalk.greenBright(
                             validCardImages
                                 .map((c) => `${c.quantity}x ${c.name}`)
                                 .join(', ')
@@ -134,6 +144,7 @@ export async function POST(request: NextRequest) {
                             })}\n\n`
                         )
                     )
+                    console.log(chalk.yellow(`Processing cards...`))
 
                     // Download all card images with progress tracking
                     const [successfulImages, failedImages] =
@@ -198,7 +209,7 @@ export async function POST(request: NextRequest) {
                         options.imageResolution
                     )
 
-                    const cardDimensions = calculateCardDimensions(
+                    const [cardDimensions, modifiers] = calculateCardDimensions(
                         successfulImages,
                         canvasDimensions,
                         options.imageSize,
@@ -243,15 +254,18 @@ export async function POST(request: NextRequest) {
                         resizedImages,
                         cardDimensions,
                         options.imageVariant,
-                        options.imageSize
+                        options.imageSize,
+                        modifiers
                     )
 
+                    console.log(chalk.yellow(`Processing overlays...`))
                     const overlayOperations = options.includeCardCount
                         ? await prepareQuantityOverlayOperations(
                               resizedImages,
                               cardDimensions,
                               options.imageVariant,
-                              options.imageSize
+                              options.imageSize,
+                              modifiers
                           )
                         : []
 

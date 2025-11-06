@@ -6,6 +6,9 @@ import { CardImageBuffer, CardItem } from '@/types/api'
 vi.mock('sharp', () => {
     const mockSharp = {
         resize: vi.fn().mockReturnThis(),
+        ensureAlpha: vi.fn().mockReturnThis(),
+        composite: vi.fn().mockReturnThis(),
+        png: vi.fn().mockReturnThis(),
         toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized-image'))
     }
     return {
@@ -241,6 +244,9 @@ describe('Processing utility functions', () => {
             const sharp = await import('sharp')
             const mockSharpInstance = {
                 resize: vi.fn().mockReturnThis(),
+                ensureAlpha: vi.fn().mockReturnThis(),
+                composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi
                     .fn()
                     .mockResolvedValue(Buffer.from('resized-image'))
@@ -263,6 +269,10 @@ describe('Processing utility functions', () => {
                 width: 100,
                 height: 140
             })
+
+            // Verify rounded corners are applied
+            expect(mockSharpInstance.ensureAlpha).toHaveBeenCalled()
+            expect(mockSharpInstance.composite).toHaveBeenCalled()
         })
 
         test('should handle images with null buffers', async () => {
@@ -295,6 +305,9 @@ describe('Processing utility functions', () => {
             const sharp = await import('sharp')
             const mockSharpInstance = {
                 resize: vi.fn().mockReturnThis(),
+                ensureAlpha: vi.fn().mockReturnThis(),
+                composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
 
@@ -320,6 +333,9 @@ describe('Processing utility functions', () => {
             const sharp = await import('sharp')
             const mockSharpInstance = {
                 resize: vi.fn().mockReturnThis(),
+                ensureAlpha: vi.fn().mockReturnThis(),
+                composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
             }
 
@@ -342,6 +358,9 @@ describe('Processing utility functions', () => {
             const sharp = await import('sharp')
             const mockSharpInstance = {
                 resize: vi.fn().mockReturnThis(),
+                ensureAlpha: vi.fn().mockReturnThis(),
+                composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
                 toBuffer: vi
                     .fn()
                     .mockRejectedValue(new Error('Sharp processing failed'))
@@ -352,6 +371,80 @@ describe('Processing utility functions', () => {
             await expect(
                 resizeImages([mockCardImages[0]], mockDimensions)
             ).rejects.toThrow('Sharp processing failed')
+        })
+
+        test('should apply rounded corners with default scale', async () => {
+            const sharp = await import('sharp')
+            const mockSharpInstance = {
+                resize: vi.fn().mockReturnThis(),
+                ensureAlpha: vi.fn().mockReturnThis(),
+                composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
+                toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized'))
+            }
+
+            vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
+
+            await resizeImages([mockCardImages[0]], mockDimensions)
+
+            // Verify composite was called with an SVG mask
+            expect(mockSharpInstance.composite).toHaveBeenCalledWith(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        blend: 'dest-in'
+                    })
+                ])
+            )
+        })
+
+        test('should scale corner radius proportionally with card dimensions', async () => {
+            const sharp = await import('sharp')
+            const mockSharpInstance = {
+                resize: vi.fn().mockReturnThis(),
+                ensureAlpha: vi.fn().mockReturnThis(),
+                composite: vi.fn().mockReturnThis(),
+                png: vi.fn().mockReturnThis(),
+                toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized')),
+                toPng: vi.fn().mockReturnThis()
+            }
+
+            vi.mocked(sharp.default).mockReturnValue(mockSharpInstance as any)
+
+            const scaledDimensions = {
+                width: 200,
+                height: 280,
+                scale: 0.5 // 50% scale
+            }
+
+            await resizeImages([mockCardImages[0]], scaledDimensions)
+
+            // Verify composite was called
+            expect(mockSharpInstance.composite).toHaveBeenCalled()
+
+            // Get the SVG that was passed to composite
+            const compositeCall = mockSharpInstance.composite.mock.calls[0][0]
+            const svgBuffer = compositeCall[0].input
+            const svgString = svgBuffer.toString()
+
+            // Verify the corner radius was scaled (35 * 0.5 = 17.5, rounds to 18)
+            expect(svgString).toContain('rx="18"')
+            expect(svgString).toContain('ry="18"')
+        })
+
+        test('should handle null buffers without applying rounded corners', async () => {
+            const sharp = await import('sharp')
+
+            // Clear previous mock calls
+            vi.mocked(sharp.default).mockClear()
+
+            const result = await resizeImages(
+                [mockCardImages[2]], // Card with null buffer
+                mockDimensions
+            )
+
+            // Sharp should not be called for null buffers
+            expect(sharp.default).not.toHaveBeenCalled()
+            expect(result[0].buffer).toBeNull()
         })
     })
 })

@@ -1,6 +1,11 @@
 import { CardImageBuffer, CardItem, ProgressCallback } from '@/types/api'
 import chalk from 'chalk'
 import { cardImageCache } from '@/utils/cache'
+import {
+    getImageFromBlobs,
+    saveImageToBlobs,
+    needsRevalidation
+} from '@/utils/storage/cardImageStorage'
 
 /**
  * Download and resize a single card image based on size settings
@@ -9,19 +14,80 @@ export async function downloadCardImage(
     card: CardItem
 ): Promise<CardImageBuffer> {
     try {
+        const cacheKey = `${card.id}`
+
+        // 1. Check in-memory cache first (fastest)
+        const memCached = cardImageCache.get(cacheKey)
+        if (memCached) {
+            console.log(
+                chalk.blueBright(`Memory cache hit for card: ${card.name}`)
+            )
+            return {
+                name: card.name,
+                groupId: card.groupId,
+                buffer: memCached.buffer,
+                quantity: card.quantity
+            }
+        }
+
+        // 2. Check Netlify Blobs (persistent storage)
+        const blobImage = await getImageFromBlobs(card.id)
+        if (blobImage) {
+            console.log(chalk.grey(`Blob cache hit for card: ${card.name}`))
+
+            const cardBuffer: CardImageBuffer = {
+                name: card.name,
+                groupId: card.groupId,
+                buffer: blobImage,
+                quantity: card.quantity
+            }
+
+            // Store in memory cache for subsequent requests in this session
+            cardImageCache.set(cacheKey, cardBuffer)
+
+            // Check if needs revalidation (background task, non-blocking)
+            if (await needsRevalidation(card.id)) {
+                console.log(
+                    chalk.yellow(`Image will be revalidated: ${card.name}`)
+                )
+                // Optionally trigger background revalidation here
+            }
+
+            return cardBuffer
+        }
+
+        // 3. Download from Scryfall (only if not cached anywhere)
+        console.log(chalk.yellow(`Downloading from Scryfall: ${card.name}`))
         const response = await fetch(card.image_uri as string)
+
         if (!response.ok) {
             throw new Error(`Failed to fetch image for ${card.name}`)
         }
 
-        const buffer = await response.arrayBuffer()
+        const arrayBuffer = await response.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
 
-        return {
+        const cardBuffer: CardImageBuffer = {
             name: card.name,
             groupId: card.groupId,
-            buffer: Buffer.from(buffer),
+            buffer: buffer,
             quantity: card.quantity
         }
+
+        // 4. Save to Netlify Blobs for future use
+        await saveImageToBlobs(
+            card.id,
+            buffer,
+            card.image_uri as string,
+            response.headers.get('content-type') || 'image/jpeg'
+        )
+
+        // 5. Store in memory cache
+        cardImageCache.set(cacheKey, cardBuffer)
+
+        console.log(chalk.green(`✓ Cached new image: ${card.name}`))
+
+        return cardBuffer
     } catch (error) {
         console.error(
             chalk.red(`Error fetching image for ${card.name}:`),
@@ -54,25 +120,10 @@ export async function downloadAllCardImages(
             progressCallback(i + 1, totalImages, card.name)
         }
 
-        // Check cache first
-        const cacheKey = `${card.id}`
-        const cached = cardImageCache.get(cacheKey)
-
-        if (cached) {
-            successfulImages.push({
-                name: card.name,
-                groupId: card.groupId,
-                buffer: cached.buffer,
-                quantity: card.quantity
-            })
-            console.log(chalk.cyan(`Cache hit for card image: ${card.name}`))
-            continue
-        }
-
         const cardBuffer = await downloadCardImage(card)
+
         if (cardBuffer?.buffer) {
             successfulImages.push(cardBuffer)
-            cardImageCache.set(cacheKey, cardBuffer)
         } else {
             failedImages.push(cardBuffer)
         }

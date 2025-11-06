@@ -3,16 +3,19 @@
 
 import { Dimensions, ImageSize } from '@/types/api'
 
+const overlaySizeEnv = process.env.OVERLAY_SIZE
+const overlaySize = overlaySizeEnv ? parseInt(overlaySizeEnv, 10) : 110
 export const DECK_LAYOUT_CONFIG = {
     // Base card dimensions (from Scryfall small images)
     card: {
-        baseWidth: 745, // PNG image width from Scryfall
-        baseHeight: 1040 // PNG image height from Scryfall
+        baseWidth: 672, // PNG image width from Scryfall
+        baseHeight: 936, // PNG image height from Scryfall
+        cornerRadius: 35 // Corner radius in pixels for rounded corners
     },
 
     // Layout spacing
     spacing: {
-        betweenCards: 0, // Space between individual cards
+        betweenCards: 4, // Space between individual cards
         groupSeparator: 70, // Extra space between groups (e.g., main deck and sideboard)
         canvasPadding: 20 // Padding around the entire canvas (using spacing value)
     },
@@ -29,8 +32,9 @@ export const DECK_LAYOUT_CONFIG = {
 
     // Quantity overlay settings
     overlay: {
-        offsetFromRight: 210, // Distance from right edge of card
-        offsetFromTop: 140 // Distance from top edge of card
+        size: overlaySize, // Base size of quantity overlay in pixels
+        offsetFromRight: 190, // Distance from right edge of card
+        offsetFromTop: 120 // Distance from top edge of card
     }
 } as const
 
@@ -49,9 +53,9 @@ export const CANVAS_SIZE: Record<ImageSize, Dimensions> = {
 export const ROW_SIZE: Record<ImageSize, number> = {
     ig_square: 7,
     ig_story: 5,
-    ig_portrait: 7,
+    ig_portrait: 6,
     ig_landscape: 12,
-    facebook_post: 7,
+    facebook_post: 12,
     facebook_cover: 12,
     twitter_post: 7,
     twitter_header: 12,

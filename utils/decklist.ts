@@ -106,14 +106,14 @@ export function createCardItem(
     quantity: number,
     groupId: number
 ): CardItem {
-    let imageUri = scryfallData?.image_uris?.png || null
+    let imageUri = scryfallData?.image_uris?.large || null
     if (
         !imageUri &&
         scryfallData.card_faces &&
         scryfallData.card_faces.length > 0
     ) {
         // If the card has multiple faces, use the front face's image
-        imageUri = scryfallData.card_faces[0].image_uris?.png || null
+        imageUri = scryfallData.card_faces[0].image_uris?.large || null
     }
     return {
         id: scryfallData.id,
@@ -144,7 +144,7 @@ export function createMockCardItem(
         typeLine: 'Instant',
         rarity: 'common',
         image_uri:
-            'https://cards.scryfall.io/large/front/c/4/c41933b2-a91f-4c43-8734-08fc3a392ac2.jpg?1675456210',
+            'https://cards.scryfall.io/normal/front/c/4/c41933b2-a91f-4c43-8734-08fc3a392ac2.jpg?1675456210',
         colors: ['U', 'R'],
         legalities: {
             standard: 'legal',

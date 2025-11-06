@@ -23,8 +23,7 @@
         "e2e:open": "start-server-and-test dev http://localhost:3000 cypress:open",
         "validate:e2e": "node scripts/validate-cypress.js",
         "test:e2e-flow": "node scripts/test-e2e-flow.js",
-        "generate:overlays": "node scripts/generate-overlays.js",
-        "cleanup:overlays": "node scripts/cleanup-overlays.js",
+        "generate:overlays": "node --env-file=.env.local scripts/generate-overlays.js",
         "bump:patch": "npm version patch && git push && git push --tags",
         "bump:minor": "npm version minor && git push && git push --tags",
         "bump:major": "npm version major && git push && git push --tags"
@@ -40,6 +39,7 @@
         "@emotion/react": "^11.11.4",
         "@emotion/styled": "^11.11.0",
         "@hookform/resolvers": "^3.9.0",
+        "@netlify/blobs": "^10.1.0",
         "@next/swc-wasm-nodejs": "13.5.1",
         "@types/node": "^22.12.0",
         "@types/react": "^18.3.24",
