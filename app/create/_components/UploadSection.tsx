@@ -102,7 +102,11 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 align="start"
                 flexWrap="wrap"
             >
-                <Box w={{ base: 'full', md: 'auto' }} h="full" flex={1}>
+                <Box
+                    w={{ base: 'full', md: 'auto' }}
+                    h={{ base: 'auto', md: 'full' }}
+                    flex={1}
+                >
                     <Text
                         fontWeight="semibold"
                         color="gray.700"
@@ -135,7 +139,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 {/* File Upload Section */}
                 <VStack
                     w={{ base: 'full', md: '40%', lg: '30%' }}
-                    h="full"
+                    h={{ base: 'auto', md: 'full' }}
                     align={'flex-start'}
                     gap={0}
                 >

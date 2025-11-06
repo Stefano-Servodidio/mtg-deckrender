@@ -10,7 +10,8 @@ import {
     ImageSize,
     ImageVariant,
     CardImageBuffer,
-    Dimensions
+    Dimensions,
+    Modifiers
 } from '@/types/api'
 import { DECK_LAYOUT_CONFIG, ROW_SIZE, CANVAS_SIZE } from './config'
 import sharp from 'sharp'
@@ -23,12 +24,12 @@ export function calculateCardDimensions(
     canvasSize: Dimensions,
     imageSize?: ImageSize,
     imageVariant?: ImageVariant
-): Dimensions {
+): [Dimensions, Modifiers] {
     const { width: canvasWidth, height: canvasHeight } = canvasSize
     const { card, row, spacing } = DECK_LAYOUT_CONFIG
     const baseWidth = card.baseWidth
     const baseHeight = card.baseHeight
-    const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
+    const rowSize = getRowSize(imageSize, imageVariant)
 
     let groups = new Map<number, CardImageBuffer[]>()
 
@@ -57,28 +58,54 @@ export function calculateCardDimensions(
     const cardHeightMultiplier = row.heightMultiplier[imageVariant || 'default']
 
     // Calculate max card dimensions to fit in the canvas
-    const maxCardWidth =
-        availableWidth / ROW_SIZE[imageSize || 'ig_square'] -
-        spacing.betweenCards
+    const maxCardWidth = availableWidth / rowSize - spacing.betweenCards
 
     // last row of each group is always fully visible, so we calculate based on that
-    const maxRawHeight =
-        availableHeight /
-        ((totalRows - groups.size) * cardHeightMultiplier + groups.size)
+    const adjustedRows =
+        (totalRows - groups.size) * cardHeightMultiplier + groups.size
+
+    const maxRawHeight = availableHeight / adjustedRows
 
     const maxCardHeight = maxRawHeight - spacing.betweenCards
 
     // Maintain aspect ratio based on base card dimensions
     let scale = 1 // Default scale
+    let width = baseWidth
+    let height = baseHeight
+    let modifiers = {
+        topModifier: 0,
+        leftModifier: 0
+    }
     if (maxCardWidth < baseWidth || maxCardHeight < baseHeight) {
-        scale = Math.min(maxCardWidth / baseWidth, maxCardHeight / baseHeight)
+        const widthScale = maxCardWidth / baseWidth
+        const heightScale = maxCardHeight / baseHeight
+        scale = Math.min(widthScale, heightScale)
+        width = baseWidth * scale
+        height = baseHeight * scale
+
+        if (widthScale < heightScale) {
+            // Center vertically
+            const adjustedHeight = height + spacing.betweenCards
+            const totalHeight =
+                adjustedHeight * adjustedRows - spacing.betweenCards
+            modifiers.topModifier = (availableHeight - totalHeight) / 2
+        } else if (heightScale < widthScale) {
+            // Center horizontally
+            const adjustedWidth = width + spacing.betweenCards
+            const totalWidth = adjustedWidth * rowSize - spacing.betweenCards
+            modifiers.leftModifier = (availableWidth - totalWidth) / 2
+        }
     }
-    return {
-        width: baseWidth * scale,
-        height: baseHeight * scale,
-        original: { width: baseWidth, height: baseHeight },
-        scale
-    }
+
+    return [
+        {
+            width,
+            height,
+            original: { width: baseWidth, height: baseHeight },
+            scale
+        },
+        modifiers
+    ]
 }
 
 /**
@@ -234,4 +261,19 @@ export async function resizeImages(
             }
         })
     )
+}
+
+export function getRowSize(
+    imageSize?: ImageSize,
+    imageVariant?: ImageVariant
+): number {
+    let size =
+        imageSize && ROW_SIZE[imageSize]
+            ? ROW_SIZE[imageSize]
+            : ROW_SIZE['ig_square']
+    // Extend row size for spoiler variant to accommodate full card visibility
+    if (imageVariant === 'spoiler') {
+        size += 1
+    }
+    return size
 }

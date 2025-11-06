@@ -2,15 +2,16 @@
 // This file contains logic for positioning cards and quantity overlays on the canvas
 
 import sharp from 'sharp'
-import { DECK_LAYOUT_CONFIG, ROW_SIZE } from './config'
+import { DECK_LAYOUT_CONFIG } from './config'
 import {
     ImageSize,
     ImageVariant,
     BackgroundStyle,
     CardImageBuffer,
-    Dimensions
+    Dimensions,
+    Modifiers
 } from '@/types/api'
-import { calculateRowHeight } from './processing'
+import { calculateRowHeight, getRowSize } from './processing'
 import { overlayCache } from '@/utils/cache'
 import chalk from 'chalk'
 import { getOverlayFromBlobs } from './storage/overlayImageStorage'
@@ -23,14 +24,15 @@ function calculateCardPosition(
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
     imageSize?: ImageSize,
-    topModifier?: number,
-    leftModifier?: number
+    modifiers?: Modifiers
 ): { left: number; top: number } {
     const {
         spacing: { betweenCards, canvasPadding }
     } = DECK_LAYOUT_CONFIG
 
-    const cardsPerRow = imageSize ? ROW_SIZE[imageSize] : 7
+    const { topModifier, leftModifier } = modifiers || {}
+    const cardsPerRow = getRowSize(imageSize, imageVariant)
+
     const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
 
     const row = Math.floor(index / cardsPerRow)
@@ -57,7 +59,8 @@ export function prepareCardOperations(
     images: CardImageBuffer[],
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
-    imageSize?: ImageSize
+    imageSize?: ImageSize,
+    modifiers?: Modifiers
 ): sharp.OverlayOptions[] {
     let separator = DECK_LAYOUT_CONFIG.spacing.groupSeparator
 
@@ -73,7 +76,7 @@ export function prepareCardOperations(
         .map((imageData) => {
             if (!processedGroups.has(imageData.groupId)) {
                 // Skip to the next row when a new group is encountered
-                const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
+                const rowSize = getRowSize(imageSize, imageVariant)
                 cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
             } else {
                 cardIndex += 1
@@ -82,12 +85,13 @@ export function prepareCardOperations(
             processedGroups.add(imageData.groupId)
 
             const topModifier = (processedGroups.size - 1) * separator
+            const mods = sumModifiers(modifiers || {}, topModifier)
             const { left, top } = calculateCardPosition(
                 cardIndex,
                 cardDimensions,
                 imageVariant,
                 imageSize,
-                topModifier
+                mods
             )
             // return position rounded to avoid subpixel rendering issues
             return {
@@ -106,7 +110,8 @@ export async function prepareQuantityOverlayOperations(
     images: CardImageBuffer[],
     cardDimensions: Dimensions,
     imageVariant?: ImageVariant,
-    imageSize?: ImageSize
+    imageSize?: ImageSize,
+    modifiers?: Modifiers
 ): Promise<sharp.OverlayOptions[]> {
     const { overlay } = DECK_LAYOUT_CONFIG
 
@@ -133,7 +138,7 @@ export async function prepareQuantityOverlayOperations(
         images.map(async (imageData) => {
             // Reset card index when a new group is encountered
             if (!processedGroups.has(imageData.groupId)) {
-                const rowSize = imageSize ? ROW_SIZE[imageSize] : 7
+                const rowSize = getRowSize(imageSize, imageVariant)
                 cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
             } else {
                 cardIndex += 1
@@ -146,13 +151,17 @@ export async function prepareQuantityOverlayOperations(
             const topModifier =
                 (processedGroups.size - 1) * separator +
                 scaledOverlayOffsetFromTop
+            const mods = sumModifiers(
+                modifiers || {},
+                topModifier,
+                leftModifier
+            )
             const { left, top } = calculateCardPosition(
                 cardIndex,
                 cardDimensions,
                 imageVariant,
                 imageSize,
-                topModifier,
-                leftModifier
+                mods
             )
             const scaledOverlaySize = Math.floor(
                 overlay.size * cardDimensions.scale!
@@ -270,5 +279,22 @@ export async function createCompositeImage(
         case 'png':
         default:
             return await compositeImage.png().toBuffer()
+    }
+}
+
+/** function to sum modifiers
+ * Sums the top and left modifiers with the provided values.
+ */
+export function sumModifiers(
+    modifiers: Modifiers,
+    top?: number,
+    left?: number
+): Modifiers {
+    const { topModifier, leftModifier } = modifiers || {}
+    const sumTop = (topModifier || 0) + (top || 0)
+    const sumLeft = (leftModifier || 0) + (left || 0)
+    return {
+        topModifier: sumTop,
+        leftModifier: sumLeft
     }
 }

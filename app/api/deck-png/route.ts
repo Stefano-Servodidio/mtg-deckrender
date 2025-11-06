@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
                         options.imageResolution
                     )
 
-                    const cardDimensions = calculateCardDimensions(
+                    const [cardDimensions, modifiers] = calculateCardDimensions(
                         successfulImages,
                         canvasDimensions,
                         options.imageSize,
@@ -243,7 +243,8 @@ export async function POST(request: NextRequest) {
                         resizedImages,
                         cardDimensions,
                         options.imageVariant,
-                        options.imageSize
+                        options.imageSize,
+                        modifiers
                     )
 
                     const overlayOperations = options.includeCardCount
@@ -251,7 +252,8 @@ export async function POST(request: NextRequest) {
                               resizedImages,
                               cardDimensions,
                               options.imageVariant,
-                              options.imageSize
+                              options.imageSize,
+                              modifiers
                           )
                         : []
 
