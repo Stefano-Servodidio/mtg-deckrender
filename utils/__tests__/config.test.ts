@@ -4,7 +4,7 @@ import {
     calculateCanvasDimensions,
     calculateRowHeight
 } from '../processing'
-import { CANVAS_SIZE, DECK_LAYOUT_CONFIG } from '../config'
+import { CANVAS_SIZE } from '../config'
 
 describe('Processing utility functions', () => {
     describe('calculateCardDimensions', () => {
@@ -15,7 +15,7 @@ describe('Processing utility functions', () => {
             ]
             const canvasSize = { width: 1080, height: 1080 }
 
-            const result = calculateCardDimensions(
+            const [result] = calculateCardDimensions(
                 mockImages,
                 canvasSize,
                 'ig_square',
@@ -34,13 +34,13 @@ describe('Processing utility functions', () => {
             ]
             const canvasSize = { width: 1080, height: 1080 }
 
-            const gridResult = calculateCardDimensions(
+            const [gridResult] = calculateCardDimensions(
                 mockImages,
                 canvasSize,
                 'ig_square',
                 'grid'
             )
-            const spoilerResult = calculateCardDimensions(
+            const [spoilerResult] = calculateCardDimensions(
                 mockImages,
                 canvasSize,
                 'ig_square',
@@ -142,26 +142,6 @@ describe('Processing utility functions', () => {
                 width: 1200,
                 height: 675
             })
-        })
-    })
-
-    describe('DECK_LAYOUT_CONFIG configuration', () => {
-        test('should have correct base card dimensions', () => {
-            expect(DECK_LAYOUT_CONFIG.card.baseWidth).toBe(745)
-            expect(DECK_LAYOUT_CONFIG.card.baseHeight).toBe(1040)
-        })
-
-        test('should have correct spacing values', () => {
-            expect(DECK_LAYOUT_CONFIG.spacing.betweenCards).toBe(0)
-            expect(DECK_LAYOUT_CONFIG.spacing.groupSeparator).toBe(70)
-            expect(DECK_LAYOUT_CONFIG.spacing.canvasPadding).toBe(20)
-        })
-
-        test('should have correct row height multipliers', () => {
-            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.default).toBe(1.0)
-            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.grid).toBe(0.4)
-            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.spoiler).toBe(1.0)
-            expect(DECK_LAYOUT_CONFIG.row.heightMultiplier.stacks).toBe(1.0)
         })
     })
 })

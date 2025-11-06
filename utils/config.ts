@@ -3,6 +3,8 @@
 
 import { Dimensions, ImageSize } from '@/types/api'
 
+const overlaySizeEnv = process.env.OVERLAY_SIZE
+const overlaySize = overlaySizeEnv ? parseInt(overlaySizeEnv, 10) : 110
 export const DECK_LAYOUT_CONFIG = {
     // Base card dimensions (from Scryfall small images)
     card: {
@@ -13,7 +15,7 @@ export const DECK_LAYOUT_CONFIG = {
 
     // Layout spacing
     spacing: {
-        betweenCards: 10, // Space between individual cards
+        betweenCards: 4, // Space between individual cards
         groupSeparator: 70, // Extra space between groups (e.g., main deck and sideboard)
         canvasPadding: 20 // Padding around the entire canvas (using spacing value)
     },
@@ -30,6 +32,7 @@ export const DECK_LAYOUT_CONFIG = {
 
     // Quantity overlay settings
     overlay: {
+        size: overlaySize, // Base size of quantity overlay in pixels
         offsetFromRight: 190, // Distance from right edge of card
         offsetFromTop: 120 // Distance from top edge of card
     }

@@ -192,7 +192,7 @@ describe('Decklist utility functions', () => {
             type_line: 'Instant',
             rarity: 'common',
             image_uris: {
-                png: 'https://example.com/card.png'
+                large: 'https://example.com/card.png'
             },
             colors: ['R'],
             legalities: {
@@ -244,12 +244,12 @@ describe('Decklist utility functions', () => {
                 card_faces: [
                     {
                         image_uris: {
-                            png: 'https://example.com/front-face.png'
+                            large: 'https://example.com/front-face.png'
                         }
                     },
                     {
                         image_uris: {
-                            png: 'https://example.com/back-face.png'
+                            large: 'https://example.com/back-face.png'
                         }
                     }
                 ]

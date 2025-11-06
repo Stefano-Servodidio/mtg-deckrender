@@ -37,6 +37,13 @@ export type Dimensions = {
     scale?: number
 }
 
+export type Modifiers = {
+    topModifier?: number
+    leftModifier?: number
+    rightModifier?: number
+    bottomModifier?: number
+}
+
 export type ProgressCallback = (
     _current: number,
     _total: number,
