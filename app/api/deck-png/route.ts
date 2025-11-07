@@ -368,12 +368,34 @@ export async function GET() {
         expectedFormat: {
             cards: [
                 {
-                    card: 'ScryfallCard object with image_uris',
-                    quantity: 'number'
+                    id: 'string (Scryfall Card ID)',
+                    name: 'string (Card Name)',
+                    cmc: 'number (Converted Mana Cost)',
+                    typeLine: 'string (Card Type Line)',
+                    rarity: 'string (Card Rarity)',
+                    image_uri: 'string | null (Card Image URI)',
+                    colors: 'string[] (Card Colors)',
+                    legalities: {
+                        standard: 'string (Legalities)',
+                        modern: 'string (Legalities)',
+                        legacy: 'string (Legalities)',
+                        vintage: 'string (Legalities)',
+                        commander: 'string (Legalities)'
+                    },
+                    quantity: 'number (Number of copies of the card)',
+                    groupId:
+                        'number (Unique identifier for grouping cards in sections)'
                 }
             ],
             options: {
-                rowSize: 'number of cards per row (optional, default: 7)'
+                imageSize: "'ig_square' | 'ig_portrait' | 'standard' | 'large'",
+                imageVariant: "'grid' | 'stacked'",
+                imageResolution: "'standard' | 'high'",
+                backgroundStyle: "'transparent' | 'white' | 'custom'",
+                sortBy: "'name' | 'cmc' | 'typeLine' | 'colors' | 'rarity'",
+                sortDirection: "'asc' | 'desc'",
+                fileType: "'png' | 'jpeg' | 'webp'",
+                includeCardCount: 'boolean'
             }
         },
         returns: 'PNG image buffer with all unique cards arranged in rows of 7'

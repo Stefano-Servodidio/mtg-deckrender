@@ -118,7 +118,6 @@ All tests pass.
   page.tsx             # Home page
   providers.tsx        # Chakra UI provider setup
 /components             # Reusable React components
-  Accordion.tsx
   DropZone.tsx         # File upload and decklist input
   FilterItem.tsx       # Card filtering/selection
   Navbar.tsx, Footer.tsx

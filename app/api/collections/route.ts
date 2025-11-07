@@ -178,31 +178,40 @@ export async function POST(request: NextRequest) {
                                     // If batch request fails, fall back to mock data for all cards in batch
                                     console.log(
                                         chalk.yellow(
-                                            `Batch ${batchIndex + 1} failed, using mock data`
-                                        )
+                                            `Batch ${batchIndex + 1} failed: `
+                                        ),
+                                        response.status,
+                                        response.statusText
                                     )
 
-                                    for (const card of cardsToFetch) {
-                                        const mockCardData = createMockCardItem(
-                                            card.name,
-                                            card.quantity,
-                                            card.groupId
-                                        )
-                                        cards.push(mockCardData)
+                                    return NextResponse.json(
+                                        {
+                                            error: 'Failed to fetch cards.'
+                                        },
+                                        { status: 500 }
+                                    )
 
-                                        processedCards++
-                                        controller.enqueue(
-                                            new TextEncoder().encode(
-                                                `data: ${JSON.stringify({
-                                                    type: 'progress',
-                                                    current: processedCards,
-                                                    total: totalCards,
-                                                    message: `Loaded ${card.name} (mock data)`,
-                                                    card: mockCardData
-                                                })}\n\n`
-                                            )
-                                        )
-                                    }
+                                    // for (const card of cardsToFetch) {
+                                    //     const mockCardData = createMockCardItem(
+                                    //         card.name,
+                                    //         card.quantity,
+                                    //         card.groupId
+                                    //     )
+                                    //     cards.push(mockCardData)
+
+                                    //     processedCards++
+                                    //     controller.enqueue(
+                                    //         new TextEncoder().encode(
+                                    //             `data: ${JSON.stringify({
+                                    //                 type: 'progress',
+                                    //                 current: processedCards,
+                                    //                 total: totalCards,
+                                    //                 message: `Loaded ${card.name} (mock data)`,
+                                    //                 card: mockCardData
+                                    //             })}\n\n`
+                                    //         )
+                                    //     )
+                                    // }
                                 } else {
                                     const batchData = await response.json()
                                     const foundCards = batchData.data || []
