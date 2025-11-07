@@ -24,7 +24,9 @@ const defaultOptions: DeckPngOptions = {
     sortBy: 'cmc' as const,
     sortDirection: 'asc' as const,
     fileType: 'png' as const,
-    includeCardCount: true as const
+    includeCardCount: true as const,
+    customBackgroundColor: undefined,
+    customBackgroundImage: undefined
 }
 
 export async function POST(request: NextRequest) {
@@ -236,7 +238,8 @@ export async function POST(request: NextRequest) {
                     const canvas = createCanvas(
                         canvasDimensions,
                         options.backgroundStyle,
-                        options.customBackground
+                        options.customBackgroundColor,
+                        options.customBackgroundImage
                     )
 
                     controller.enqueue(
@@ -284,7 +287,9 @@ export async function POST(request: NextRequest) {
                         canvas,
                         cardOperations,
                         overlayOperations,
-                        options.fileType
+                        options.fileType,
+                        options.customBackgroundImage,
+                        canvasDimensions
                     )
 
                     console.log(
@@ -391,7 +396,11 @@ export async function GET() {
                 imageSize: "'ig_square' | 'ig_portrait' | 'standard' | 'large'",
                 imageVariant: "'grid' | 'stacked'",
                 imageResolution: "'standard' | 'high'",
-                backgroundStyle: "'transparent' | 'white' | 'custom'",
+                backgroundStyle:
+                    "'transparent' | 'white' | 'custom_color' | 'custom_image'",
+                customBackgroundColor: 'string (hex color for custom_color)',
+                customBackgroundImage:
+                    'string (base64 encoded image for custom_image)',
                 sortBy: "'name' | 'cmc' | 'typeLine' | 'colors' | 'rarity'",
                 sortDirection: "'asc' | 'desc'",
                 fileType: "'png' | 'jpeg' | 'webp'",

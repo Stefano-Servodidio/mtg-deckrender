@@ -79,7 +79,12 @@ export const IMAGE_VARIANT = ['grid', 'spoiler', 'stacks'] as const
 
 export const IMAGE_RESOLUTION = ['standard', 'high'] as const
 
-export const BACKGROUND_STYLE = ['transparent', 'white', 'custom'] as const
+export const BACKGROUND_STYLE = [
+    'transparent',
+    'white',
+    'custom_color',
+    'custom_image'
+] as const
 
 export const SCRYFALL_FORMAT = [
     'standard',
@@ -122,7 +127,8 @@ export interface DeckPngOptions {
     imageVariant?: ImageVariant
     imageResolution?: ImageResolution
     backgroundStyle?: BackgroundStyle
-    customBackground?: string
+    customBackgroundColor?: string // Hex color for custom background
+    customBackgroundImage?: string // Base64 encoded image for custom background
     includeCardCount?: boolean
 }
 

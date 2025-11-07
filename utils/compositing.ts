@@ -224,7 +224,8 @@ export async function prepareQuantityOverlayOperations(
 export function createCanvas(
     dimensions: Dimensions,
     backgroundStyle: BackgroundStyle = 'transparent',
-    customBackground?: string
+    customBackgroundColor?: string,
+    customBackgroundImage?: string
 ): sharp.Sharp {
     const { width, height } = dimensions
     let background: { r: number; g: number; b: number; alpha: number }
@@ -233,14 +234,17 @@ export function createCanvas(
         case 'white':
             background = { r: 255, g: 255, b: 255, alpha: 1 }
             break
-        case 'custom':
-            // Parse custom background color (e.g., "#FF0000", "rgb(255,0,0)", etc.)
-            if (customBackground) {
-                // For now, default to white for custom - could be enhanced to parse hex/rgb
-                background = { r: 255, g: 255, b: 255, alpha: 1 }
+        case 'custom_color':
+            // Parse hex color (e.g., "#FF0000")
+            if (customBackgroundColor) {
+                background = parseHexColor(customBackgroundColor)
             } else {
-                background = { r: 0, g: 0, b: 0, alpha: 0 }
+                background = { r: 255, g: 255, b: 255, alpha: 1 }
             }
+            break
+        case 'custom_image':
+            // For custom image, start with transparent and composite image later
+            background = { r: 0, g: 0, b: 0, alpha: 0 }
             break
         case 'transparent':
         default:
@@ -259,19 +263,51 @@ export function createCanvas(
 }
 
 /**
+ * Parse hex color string to RGB object
+ */
+function parseHexColor(hex: string): {
+    r: number
+    g: number
+    b: number
+    alpha: number
+} {
+    // Remove # if present
+    const cleanHex = hex.replace('#', '')
+
+    // Parse hex values
+    const r = parseInt(cleanHex.substring(0, 2), 16)
+    const g = parseInt(cleanHex.substring(2, 4), 16)
+    const b = parseInt(cleanHex.substring(4, 6), 16)
+
+    return { r, g, b, alpha: 1 }
+}
+
+/**
  * Create the final composite image with all cards and overlays
- * Supports different output file formats
+ * Supports different output file formats and custom background images
  */
 export async function createCompositeImage(
     canvas: sharp.Sharp,
     cardOperations: sharp.OverlayOptions[],
     overlayOperations: sharp.OverlayOptions[],
-    fileType: 'png' | 'jpeg' | 'webp' = 'png'
+    fileType: 'png' | 'jpeg' | 'webp' = 'png',
+    customBackgroundImage?: string,
+    dimensions?: Dimensions
 ): Promise<Buffer> {
-    const compositeImage = canvas.composite([
-        ...cardOperations,
-        ...overlayOperations
-    ])
+    let operations = [...cardOperations, ...overlayOperations]
+
+    // If custom background image is provided, add it as the first layer
+    if (customBackgroundImage && dimensions) {
+        const backgroundOperation = await prepareBackgroundImageOperation(
+            customBackgroundImage,
+            dimensions
+        )
+        if (backgroundOperation) {
+            operations = [backgroundOperation, ...operations]
+        }
+    }
+
+    const compositeImage = canvas.composite(operations)
 
     // Apply appropriate output format
     switch (fileType) {
@@ -282,6 +318,40 @@ export async function createCompositeImage(
         case 'png':
         default:
             return await compositeImage.png().toBuffer()
+    }
+}
+
+/**
+ * Prepare background image operation from base64 data
+ */
+async function prepareBackgroundImageOperation(
+    base64Image: string,
+    dimensions: Dimensions
+): Promise<sharp.OverlayOptions | null> {
+    try {
+        // Extract the base64 data (remove data:image/...;base64, prefix)
+        const base64Data = base64Image.includes(',')
+            ? base64Image.split(',')[1]
+            : base64Image
+
+        const imageBuffer = Buffer.from(base64Data, 'base64')
+
+        // Resize and fit the background image to canvas dimensions
+        const resizedBuffer = await sharp(imageBuffer)
+            .resize(dimensions.width, dimensions.height, {
+                fit: 'cover',
+                position: 'center'
+            })
+            .toBuffer()
+
+        return {
+            input: resizedBuffer,
+            left: 0,
+            top: 0
+        }
+    } catch (error) {
+        console.error('Error preparing background image:', error)
+        return null
     }
 }
 

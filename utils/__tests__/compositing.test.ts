@@ -180,13 +180,22 @@ describe('Compositing utility functions', () => {
             expect(result).toBeDefined()
         })
 
-        test('should create canvas with custom background', () => {
-            const result = createCanvas(mockDimensions, 'custom', '#FF0000')
+        test('should create canvas with custom color background', () => {
+            const result = createCanvas(
+                mockDimensions,
+                'custom_color',
+                '#FF0000'
+            )
             expect(result).toBeDefined()
         })
 
-        test('should handle custom background without color value', () => {
-            const result = createCanvas(mockDimensions, 'custom')
+        test('should handle custom color background without color value', () => {
+            const result = createCanvas(mockDimensions, 'custom_color')
+            expect(result).toBeDefined()
+        })
+
+        test('should create canvas with custom image background', () => {
+            const result = createCanvas(mockDimensions, 'custom_image')
             expect(result).toBeDefined()
         })
     })
