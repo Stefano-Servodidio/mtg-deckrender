@@ -9,13 +9,17 @@ import {
     useColorModeValue,
     Card,
     CardBody,
-    useToast
+    useToast,
+    AccordionButton,
+    AccordionItem,
+    AccordionPanel,
+    HStack,
+    Accordion
 } from '@chakra-ui/react'
 import { useCallback, useMemo, useState } from 'react'
 import React from 'react'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-// import { useCards } from '@/hooks/useCards'
 import { useDeckPng } from '@/hooks/useDeckPng'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { gradients } from '@/theme/gradients'
@@ -25,12 +29,14 @@ import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadSection from './_components/UploadSection'
 import ConfigureSection from './_components/ConfigureSection'
 import DownloadSection from './_components/DownloadSection'
-import Accordion, { AccordionSection } from '@/components/Accordion'
 import { DeckPngOptions } from '../../types/api'
 import { useCollections } from '@/hooks/useCollections'
+import { scrollToAccordionButton } from './_utils/scrollToAccordionButton'
 
 export default function Create() {
     const [accordionIndex, setAccordionIndex] = useState<number[]>([0])
+    const accordionRefs = React.useRef<Array<HTMLButtonElement | null>>([])
+
     const toast = useToast()
     const analytics = useAnalytics()
 
@@ -85,9 +91,11 @@ export default function Create() {
                     duration: 3000,
                     isClosable: true
                 })
-                // Move to configure section after successful upload
             }
+            // Move to configure section after successful upload
             setAccordionIndex([1])
+            const element = accordionRefs.current[1]
+            scrollToAccordionButton(element)
         } else if (cardsError && !isLoadingCards) {
             // Track error
             analytics.trackError(
@@ -117,6 +125,8 @@ export default function Create() {
             })
             // Move to download section after successful generation
             setAccordionIndex([2])
+            const element = accordionRefs.current[2]
+            scrollToAccordionButton(element)
         } else if (imageError && !isGenerating) {
             // Track error
             analytics.trackError(
@@ -135,7 +145,14 @@ export default function Create() {
             })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [generatedImage, imageError, isGenerating, toast, analytics])
+    }, [
+        generatedImage,
+        imageError,
+        isGenerating,
+        toast,
+        analytics,
+        scrollToAccordionButton
+    ])
 
     /* Handlers */
     const handleGenerateImage = useCallback(
@@ -164,7 +181,13 @@ export default function Create() {
         [cardsData, toast, generateImage, analytics]
     )
 
-    const sections: AccordionSection[] = useMemo(
+    const sections: {
+        id?: string
+        title: React.ReactNode
+        description: React.ReactNode
+        icon?: React.ReactNode
+        content: React.ReactNode
+    }[] = useMemo(
         () => [
             {
                 id: 'upload',
@@ -246,8 +269,9 @@ export default function Create() {
                     <Card w="full" bg={cardBg} shadow="lg">
                         <CardBody p={0}>
                             <Accordion
-                                sections={sections}
                                 index={accordionIndex}
+                                allowMultiple
+                                defaultIndex={0}
                                 onChange={(expandedIndex) =>
                                     setAccordionIndex(
                                         Array.isArray(expandedIndex)
@@ -255,9 +279,53 @@ export default function Create() {
                                             : [expandedIndex]
                                     )
                                 }
-                                allowMultiple
-                                defaultIndex={0}
-                            />
+                            >
+                                {sections.map((section, index) => (
+                                    <AccordionItem
+                                        key={'accordion-' + section.id}
+                                    >
+                                        <AccordionButton
+                                            ref={(el) => {
+                                                accordionRefs.current[index] =
+                                                    el
+                                            }}
+                                            data-testid={
+                                                'accordion-' + section.id
+                                            }
+                                            py={{ base: 3, md: 6 }}
+                                            px={{ base: 4, md: 8 }}
+                                        >
+                                            <HStack
+                                                flex="1"
+                                                textAlign="left"
+                                                spacing={3}
+                                            >
+                                                {!!section.icon && section.icon}
+                                                <VStack
+                                                    align="start"
+                                                    spacing={1}
+                                                >
+                                                    <Heading size="md">
+                                                        {section.title}
+                                                    </Heading>
+                                                    <Text
+                                                        fontSize="sm"
+                                                        color="gray.600"
+                                                    >
+                                                        {section.description}
+                                                    </Text>
+                                                </VStack>
+                                            </HStack>
+                                        </AccordionButton>
+                                        <AccordionPanel
+                                            pb={{ base: 4, md: 8 }}
+                                            px={{ base: 4, md: 8 }}
+                                        >
+                                            {section.content}
+                                        </AccordionPanel>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
                         </CardBody>
                     </Card>
                 </VStack>
