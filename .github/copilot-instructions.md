@@ -121,7 +121,6 @@ All tests pass.
   DropZone.tsx         # File upload and decklist input
   FilterItem.tsx       # Card filtering/selection
   Navbar.tsx, Footer.tsx
-  QuantityOverlay.tsx  # Overlay for card quantities
   /icons              # Custom icon components
   /_tests             # Component unit tests
 /hooks                  # Custom React hooks
