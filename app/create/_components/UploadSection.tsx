@@ -1,5 +1,6 @@
 'use client'
 import { DropZone } from '@/components/DropZone'
+import { DropZoneButton } from '@/components/DropZoneButton'
 import {
     Box,
     Button,
@@ -136,12 +137,13 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         }}
                     />
                 </Box>
-                {/* File Upload Section */}
+                {/* File Upload Section - Desktop */}
                 <VStack
                     w={{ base: 'full', md: '40%', lg: '30%' }}
                     h={{ base: 'auto', md: 'full' }}
                     align={'flex-start'}
                     gap={0}
+                    display={{ base: 'none', md: 'flex' }}
                 >
                     <Text fontWeight="semibold" mb={3} color="gray.700">
                         Or upload Text File
@@ -151,6 +153,23 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                             onFileUpload={handleFileUpload}
                             colorScheme="orange"
                             wrapperProps={{ h: '300px' }}
+                        />
+                    </Box>
+                </VStack>
+                {/* File Upload Section - Mobile */}
+                <VStack
+                    w="full"
+                    align={'flex-start'}
+                    gap={0}
+                    display={{ base: 'flex', md: 'none' }}
+                >
+                    <Text fontWeight="semibold" mb={3} color="gray.700">
+                        Or upload Text File
+                    </Text>
+                    <Box w="full">
+                        <DropZoneButton
+                            onFileUpload={handleFileUpload}
+                            colorScheme="orange"
                         />
                     </Box>
                 </VStack>

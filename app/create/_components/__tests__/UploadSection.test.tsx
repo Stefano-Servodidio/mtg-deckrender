@@ -56,7 +56,9 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('Or upload Text File')).toBeInTheDocument()
+        // Should render both mobile and desktop versions
+        const uploadTexts = screen.getAllByText('Or upload Text File')
+        expect(uploadTexts).toHaveLength(2)
     })
 
     it('should render upload button', () => {
