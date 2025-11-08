@@ -15,8 +15,28 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 }) => {
     const analytics = useAnalytics()
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         analytics.trackImageDownload('png', cardCount)
+
+        try {
+            // Fetch the blob URL and convert to blob
+            const response = await fetch(generatedImage!)
+            const blob = await response.blob()
+
+            // For Safari iOS compatibility, use data URL instead of blob URL
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                const link = document.createElement('a')
+                link.href = reader.result as string
+                link.download = `mtg-deck-${Date.now()}.png`
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+            }
+            reader.readAsDataURL(blob)
+        } catch (error) {
+            console.error('Download failed:', error)
+        }
     }
 
     return (
@@ -52,9 +72,6 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                     {/* Download Button */}
                     <Button
                         data-testid="download-button"
-                        as="a"
-                        href={generatedImage}
-                        download={`mtg-deck-${Date.now()}.png`}
                         size="lg"
                         colorScheme="green"
                         leftIcon={<FaDownload />}
