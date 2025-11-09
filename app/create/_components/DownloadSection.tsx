@@ -4,6 +4,7 @@ import React from 'react'
 import { FaDownload } from 'react-icons/fa'
 import Image from 'next/image'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { isIOS, isSafari } from 'react-device-detect'
 
 export interface DownloadSectionProps {
     generatedImage: string | null
@@ -15,8 +16,38 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 }) => {
     const analytics = useAnalytics()
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         analytics.trackImageDownload('png', cardCount)
+
+        try {
+            // For iOS Safari, open in new tab instead of downloading
+            // This avoids the unreliable download behavior in iOS Safari
+            // IMPORTANT: window.open must be called synchronously to avoid popup blockers
+            if (isIOS && isSafari) {
+                // Open the blob URL directly in a new tab
+                // This must be called synchronously from the click handler
+                window.open(generatedImage!, '_blank')
+                return
+            }
+
+            // For all other browsers, use programmatic download
+            const response = await fetch(generatedImage!)
+            const blob = await response.blob()
+
+            // Use data URL for download
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                const link = document.createElement('a')
+                link.href = reader.result as string
+                link.download = `mtg-deck-${Date.now()}.png`
+                document.body.appendChild(link)
+                link.click()
+                document.body.removeChild(link)
+            }
+            reader.readAsDataURL(blob)
+        } catch (error) {
+            console.error('Download failed:', error)
+        }
     }
 
     return (
@@ -52,9 +83,6 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                     {/* Download Button */}
                     <Button
                         data-testid="download-button"
-                        as="a"
-                        href={generatedImage}
-                        download={`mtg-deck-${Date.now()}.png`}
                         size="lg"
                         colorScheme="green"
                         leftIcon={<FaDownload />}
@@ -70,7 +98,9 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                         }}
                         transition="all 0.2s"
                     >
-                        Download PNG
+                        {isIOS && isSafari
+                            ? 'Open Image in New Tab'
+                            : 'Download PNG'}
                     </Button>
                 </>
             ) : (
