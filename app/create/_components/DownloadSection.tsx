@@ -22,13 +22,11 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
         try {
             // For iOS Safari, open in new tab instead of downloading
             // This avoids the unreliable download behavior in iOS Safari
+            // IMPORTANT: window.open must be called synchronously to avoid popup blockers
             if (isIOS && isSafari) {
-                const response = await fetch(generatedImage!)
-                const blob = await response.blob()
-                const url = URL.createObjectURL(blob)
-                window.open(url, '_blank')
-                // Revoke the object URL after a delay to prevent memory leaks
-                setTimeout(() => URL.revokeObjectURL(url), 100)
+                // Open the blob URL directly in a new tab
+                // This must be called synchronously from the click handler
+                window.open(generatedImage!, '_blank')
                 return
             }
 

@@ -270,16 +270,7 @@ describe('DownloadSection', () => {
         const DownloadSectionModule = await import('../DownloadSection')
         const DownloadSection = DownloadSectionModule.default
 
-        // Mock fetch
-        const mockBlob = new Blob(['test'], { type: 'image/png' })
-        global.fetch = vi.fn().mockResolvedValue({
-            blob: vi.fn().mockResolvedValue(mockBlob)
-        })
-
-        // Mock URL.createObjectURL and window.open
-        const mockUrl = 'blob:mock-url'
-        global.URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
-        global.URL.revokeObjectURL = vi.fn()
+        // Mock window.open
         const windowOpenSpy = vi
             .spyOn(window, 'open')
             .mockImplementation(() => null)
@@ -302,14 +293,8 @@ describe('DownloadSection', () => {
         // Wait for async operations
         await new Promise((resolve) => setTimeout(resolve, 0))
 
-        // Verify fetch was called
-        expect(global.fetch).toHaveBeenCalledWith('blob:test-image')
-
-        // Verify window.open was called
-        expect(windowOpenSpy).toHaveBeenCalledWith(mockUrl, '_blank')
-
-        // Verify URL was created and will be revoked
-        expect(global.URL.createObjectURL).toHaveBeenCalledWith(mockBlob)
+        // Verify window.open was called with the blob URL directly
+        expect(windowOpenSpy).toHaveBeenCalledWith('blob:test-image', '_blank')
 
         // Cleanup
         windowOpenSpy.mockRestore()
