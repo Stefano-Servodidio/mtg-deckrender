@@ -19,6 +19,12 @@ vi.mock('@/hooks/useAnalytics', () => ({
     }))
 }))
 
+// Mock react-device-detect
+vi.mock('react-device-detect', () => ({
+    isIOS: false,
+    isSafari: false
+}))
+
 const ChakraWrapper = ({ children }: { children: React.ReactNode }) => (
     <ChakraProvider>{children}</ChakraProvider>
 )
@@ -248,5 +254,67 @@ describe('DownloadSection', () => {
 
         // Cleanup
         consoleErrorSpy.mockRestore()
+    })
+
+    it('should open image in new tab on iOS Safari', async () => {
+        // Mock react-device-detect for iOS Safari by re-mocking the module
+        vi.doMock('react-device-detect', () => ({
+            isIOS: true,
+            isSafari: true
+        }))
+
+        // Re-import the component to pick up the mocked values
+        vi.resetModules()
+
+        // Re-import DownloadSection with the new mock
+        const DownloadSectionModule = await import('../DownloadSection')
+        const DownloadSection = DownloadSectionModule.default
+
+        // Mock fetch
+        const mockBlob = new Blob(['test'], { type: 'image/png' })
+        global.fetch = vi.fn().mockResolvedValue({
+            blob: vi.fn().mockResolvedValue(mockBlob)
+        })
+
+        // Mock URL.createObjectURL and window.open
+        const mockUrl = 'blob:mock-url'
+        global.URL.createObjectURL = vi.fn().mockReturnValue(mockUrl)
+        global.URL.revokeObjectURL = vi.fn()
+        const windowOpenSpy = vi
+            .spyOn(window, 'open')
+            .mockImplementation(() => null)
+
+        const user = userEvent.setup()
+
+        render(
+            <ChakraWrapper>
+                <DownloadSection generatedImage="blob:test-image" />
+            </ChakraWrapper>
+        )
+
+        const button = screen.getByTestId('download-button')
+
+        // Verify button text is different for iOS Safari
+        expect(button).toHaveTextContent('Open Image in New Tab')
+
+        await user.click(button)
+
+        // Wait for async operations
+        await new Promise((resolve) => setTimeout(resolve, 0))
+
+        // Verify fetch was called
+        expect(global.fetch).toHaveBeenCalledWith('blob:test-image')
+
+        // Verify window.open was called
+        expect(windowOpenSpy).toHaveBeenCalledWith(mockUrl, '_blank')
+
+        // Verify URL was created and will be revoked
+        expect(global.URL.createObjectURL).toHaveBeenCalledWith(mockBlob)
+
+        // Cleanup
+        windowOpenSpy.mockRestore()
+
+        // Reset modules back to original state
+        vi.doUnmock('react-device-detect')
     })
 })

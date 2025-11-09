@@ -4,6 +4,7 @@ import React from 'react'
 import { FaDownload } from 'react-icons/fa'
 import Image from 'next/image'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { isIOS, isSafari } from 'react-device-detect'
 
 export interface DownloadSectionProps {
     generatedImage: string | null
@@ -19,11 +20,23 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
         analytics.trackImageDownload('png', cardCount)
 
         try {
-            // Fetch the blob URL and convert to blob
+            // For iOS Safari, open in new tab instead of downloading
+            // This avoids the unreliable download behavior in iOS Safari
+            if (isIOS && isSafari) {
+                const response = await fetch(generatedImage!)
+                const blob = await response.blob()
+                const url = URL.createObjectURL(blob)
+                window.open(url, '_blank')
+                // Revoke the object URL after a delay to prevent memory leaks
+                setTimeout(() => URL.revokeObjectURL(url), 100)
+                return
+            }
+
+            // For all other browsers, use programmatic download
             const response = await fetch(generatedImage!)
             const blob = await response.blob()
 
-            // For Safari iOS compatibility, use data URL instead of blob URL
+            // Use data URL for download
             const reader = new FileReader()
             reader.onloadend = () => {
                 const link = document.createElement('a')
@@ -87,7 +100,9 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                         }}
                         transition="all 0.2s"
                     >
-                        Download PNG
+                        {isIOS && isSafari
+                            ? 'Open Image in New Tab'
+                            : 'Download PNG'}
                     </Button>
                 </>
             ) : (
