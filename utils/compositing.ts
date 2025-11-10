@@ -220,12 +220,13 @@ export async function prepareQuantityOverlayOperations(
 
 /**
  * Create the base canvas for compositing with background style support
+ * Note: For custom images, we create a transparent canvas here and the image
+ * will be processed separately in createCompositeImage
  */
 export function createCanvas(
     dimensions: Dimensions,
     backgroundStyle: BackgroundStyle = 'transparent',
-    customBackgroundColor?: string,
-    customBackgroundImage?: string
+    customBackgroundColor?: string
 ): sharp.Sharp {
     const { width, height } = dimensions
     let background: { r: number; g: number; b: number; alpha: number }
@@ -243,11 +244,9 @@ export function createCanvas(
             }
             break
         case 'custom_image':
-            // For custom image, start with transparent and composite image later
-            background = { r: 0, g: 0, b: 0, alpha: 0 }
-            break
         case 'transparent':
         default:
+            // For custom image and transparent, start with transparent canvas
             background = { r: 0, g: 0, b: 0, alpha: 0 }
             break
     }
@@ -294,24 +293,29 @@ export async function createCompositeImage(
     customBackgroundImage?: string,
     dimensions?: Dimensions
 ): Promise<Buffer> {
-    let operations = [...cardOperations, ...overlayOperations]
+    let baseCanvas: sharp.Sharp
 
-    // If custom background image is provided, add it as the first layer
+    // If custom background image is provided, use it as the base canvas
     if (customBackgroundImage && dimensions) {
         console.log(
             chalk.yellow('Custom background image detected, processing...')
         )
-        const backgroundOperation = await prepareBackgroundImageOperation(
+        const backgroundCanvas = await createBackgroundImageCanvas(
             customBackgroundImage,
             dimensions
         )
-        if (backgroundOperation) {
-            console.log(chalk.green('Adding background image as first layer'))
-            operations = [backgroundOperation, ...operations]
+        if (backgroundCanvas) {
+            console.log(
+                chalk.green('Using custom background image as base canvas')
+            )
+            baseCanvas = backgroundCanvas
         } else {
             console.log(
-                chalk.red('Failed to prepare background image operation')
+                chalk.red(
+                    'Failed to create background image canvas, using flat canvas'
+                )
             )
+            baseCanvas = canvas
         }
     } else {
         if (!customBackgroundImage) {
@@ -320,9 +324,12 @@ export async function createCompositeImage(
         if (!dimensions) {
             console.log(chalk.gray('No dimensions provided'))
         }
+        baseCanvas = canvas
     }
 
-    const compositeImage = canvas.composite(operations)
+    // Composite all cards and overlays on top of the base canvas
+    const operations = [...cardOperations, ...overlayOperations]
+    const compositeImage = baseCanvas.composite(operations)
 
     // Apply appropriate output format
     switch (fileType) {
@@ -337,16 +344,17 @@ export async function createCompositeImage(
 }
 
 /**
- * Prepare background image operation from base64 data
+ * Create a Sharp canvas from a custom background image
+ * This replaces the flat-color background with the uploaded image
  */
-async function prepareBackgroundImageOperation(
+async function createBackgroundImageCanvas(
     base64Image: string,
     dimensions: Dimensions
-): Promise<sharp.OverlayOptions | null> {
+): Promise<sharp.Sharp | null> {
     try {
         console.log(
             chalk.yellow(
-                'Preparing background image, dimensions:',
+                'Creating background image canvas, dimensions:',
                 dimensions.width,
                 'x',
                 dimensions.height
@@ -363,28 +371,25 @@ async function prepareBackgroundImageOperation(
             chalk.yellow('Decoded image buffer size:', imageBuffer.length)
         )
 
-        // Resize and fit the background image to canvas dimensions
-        const resizedBuffer = await sharp(imageBuffer)
-            .resize(dimensions.width, dimensions.height, {
+        // Create Sharp instance from the background image and resize to canvas dimensions
+        // Using 'cover' fit to fill the entire canvas while maintaining aspect ratio
+        const backgroundCanvas = sharp(imageBuffer).resize(
+            dimensions.width,
+            dimensions.height,
+            {
                 fit: 'cover',
                 position: 'center'
-            })
-            .toBuffer()
-
-        console.log(
-            chalk.green(
-                'Background image prepared, size:',
-                resizedBuffer.length
-            )
+            }
         )
 
-        return {
-            input: resizedBuffer,
-            left: 0,
-            top: 0
-        }
+        console.log(chalk.green('Background image canvas created successfully'))
+
+        return backgroundCanvas
     } catch (error) {
-        console.error(chalk.red('Error preparing background image:'), error)
+        console.error(
+            chalk.red('Error creating background image canvas:'),
+            error
+        )
         return null
     }
 }

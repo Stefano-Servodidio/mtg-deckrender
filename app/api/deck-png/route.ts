@@ -235,11 +235,11 @@ export async function POST(request: NextRequest) {
                     )
 
                     // Create base canvas with background style
+                    // For custom images, the image will be used as base in createCompositeImage
                     const canvas = createCanvas(
                         canvasDimensions,
                         options.backgroundStyle,
-                        options.customBackgroundColor,
-                        options.customBackgroundImage
+                        options.customBackgroundColor
                     )
 
                     controller.enqueue(
