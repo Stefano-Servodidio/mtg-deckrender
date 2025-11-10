@@ -42,7 +42,7 @@ describe('UploadSection', () => {
 
         expect(screen.getByText('Paste Decklist Text')).toBeInTheDocument()
         expect(
-            screen.getByPlaceholderText(/Paste the decklist list/)
+            screen.getByPlaceholderText(/1x Lightning Bolt/)
         ).toBeInTheDocument()
     })
 
@@ -56,7 +56,16 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('Or upload Text File')).toBeInTheDocument()
+        // Should render both mobile and desktop versions
+        const desktopUploadSection = screen.getByTestId(
+            'file-upload-section-desktop'
+        )
+        const mobileUploadSection = screen.getByTestId(
+            'file-upload-section-mobile'
+        )
+
+        expect(desktopUploadSection).toBeInTheDocument()
+        expect(mobileUploadSection).toBeInTheDocument()
     })
 
     it('should render upload button', () => {
@@ -99,7 +108,7 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        const textarea = screen.getByPlaceholderText(/Paste the decklist list/)
+        const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
         await user.type(textarea, '4 Lightning Bolt')
 
         const button = screen.getByTestId('upload-button')
@@ -118,7 +127,7 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        const textarea = screen.getByPlaceholderText(/Paste the decklist list/)
+        const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
         await user.type(textarea, '4 Lightning Bolt')
 
         const button = screen.getByTestId('upload-button')
@@ -148,7 +157,7 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        const textarea = screen.getByPlaceholderText(/Paste the decklist list/)
+        const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
         await user.type(textarea, '4 Lightning Bolt')
 
         const button = screen.getByTestId('upload-button')
@@ -178,7 +187,7 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        const textarea = screen.getByPlaceholderText(/Paste the decklist list/)
+        const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
         await user.type(textarea, '4 Lightning Bolt\n2 Counterspell\n3 Island')
 
         const button = screen.getByTestId('upload-button')
@@ -258,7 +267,7 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        const textarea = screen.getByPlaceholderText(/Paste the decklist list/)
+        const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
         await user.type(textarea, '  4 Lightning Bolt  ')
 
         const button = screen.getByTestId('upload-button')
@@ -281,7 +290,7 @@ describe('UploadSection', () => {
             </ChakraWrapper>
         )
 
-        const textarea = screen.getByPlaceholderText(/Paste the decklist list/)
+        const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
         await user.type(textarea, 'Test decklist')
 
         expect(textarea).toHaveValue('Test decklist')
