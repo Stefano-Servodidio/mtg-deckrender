@@ -298,12 +298,27 @@ export async function createCompositeImage(
 
     // If custom background image is provided, add it as the first layer
     if (customBackgroundImage && dimensions) {
+        console.log(
+            chalk.yellow('Custom background image detected, processing...')
+        )
         const backgroundOperation = await prepareBackgroundImageOperation(
             customBackgroundImage,
             dimensions
         )
         if (backgroundOperation) {
+            console.log(chalk.green('Adding background image as first layer'))
             operations = [backgroundOperation, ...operations]
+        } else {
+            console.log(
+                chalk.red('Failed to prepare background image operation')
+            )
+        }
+    } else {
+        if (!customBackgroundImage) {
+            console.log(chalk.gray('No custom background image provided'))
+        }
+        if (!dimensions) {
+            console.log(chalk.gray('No dimensions provided'))
         }
     }
 
@@ -329,12 +344,24 @@ async function prepareBackgroundImageOperation(
     dimensions: Dimensions
 ): Promise<sharp.OverlayOptions | null> {
     try {
+        console.log(
+            chalk.yellow(
+                'Preparing background image, dimensions:',
+                dimensions.width,
+                'x',
+                dimensions.height
+            )
+        )
+
         // Extract the base64 data (remove data:image/...;base64, prefix)
         const base64Data = base64Image.includes(',')
             ? base64Image.split(',')[1]
             : base64Image
 
         const imageBuffer = Buffer.from(base64Data, 'base64')
+        console.log(
+            chalk.yellow('Decoded image buffer size:', imageBuffer.length)
+        )
 
         // Resize and fit the background image to canvas dimensions
         const resizedBuffer = await sharp(imageBuffer)
@@ -344,13 +371,20 @@ async function prepareBackgroundImageOperation(
             })
             .toBuffer()
 
+        console.log(
+            chalk.green(
+                'Background image prepared, size:',
+                resizedBuffer.length
+            )
+        )
+
         return {
             input: resizedBuffer,
             left: 0,
             top: 0
         }
     } catch (error) {
-        console.error('Error preparing background image:', error)
+        console.error(chalk.red('Error preparing background image:'), error)
         return null
     }
 }
