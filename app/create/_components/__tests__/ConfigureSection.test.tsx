@@ -4,6 +4,7 @@ import { ChakraProvider } from '@chakra-ui/react'
 import userEvent from '@testing-library/user-event'
 import ConfigureSection from '../ConfigureSection'
 import { CardsResponse } from '@/types/api'
+import { ScryfallCard } from '@/types/scryfall'
 
 // Mock analytics hook
 vi.mock('@/hooks/useAnalytics', () => ({
@@ -27,7 +28,7 @@ describe('ConfigureSection', () => {
                 rarity: 'common',
                 image_uri: 'test.jpg',
                 colors: ['R'],
-                legalities: {},
+                legalities: {} as ScryfallCard['legalities'],
                 quantity: 4,
                 groupId: 1
             }
@@ -126,7 +127,7 @@ describe('ConfigureSection', () => {
             expect.objectContaining({
                 sortBy: 'name',
                 fileType: 'png',
-                imageSize: 'ig_square'
+                imageSize: 'ig_portrait'
             })
         )
     })

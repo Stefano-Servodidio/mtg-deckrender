@@ -56,21 +56,7 @@ describe('DropZoneButton', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('Upload Text File')).toBeInTheDocument()
-    })
-
-    it('should render upload icon', () => {
-        render(
-            <ChakraWrapper>
-                <DropZoneButton onFileUpload={mockOnFileUpload} />
-            </ChakraWrapper>
-        )
-
-        const button = screen.getByRole('button', { name: /upload text file/i })
-        expect(button).toBeInTheDocument()
-        // Check that the button has an svg icon
-        const icon = button.querySelector('svg')
-        expect(icon).toBeInTheDocument()
+        expect(screen.getByText('or Upload Text File')).toBeInTheDocument()
     })
 
     it('should open file dialog when button is clicked', () => {
@@ -80,7 +66,7 @@ describe('DropZoneButton', () => {
             </ChakraWrapper>
         )
 
-        const button = screen.getByRole('button', { name: /upload text file/i })
+        const button = screen.getByTestId('dropzone-button')
         fireEvent.click(button)
 
         expect(mockOpen).toHaveBeenCalled()
@@ -163,7 +149,7 @@ describe('DropZoneButton', () => {
             </ChakraWrapper>
         )
 
-        const button = screen.getByRole('button', { name: /upload text file/i })
+        const button = screen.getByTestId('dropzone-button')
         expect(button).toBeInTheDocument()
     })
 
@@ -177,7 +163,7 @@ describe('DropZoneButton', () => {
             </ChakraWrapper>
         )
 
-        const button = screen.getByRole('button', { name: /upload text file/i })
+        const button = screen.getByTestId('dropzone-button')
         expect(button).toBeDisabled()
     })
 

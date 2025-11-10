@@ -1,12 +1,11 @@
 'use client'
 
-import { Button, ButtonProps, Icon, useColorModeValue } from '@chakra-ui/react'
+import { Button, ButtonProps } from '@chakra-ui/react'
 import {
     useDropzone,
     DropzoneProps as ReactDropzoneProps
 } from 'react-dropzone'
 import { useCallback } from 'react'
-import { FaCloudUploadAlt } from 'react-icons/fa'
 
 interface DropZoneButtonProps extends Omit<ReactDropzoneProps, 'onDrop'> {
     onFileUpload: (_files: File[]) => void
@@ -45,14 +44,15 @@ export function DropZoneButton({
         <div {...getRootProps()}>
             <input {...getInputProps()} />
             <Button
-                leftIcon={<Icon as={FaCloudUploadAlt} />}
+                data-testid="dropzone-button"
                 onClick={handleClick}
                 colorScheme={colorScheme}
                 size="lg"
                 w="full"
+                variant={'outline'}
                 {...buttonProps}
             >
-                Upload Text File
+                or Upload Text File
             </Button>
         </div>
     )
