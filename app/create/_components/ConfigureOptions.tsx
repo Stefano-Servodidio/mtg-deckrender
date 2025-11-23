@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import React from 'react'
 import { FaCogs, FaPen } from 'react-icons/fa'
-import { HexColorPicker } from 'react-colorful'
+import { HexColorInput, HexColorPicker } from 'react-colorful'
 
 export interface ConfigureOptionsProps {
     form: DeckPngOptions
@@ -164,85 +164,6 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                 }
                             />
                         </FilterItem.Wrapper>
-                        <FilterItem.Wrapper label="Background">
-                            <FilterItem.Radio
-                                name="backgroundStyle"
-                                colorScheme="blue"
-                                options={[
-                                    {
-                                        label: 'Transparent',
-                                        value: 'transparent'
-                                    },
-                                    { label: 'White', value: 'white' },
-                                    {
-                                        label: 'Custom Color',
-                                        value: 'custom_color'
-                                    },
-                                    {
-                                        label: 'Custom Image',
-                                        value: 'custom_image'
-                                    }
-                                ]}
-                                value={form.backgroundStyle}
-                                onChange={(val) =>
-                                    updateForm('backgroundStyle', val)
-                                }
-                            />
-                            {form.backgroundStyle === 'custom_color' && (
-                                <Box mt={4}>
-                                    <VStack spacing={2} align="flex-start">
-                                        <Text fontSize="sm" fontWeight="medium">
-                                            Pick a color:
-                                        </Text>
-                                        <HexColorPicker
-                                            color={
-                                                form.customBackgroundColor ||
-                                                '#ffffff'
-                                            }
-                                            onChange={(color) =>
-                                                updateForm(
-                                                    'customBackgroundColor',
-                                                    color
-                                                )
-                                            }
-                                        />
-                                        <Text fontSize="xs" color="gray.500">
-                                            Current:{' '}
-                                            {form.customBackgroundColor ||
-                                                '#ffffff'}
-                                        </Text>
-                                    </VStack>
-                                </Box>
-                            )}
-                            {form.backgroundStyle === 'custom_image' && (
-                                <BackgroundImageUpload
-                                    onImageUpload={(imageData) =>
-                                        updateForm(
-                                            'customBackgroundImage',
-                                            imageData
-                                        )
-                                    }
-                                    colorScheme="blue"
-                                    wrapperProps={{ mt: 4 }}
-                                    maxSizeBytes={1024 * 1024}
-                                />
-                            )}
-                        </FilterItem.Wrapper>
-
-                        <FilterItem.Wrapper label="Include card count">
-                            <FilterItem.Toggle
-                                name="includeCardCount"
-                                label="Show quantity on cards"
-                                isChecked={form.includeCardCount ?? true}
-                                onChange={(e) =>
-                                    updateForm(
-                                        'includeCardCount',
-                                        e.target.checked
-                                    )
-                                }
-                            />
-                        </FilterItem.Wrapper>
-
                         <FilterItem.Wrapper label="File type">
                             <FilterItem.Radio
                                 name="fileType"
@@ -258,6 +179,96 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                 }}
                             />
                         </FilterItem.Wrapper>
+                        <FilterItem.Wrapper label="Include card count">
+                            <FilterItem.Toggle
+                                name="includeCardCount"
+                                label="Show quantity on cards"
+                                isChecked={form.includeCardCount ?? true}
+                                onChange={(e) =>
+                                    updateForm(
+                                        'includeCardCount',
+                                        e.target.checked
+                                    )
+                                }
+                            />
+                        </FilterItem.Wrapper>
+                        <FilterItem.Wrapper
+                            label="Background"
+                            justifyContent={'space-between'}
+                        >
+                            <FilterItem.Radio
+                                name="backgroundStyle"
+                                colorScheme="blue"
+                                options={[
+                                    {
+                                        label: 'Transparent',
+                                        value: 'transparent'
+                                    },
+                                    {
+                                        label: 'Custom Color',
+                                        value: 'custom_color'
+                                    },
+                                    {
+                                        label: 'Custom Image',
+                                        value: 'custom_image'
+                                    }
+                                ]}
+                                value={form.backgroundStyle}
+                                onChange={(val) =>
+                                    updateForm('backgroundStyle', val)
+                                }
+                            />
+                        </FilterItem.Wrapper>
+                        <Box>
+                            {form.backgroundStyle === 'custom_color' && (
+                                <FilterItem.Wrapper label="Custom Background Color">
+                                    <VStack
+                                        spacing={2}
+                                        align="flex-start"
+                                        sx={{
+                                            '.react-colorful': {
+                                                height: '150px',
+                                                borderRadius: '.25rem'
+                                            }
+                                        }}
+                                    >
+                                        <HexColorPicker
+                                            color={form.customBackgroundColor}
+                                            onChange={(color) =>
+                                                updateForm(
+                                                    'customBackgroundColor',
+                                                    color
+                                                )
+                                            }
+                                        />
+                                        <HexColorInput
+                                            color={form.customBackgroundColor}
+                                            onChange={(color) =>
+                                                updateForm(
+                                                    'customBackgroundColor',
+                                                    color
+                                                )
+                                            }
+                                        />
+                                    </VStack>
+                                </FilterItem.Wrapper>
+                            )}
+                            {form.backgroundStyle === 'custom_image' && (
+                                <FilterItem.Wrapper label="Custom Background Image">
+                                    <BackgroundImageUpload
+                                        onImageUpload={(imageData) =>
+                                            updateForm(
+                                                'customBackgroundImage',
+                                                imageData
+                                            )
+                                        }
+                                        colorScheme="blue"
+                                        wrapperProps={{ mt: 4 }}
+                                        maxSizeBytes={1024 * 1024}
+                                    />
+                                </FilterItem.Wrapper>
+                            )}
+                        </Box>
                     </SimpleGrid>
                     <Button
                         colorScheme="blue"

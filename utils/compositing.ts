@@ -232,9 +232,6 @@ export function createCanvas(
     let background: { r: number; g: number; b: number; alpha: number }
 
     switch (backgroundStyle) {
-        case 'white':
-            background = { r: 255, g: 255, b: 255, alpha: 1 }
-            break
         case 'custom_color':
             // Parse hex color (e.g., "#FF0000")
             if (customBackgroundColor) {

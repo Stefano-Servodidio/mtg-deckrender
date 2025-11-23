@@ -81,7 +81,6 @@ export const IMAGE_RESOLUTION = ['standard', 'high'] as const
 
 export const BACKGROUND_STYLE = [
     'transparent',
-    'white',
     'custom_color',
     'custom_image'
 ] as const

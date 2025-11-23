@@ -36,7 +36,9 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
         imageVariant: 'grid',
         imageResolution: 'standard' as ImageResolution,
         backgroundStyle: 'transparent',
-        includeCardCount: true
+        includeCardCount: true,
+        customBackgroundColor: '#FFFFFF',
+        customBackgroundImage: undefined
     })
 
     const updateForm = (

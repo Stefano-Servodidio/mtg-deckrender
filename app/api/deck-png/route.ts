@@ -397,7 +397,7 @@ export async function GET() {
                 imageVariant: "'grid' | 'stacked'",
                 imageResolution: "'standard' | 'high'",
                 backgroundStyle:
-                    "'transparent' | 'white' | 'custom_color' | 'custom_image'",
+                    "'transparent' | 'custom_color' | 'custom_image'",
                 customBackgroundColor: 'string (hex color for custom_color)',
                 customBackgroundImage:
                     'string (base64 encoded image for custom_image)',

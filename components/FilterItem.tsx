@@ -14,7 +14,8 @@ import {
     SwitchProps,
     RadioGroupProps,
     Heading,
-    Box
+    Box,
+    CardBodyProps
 } from '@chakra-ui/react'
 import React from 'react'
 export interface FilterItemProps {
@@ -125,17 +126,28 @@ const Toggle: React.FC<FilterItemProps & SwitchProps> = ({
     )
 }
 
-const Wrapper: React.FC<{
+interface FilterItemWrapperProps extends CardBodyProps {
     children: React.ReactNode
     label?: string
-}> = ({ children, label }) => (
+}
+const Wrapper: React.FC<FilterItemWrapperProps> = ({
+    children,
+    label,
+    ...props
+}) => (
     <Card variant="outlined" size="sm">
         {label && (
             <CardHeader>
                 <Heading size="sm">{label}</Heading>
             </CardHeader>
         )}
-        <CardBody paddingTop={0} gap={2} display="flex" flexDirection="column">
+        <CardBody
+            paddingTop={0}
+            gap={2}
+            display="flex"
+            flexDirection="column"
+            {...props}
+        >
             {children}
         </CardBody>
     </Card>
