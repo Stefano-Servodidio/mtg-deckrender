@@ -13,25 +13,44 @@ import {
     VStack,
     Button
 } from '@chakra-ui/react'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FaCogs, FaPen } from 'react-icons/fa'
 import { HexColorInput, HexColorPicker } from 'react-colorful'
-
+import { UseFormReturn } from 'react-hook-form'
 export interface ConfigureOptionsProps {
-    form: DeckPngOptions
-    updateForm: (_id: string, _value: string | number | boolean | null) => void
+    form: UseFormReturn<DeckPngOptions>
 }
 
 const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
-    form,
-    updateForm
+    form: hookForm
 }) => {
+    const { control, watch, formState } = hookForm
     const [editing, setEditing] = React.useState(false)
+    const form = watch()
+    const [fileType, backgroundStyle, customBackgroundColor] = watch([
+        'fileType',
+        'backgroundStyle',
+        'customBackgroundColor'
+    ])
+    console.log('formState.errors', formState.errors)
+    console.log('form values', hookForm.getValues())
+    useEffect(() => {
+        // If fileType is jpeg and backgroundStyle is transparent, change backgroundStyle to white
+        if (fileType === 'jpeg' && backgroundStyle === 'transparent') {
+            hookForm.setValue('customBackgroundColor', '#FFFFFF')
+        } else if (
+            (fileType === 'png' || fileType === 'webp') &&
+            customBackgroundColor === '#FFFFFF'
+        ) {
+            // If fileType is not jpeg and backgroundStyle is white, change backgroundStyle to transparent
+            hookForm.setValue('backgroundStyle', 'transparent')
+        }
+    }, [fileType, backgroundStyle, customBackgroundColor, hookForm])
 
     const imageSizes: { [_key in ImageSize]: string } = {
-        ig_square: 'Instagram Square (1080x1080)',
+        ig_portrait: 'Instagram Post (1080x1350)',
         ig_story: 'Instagram Story (1080x1920)',
-        ig_portrait: 'Instagram Portrait (1080x1350)',
+        ig_square: 'Instagram Square (1080x1080)',
         ig_landscape: 'Instagram Landscape (1080x566)',
         facebook_post: 'Facebook Post (1200x630)',
         facebook_cover: 'Facebook Cover (820x312)',
@@ -64,41 +83,60 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                 />
             </HStack>
             {!editing && (
-                <SimpleGrid
-                    data-testid="configuration-summary"
-                    columns={{ base: 1, md: 2 }}
-                    spacing={{ base: 2, md: 4 }}
-                >
-                    <Text fontSize="sm">
-                        <strong>Sort by:</strong> {form.sortBy}
-                    </Text>
-                    <Text fontSize="sm" data-testid="configuration-image-size">
-                        <strong>Image size:</strong>{' '}
-                        {form.imageSize ? imageSizes[form.imageSize] : 'N/A'}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>Resolution:</strong> {form.imageResolution}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>Variant:</strong> {form.imageVariant}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>Background:</strong> {form.backgroundStyle}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>Include card count:</strong>{' '}
-                        {form.includeCardCount ? 'Yes' : 'No'}
-                    </Text>
-                    <Text fontSize="sm">
-                        <strong>File type:</strong> {form.fileType}
-                    </Text>
-                </SimpleGrid>
+                <Box>
+                    <SimpleGrid
+                        data-testid="configuration-summary"
+                        columns={{ base: 1, md: 2 }}
+                        spacing={{ base: 2, md: 4 }}
+                    >
+                        <Text fontSize="sm">
+                            <strong>Sort by:</strong> {form.sortBy}
+                        </Text>
+                        <Text
+                            fontSize="sm"
+                            data-testid="configuration-image-size"
+                            color={
+                                !!formState.errors.imageSize
+                                    ? 'red.600'
+                                    : 'inherit'
+                            }
+                        >
+                            <strong>Image size:</strong>{' '}
+                            {form.imageSize
+                                ? imageSizes[form.imageSize]
+                                : 'N/A'}
+                        </Text>
+                        <Text fontSize="sm">
+                            <strong>Resolution:</strong> {form.imageResolution}
+                        </Text>
+                        <Text fontSize="sm">
+                            <strong>Variant:</strong> {form.imageVariant}
+                        </Text>
+                        <Text fontSize="sm">
+                            <strong>Background:</strong> {form.backgroundStyle}
+                        </Text>
+                        <Text fontSize="sm">
+                            <strong>Include card count:</strong>{' '}
+                            {form.includeCardCount ? 'Yes' : 'No'}
+                        </Text>
+                        <Text fontSize="sm">
+                            <strong>File type:</strong> {form.fileType}
+                        </Text>
+                    </SimpleGrid>
+                    {formState.errors &&
+                        Object.keys(formState.errors).length > 0 && (
+                            <Text color="red.600" fontSize="sm" mt={4}>
+                                Please fill all required fields.
+                            </Text>
+                        )}
+                </Box>
             )}
             {!!editing && (
                 <VStack spacing={4} w="full">
                     <SimpleGrid columns={[1, 1, 2]} spacing={[2, 2, 4]}>
                         <FilterItem.Wrapper label="Sort by">
                             <FilterItem.Radio
+                                control={control}
                                 name="sortBy"
                                 colorScheme="blue"
                                 options={[
@@ -108,45 +146,42 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                     { label: 'Color', value: 'colors' },
                                     { label: 'Rarity', value: 'rarity' }
                                 ]}
-                                value={form.sortBy}
-                                onChange={(val) => updateForm('sortBy', val)}
                             />
                         </FilterItem.Wrapper>
 
-                        <FilterItem.Wrapper label="Image size">
+                        <FilterItem.Wrapper
+                            label="Image size"
+                            error={!!formState.errors.imageSize}
+                        >
                             <FilterItem.Select
+                                control={control}
                                 name="imageSize"
                                 colorScheme="blue"
+                                isRequired
                                 options={Object.entries(imageSizes).map(
                                     ([value, label]) => ({
                                         label,
                                         value
                                     })
                                 )}
-                                value={form.imageSize}
-                                onChange={(e) => {
-                                    updateForm('imageSize', e.target.value)
-                                }}
                             />
                         </FilterItem.Wrapper>
 
                         <FilterItem.Wrapper label="Resolution">
                             <FilterItem.Radio
+                                control={control}
                                 name="imageResolution"
                                 colorScheme="blue"
                                 options={[
                                     { label: 'Standard', value: 'standard' },
                                     { label: 'High', value: 'high' }
                                 ]}
-                                value={form.imageResolution}
-                                onChange={(val) =>
-                                    updateForm('imageResolution', val)
-                                }
                             />
                         </FilterItem.Wrapper>
 
                         <FilterItem.Wrapper label="Image variant">
                             <FilterItem.Radio
+                                control={control}
                                 name="imageVariant"
                                 colorScheme="blue"
                                 options={[
@@ -158,14 +193,11 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                         disabled: true
                                     }
                                 ]}
-                                value={form.imageVariant}
-                                onChange={(val) =>
-                                    updateForm('imageVariant', val)
-                                }
                             />
                         </FilterItem.Wrapper>
                         <FilterItem.Wrapper label="File type">
                             <FilterItem.Radio
+                                control={control}
                                 name="fileType"
                                 colorScheme="blue"
                                 options={[
@@ -173,23 +205,25 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                     { label: 'JPEG', value: 'jpeg' },
                                     { label: 'WebP', value: 'webp' }
                                 ]}
-                                value={form.fileType}
-                                onChange={(val) => {
-                                    updateForm('fileType', val)
-                                }}
+                            />
+                        </FilterItem.Wrapper>
+                        <FilterItem.Wrapper label="File type">
+                            <FilterItem.Radio
+                                control={control}
+                                name="fileType"
+                                colorScheme="blue"
+                                options={[
+                                    { label: 'PNG', value: 'png' },
+                                    { label: 'JPEG', value: 'jpeg' },
+                                    { label: 'WebP', value: 'webp' }
+                                ]}
                             />
                         </FilterItem.Wrapper>
                         <FilterItem.Wrapper label="Include card count">
                             <FilterItem.Toggle
+                                control={control}
                                 name="includeCardCount"
                                 label="Show quantity on cards"
-                                isChecked={form.includeCardCount ?? true}
-                                onChange={(e) =>
-                                    updateForm(
-                                        'includeCardCount',
-                                        e.target.checked
-                                    )
-                                }
                             />
                         </FilterItem.Wrapper>
                         <FilterItem.Wrapper
@@ -197,12 +231,14 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                             justifyContent={'space-between'}
                         >
                             <FilterItem.Radio
+                                control={control}
                                 name="backgroundStyle"
                                 colorScheme="blue"
                                 options={[
                                     {
                                         label: 'Transparent',
-                                        value: 'transparent'
+                                        value: 'transparent',
+                                        disabled: form.fileType === 'jpeg'
                                     },
                                     {
                                         label: 'Custom Color',
@@ -213,10 +249,6 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                         value: 'custom_image'
                                     }
                                 ]}
-                                value={form.backgroundStyle}
-                                onChange={(val) =>
-                                    updateForm('backgroundStyle', val)
-                                }
                             />
                         </FilterItem.Wrapper>
                         <Box>
@@ -235,7 +267,7 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                         <HexColorPicker
                                             color={form.customBackgroundColor}
                                             onChange={(color) =>
-                                                updateForm(
+                                                hookForm.setValue(
                                                     'customBackgroundColor',
                                                     color
                                                 )
@@ -244,7 +276,7 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                         <HexColorInput
                                             color={form.customBackgroundColor}
                                             onChange={(color) =>
-                                                updateForm(
+                                                hookForm.setValue(
                                                     'customBackgroundColor',
                                                     color
                                                 )
@@ -257,9 +289,9 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                 <FilterItem.Wrapper label="Custom Background Image">
                                     <BackgroundImageUpload
                                         onImageUpload={(imageData) =>
-                                            updateForm(
+                                            hookForm.setValue(
                                                 'customBackgroundImage',
-                                                imageData
+                                                imageData || undefined
                                             )
                                         }
                                         colorScheme="blue"
@@ -270,14 +302,24 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                             )}
                         </Box>
                     </SimpleGrid>
-                    <Button
-                        colorScheme="blue"
-                        alignSelf="flex-end"
-                        minWidth={{ base: '100%', md: '120px' }}
-                        onClick={() => setEditing(false)}
-                    >
-                        Done
-                    </Button>
+                    <HStack width={'100%'} justify="space-between">
+                        <Box>
+                            {formState.errors &&
+                                Object.keys(formState.errors).length > 0 && (
+                                    <Text color="red.600" fontSize="sm">
+                                        Please fill all required fields.
+                                    </Text>
+                                )}
+                        </Box>
+                        <Button
+                            colorScheme="blue"
+                            alignSelf="flex-end"
+                            minWidth={{ base: '100%', md: '120px' }}
+                            onClick={() => setEditing(false)}
+                        >
+                            Done
+                        </Button>
+                    </HStack>
                 </VStack>
             )}
         </Box>

@@ -1,12 +1,24 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
 import userEvent from '@testing-library/user-event'
+import { useForm } from 'react-hook-form'
 import FilterItem from '../FilterItem'
 
 const ChakraWrapper = ({ children }: { children: React.ReactNode }) => (
     <ChakraProvider>{children}</ChakraProvider>
 )
+
+// Test wrapper component that sets up react-hook-form
+interface TestFormProps {
+    defaultValues?: any
+    children: (_control: any) => React.ReactNode
+}
+
+const TestForm: React.FC<TestFormProps> = ({ defaultValues, children }) => {
+    const { control } = useForm({ defaultValues })
+    return <>{children(control)}</>
+}
 
 describe('FilterItem', () => {
     describe('Radio', () => {
@@ -19,12 +31,15 @@ describe('FilterItem', () => {
         it('should render radio group with options', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Radio
-                        name="test-radio"
-                        options={options}
-                        value="opt1"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testRadio: 'opt1' }}>
+                        {(control) => (
+                            <FilterItem.Radio
+                                control={control}
+                                name="testRadio"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
@@ -36,58 +51,67 @@ describe('FilterItem', () => {
         it('should render with correct test ids', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Radio
-                        name="test-radio"
-                        options={options}
-                        value="opt1"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testRadio: 'opt1' }}>
+                        {(control) => (
+                            <FilterItem.Radio
+                                control={control}
+                                name="testRadio"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
             expect(
-                screen.getByTestId('filter-radio-group-test-radio')
+                screen.getByTestId('filter-radio-group-testRadio')
             ).toBeInTheDocument()
             expect(
-                screen.getByTestId('filter-radio-test-radio-opt1')
+                screen.getByTestId('filter-radio-testRadio-opt1')
             ).toBeInTheDocument()
         })
 
         it('should call onChange when option is clicked', async () => {
-            const handleChange = vi.fn()
             const user = userEvent.setup()
 
             render(
                 <ChakraWrapper>
-                    <FilterItem.Radio
-                        name="test-radio"
-                        options={options}
-                        value="opt1"
-                        onChange={handleChange}
-                    />
+                    <TestForm defaultValues={{ testRadio: 'opt1' }}>
+                        {(control) => (
+                            <FilterItem.Radio
+                                control={control}
+                                name="testRadio"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
-            const radio = screen.getByTestId('filter-radio-test-radio-opt2')
+            const radio = screen.getByTestId('filter-radio-testRadio-opt2')
             await user.click(radio)
 
-            expect(handleChange).toHaveBeenCalled()
+            // After clicking, the clicked radio should have aria-checked="true"
+            expect(radio).toHaveAttribute('data-checked')
         })
 
         it('should have disabled attribute when disabled prop is true', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Radio
-                        name="test-radio"
-                        options={options}
-                        value="opt1"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testRadio: 'opt1' }}>
+                        {(control) => (
+                            <FilterItem.Radio
+                                control={control}
+                                name="testRadio"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
             const disabledRadio = screen.getByTestId(
-                'filter-radio-test-radio-opt3'
+                'filter-radio-testRadio-opt3'
             )
             expect(disabledRadio).toHaveAttribute('disabled')
         })
@@ -103,12 +127,15 @@ describe('FilterItem', () => {
         it('should render select with options', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Select
-                        name="test-select"
-                        options={options}
-                        value="sel1"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testSelect: 'sel1' }}>
+                        {(control) => (
+                            <FilterItem.Select
+                                control={control}
+                                name="testSelect"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
@@ -120,29 +147,36 @@ describe('FilterItem', () => {
         it('should render with correct test id', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Select
-                        name="test-select"
-                        options={options}
-                        value="sel1"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testSelect: 'sel1' }}>
+                        {(control) => (
+                            <FilterItem.Select
+                                control={control}
+                                name="testSelect"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
             expect(
-                screen.getByTestId('filter-select-test-select')
+                screen.getByTestId('filter-select-testSelect')
             ).toBeInTheDocument()
         })
 
         it('should render with placeholder', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Select
-                        name="test-select"
-                        options={options}
-                        placeholder="Choose option"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testSelect: '' }}>
+                        {(control) => (
+                            <FilterItem.Select
+                                control={control}
+                                name="testSelect"
+                                options={options}
+                                placeholder="Choose option"
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
@@ -150,40 +184,46 @@ describe('FilterItem', () => {
         })
 
         it('should call onChange when option is selected', async () => {
-            const handleChange = vi.fn()
             const user = userEvent.setup()
 
             render(
                 <ChakraWrapper>
-                    <FilterItem.Select
-                        name="test-select"
-                        options={options}
-                        value="sel1"
-                        onChange={handleChange}
-                    />
+                    <TestForm defaultValues={{ testSelect: 'sel1' }}>
+                        {(control) => (
+                            <FilterItem.Select
+                                control={control}
+                                name="testSelect"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
-            const select = screen.getByTestId('filter-select-test-select')
+            const select = screen.getByTestId('filter-select-testSelect')
             await user.selectOptions(select, 'sel2')
 
-            expect(handleChange).toHaveBeenCalled()
+            // The select value should have changed
+            expect(select).toHaveValue('sel2')
         })
 
         it('should disable option when disabled prop is true', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Select
-                        name="test-select"
-                        options={options}
-                        value="sel1"
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testSelect: 'sel1' }}>
+                        {(control) => (
+                            <FilterItem.Select
+                                control={control}
+                                name="testSelect"
+                                options={options}
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
             const disabledOption = screen.getByTestId(
-                'filter-select-test-select-sel3'
+                'filter-select-testSelect-sel3'
             )
             expect(disabledOption).toBeDisabled()
         })
@@ -193,12 +233,15 @@ describe('FilterItem', () => {
         it('should render toggle with label', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Toggle
-                        name="test-toggle"
-                        label="Enable feature"
-                        isChecked={false}
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testToggle: false }}>
+                        {(control) => (
+                            <FilterItem.Toggle
+                                control={control}
+                                name="testToggle"
+                                label="Enable feature"
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
@@ -208,50 +251,59 @@ describe('FilterItem', () => {
         it('should render with correct test id', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Toggle
-                        name="test-toggle"
-                        label="Enable feature"
-                        isChecked={false}
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testToggle: false }}>
+                        {(control) => (
+                            <FilterItem.Toggle
+                                control={control}
+                                name="testToggle"
+                                label="Enable feature"
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
             expect(
-                screen.getByTestId('filter-toggle-test-toggle')
+                screen.getByTestId('filter-toggle-testToggle')
             ).toBeInTheDocument()
         })
 
         it('should call onChange when toggled', async () => {
-            const handleChange = vi.fn()
             const user = userEvent.setup()
 
             render(
                 <ChakraWrapper>
-                    <FilterItem.Toggle
-                        name="test-toggle"
-                        label="Enable feature"
-                        isChecked={false}
-                        onChange={handleChange}
-                    />
+                    <TestForm defaultValues={{ testToggle: false }}>
+                        {(control) => (
+                            <FilterItem.Toggle
+                                control={control}
+                                name="testToggle"
+                                label="Enable feature"
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
-            const toggle = screen.getByTestId('filter-toggle-test-toggle')
+            const toggle = screen.getByRole('checkbox')
             await user.click(toggle)
 
-            expect(handleChange).toHaveBeenCalled()
+            // Toggle should now be checked
+            expect(toggle).toBeChecked()
         })
 
         it('should render checked state', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Toggle
-                        name="test-toggle"
-                        label="Enable feature"
-                        isChecked={true}
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testToggle: true }}>
+                        {(control) => (
+                            <FilterItem.Toggle
+                                control={control}
+                                name="testToggle"
+                                label="Enable feature"
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 
@@ -262,12 +314,15 @@ describe('FilterItem', () => {
         it('should render unchecked state', () => {
             render(
                 <ChakraWrapper>
-                    <FilterItem.Toggle
-                        name="test-toggle"
-                        label="Enable feature"
-                        isChecked={false}
-                        onChange={vi.fn()}
-                    />
+                    <TestForm defaultValues={{ testToggle: false }}>
+                        {(control) => (
+                            <FilterItem.Toggle
+                                control={control}
+                                name="testToggle"
+                                label="Enable feature"
+                            />
+                        )}
+                    </TestForm>
                 </ChakraWrapper>
             )
 

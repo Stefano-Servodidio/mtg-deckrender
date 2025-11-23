@@ -1,5 +1,6 @@
 'use client'
 import { DropZone } from '@/components/DropZone'
+import { DropZoneButton } from '@/components/DropZoneButton'
 import {
     Box,
     Button,
@@ -89,7 +90,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 })
             }
         },
-        [toast]
+        [analytics, toast]
     )
 
     return (
@@ -119,7 +120,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         value={decklistText}
                         onChange={(e) => setDecklistText(e.target.value)}
                         placeholder={
-                            'Paste the decklist list one card per line, with the quantity and cardname (e.g. "2x Llanowar Elves", "1 Black Lotus").\nYou can add a sideboard by including an empty line. Works with or without the keyword "SIDEBOARD".'
+                            '1x Lightning Bolt\n2 Mountain\nx4 Goblin Guide\n...\n\nSIDEBOARD\n1x Blood Moon\n...'
                         }
                         size="lg"
                         minH="300px"
@@ -136,12 +137,14 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         }}
                     />
                 </Box>
-                {/* File Upload Section */}
+                {/* File Upload Section - Desktop */}
                 <VStack
+                    data-testid="file-upload-section-desktop"
                     w={{ base: 'full', md: '40%', lg: '30%' }}
                     h={{ base: 'auto', md: 'full' }}
                     align={'flex-start'}
                     gap={0}
+                    display={{ base: 'none', md: 'flex' }}
                 >
                     <Text fontWeight="semibold" mb={3} color="gray.700">
                         Or upload Text File
@@ -151,6 +154,21 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                             onFileUpload={handleFileUpload}
                             colorScheme="orange"
                             wrapperProps={{ h: '300px' }}
+                        />
+                    </Box>
+                </VStack>
+                {/* File Upload Section - Mobile */}
+                <VStack
+                    data-testid="file-upload-section-mobile"
+                    w="full"
+                    align={'flex-start'}
+                    gap={0}
+                    display={{ base: 'flex', md: 'none' }}
+                >
+                    <Box w="full">
+                        <DropZoneButton
+                            onFileUpload={handleFileUpload}
+                            colorScheme="orange"
                         />
                     </Box>
                 </VStack>

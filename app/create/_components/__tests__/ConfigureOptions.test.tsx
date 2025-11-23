@@ -4,13 +4,14 @@ import { ChakraProvider } from '@chakra-ui/react'
 import userEvent from '@testing-library/user-event'
 import ConfigureOptions from '../ConfigureOptions'
 import { DeckPngOptions } from '@/types/api'
+import { UseFormReturn } from 'react-hook-form'
 
 const ChakraWrapper = ({ children }: { children: React.ReactNode }) => (
     <ChakraProvider>{children}</ChakraProvider>
 )
 
 describe('ConfigureOptions', () => {
-    const mockForm: DeckPngOptions = {
+    const defaultFormValues = {
         sortBy: 'name',
         sortDirection: 'asc',
         fileType: 'png',
@@ -19,9 +20,47 @@ describe('ConfigureOptions', () => {
         imageResolution: 'standard',
         backgroundStyle: 'transparent',
         includeCardCount: true
-    }
+    } as const
 
-    const mockUpdateForm = vi.fn()
+    const mockForm = (values: DeckPngOptions) =>
+        ({
+            watch: vi.fn((name?: any) => {
+                // Handle different watch signatures
+                if (name === undefined) {
+                    // watch() - return all values
+                    return values
+                }
+                if (typeof name === 'string') {
+                    // watch('fieldName') - return single value
+                    return values[name as keyof typeof values]
+                }
+                if (Array.isArray(name)) {
+                    // watch(['field1', 'field2']) - return array of values
+                    return name.map(
+                        (field) => values[field as keyof typeof values]
+                    )
+                }
+                return values
+            }),
+            getValues: vi.fn((name?: any) => {
+                if (name === undefined) {
+                    return values
+                }
+                if (typeof name === 'string') {
+                    return values[name as keyof typeof values]
+                }
+                if (Array.isArray(name)) {
+                    return name.map(
+                        (field) => values[field as keyof typeof values]
+                    )
+                }
+                return values
+            }),
+            setValue: vi.fn(),
+            register: vi.fn(),
+            handleSubmit: vi.fn((fn) => fn),
+            formState: { errors: {}, isSubmitting: false }
+        }) as unknown as UseFormReturn<DeckPngOptions>
 
     beforeEach(() => {
         vi.clearAllMocks()
@@ -30,7 +69,7 @@ describe('ConfigureOptions', () => {
     it('should render configuration summary by default', () => {
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -41,7 +80,7 @@ describe('ConfigureOptions', () => {
     it('should display form values in summary', () => {
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -56,7 +95,7 @@ describe('ConfigureOptions', () => {
     it('should render edit button', () => {
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -72,7 +111,7 @@ describe('ConfigureOptions', () => {
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -94,7 +133,7 @@ describe('ConfigureOptions', () => {
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -113,100 +152,12 @@ describe('ConfigureOptions', () => {
         expect(screen.getByText('File type')).toBeInTheDocument()
     })
 
-    it.skip('should call updateForm when sort option changes', async () => {
-        const user = userEvent.setup()
-
-        render(
-            <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
-            </ChakraWrapper>
-        )
-
-        const editButton = screen.getByTestId('configure-options-button')
-        await user.click(editButton)
-
-        await screen.findByText('Sort by')
-
-        const cmcRadio = screen.getByTestId('filter-radio-sortBy-cmc')
-        await user.click(cmcRadio)
-
-        expect(mockUpdateForm).toHaveBeenCalledWith('sortBy', 'cmc')
-    })
-
-    it.skip('should call updateForm when image size changes', async () => {
-        const user = userEvent.setup()
-
-        render(
-            <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
-            </ChakraWrapper>
-        )
-
-        const editButton = screen.getByTestId('configure-options-button')
-        await user.click(editButton)
-
-        await screen.findByText('Image size')
-
-        const select = screen.getByTestId('filter-select-imageSize')
-        await user.selectOptions(select, 'ig_story')
-
-        expect(mockUpdateForm).toHaveBeenCalledWith(
-            'imageSize',
-            expect.any(String)
-        )
-    })
-
-    it.skip('should call updateForm when resolution changes', async () => {
-        const user = userEvent.setup()
-
-        render(
-            <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
-            </ChakraWrapper>
-        )
-
-        const editButton = screen.getByTestId('configure-options-button')
-        await user.click(editButton)
-
-        await screen.findByText('Resolution')
-
-        const highResRadio = screen.getByTestId(
-            'filter-radio-imageResolution-high'
-        )
-        await user.click(highResRadio)
-
-        expect(mockUpdateForm).toHaveBeenCalledWith('imageResolution', 'high')
-    })
-
-    it.skip('should call updateForm when card count toggle changes', async () => {
-        const user = userEvent.setup()
-
-        render(
-            <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
-            </ChakraWrapper>
-        )
-
-        const editButton = screen.getByTestId('configure-options-button')
-        await user.click(editButton)
-
-        await screen.findByText('Include card count')
-
-        const toggle = screen.getByTestId('filter-toggle-includeCardCount')
-        await user.click(toggle)
-
-        expect(mockUpdateForm).toHaveBeenCalledWith(
-            'includeCardCount',
-            expect.any(Boolean)
-        )
-    })
-
     it.skip('should render Done button in edit mode', async () => {
         const user = userEvent.setup()
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -223,7 +174,7 @@ describe('ConfigureOptions', () => {
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 
@@ -241,17 +192,14 @@ describe('ConfigureOptions', () => {
     })
 
     it('should display correct image size label', () => {
-        const formWithStory = {
-            ...mockForm,
-            imageSize: 'ig_story' as const
-        }
+        const formWithStory = mockForm({
+            ...defaultFormValues,
+            imageSize: 'ig_story'
+        })
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions
-                    form={formWithStory}
-                    updateForm={mockUpdateForm}
-                />
+                <ConfigureOptions form={formWithStory} />
             </ChakraWrapper>
         )
 
@@ -261,17 +209,14 @@ describe('ConfigureOptions', () => {
     })
 
     it('should show N/A when image size is not set', () => {
-        const formWithoutSize = {
-            ...mockForm,
+        const formWithoutSize = mockForm({
+            ...defaultFormValues,
             imageSize: undefined
-        }
+        })
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions
-                    form={formWithoutSize}
-                    updateForm={mockUpdateForm}
-                />
+                <ConfigureOptions form={formWithoutSize} />
             </ChakraWrapper>
         )
 
@@ -284,7 +229,7 @@ describe('ConfigureOptions', () => {
 
         render(
             <ChakraWrapper>
-                <ConfigureOptions form={mockForm} updateForm={mockUpdateForm} />
+                <ConfigureOptions form={mockForm(defaultFormValues)} />
             </ChakraWrapper>
         )
 

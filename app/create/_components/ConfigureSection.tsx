@@ -4,8 +4,9 @@ import { Box, Button, Text, VStack, Progress, HStack } from '@chakra-ui/react'
 import React from 'react'
 import { FaImage } from 'react-icons/fa'
 import ConfigureOptions from './ConfigureOptions'
-import { DeckPngOptions, CardsResponse, ImageResolution } from '@/types/api'
+import { DeckPngOptions, CardsResponse } from '@/types/api'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { Resolver, useForm, ResolverResult } from 'react-hook-form'
 
 interface ProgressInfo {
     current: number
@@ -28,40 +29,57 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
     progress
 }) => {
     const analytics = useAnalytics()
-    const [form, setForm] = React.useState<DeckPngOptions>({
-        sortBy: 'name',
-        sortDirection: 'asc',
-        fileType: 'png',
-        imageSize: 'ig_square',
-        imageVariant: 'grid',
-        imageResolution: 'standard' as ImageResolution,
-        backgroundStyle: 'transparent',
-        includeCardCount: true,
-        customBackgroundColor: '#FFFFFF',
-        customBackgroundImage: undefined
-    })
 
-    const updateForm = (
-        id: string,
-        value: string | number | boolean | null
-    ) => {
-        setForm((prev) => ({
-            ...prev,
-            [id]: value
-        }))
+    const resolver: Resolver<DeckPngOptions> = async (
+        values
+    ): Promise<ResolverResult<DeckPngOptions>> => {
+        if (!values.imageSize) {
+            return {
+                values: {},
+                errors: {
+                    imageSize: {
+                        type: 'required',
+                        message: 'Image size is required'
+                    }
+                }
+            }
+        }
+
+        return {
+            values,
+            errors: {}
+        }
     }
+
+    const form = useForm<DeckPngOptions>({
+        mode: 'onChange',
+        defaultValues: {
+            sortBy: 'name',
+            sortDirection: 'asc',
+            fileType: 'png',
+            imageSize: 'ig_portrait',
+            imageVariant: 'grid',
+            imageResolution: 'standard',
+            backgroundStyle: 'transparent',
+            includeCardCount: true,
+            customBackgroundColor: '#FFFFFF',
+            customBackgroundImage: undefined
+        },
+        resolver: resolver
+    })
+    const { getValues, formState } = form
 
     const handleGenerate = () => {
         analytics.trackButtonClick('Generate Deck Image', {
             event_label: 'configure_section'
         })
-        handleGenerateImage(form)
+        handleGenerateImage(getValues())
     }
 
     return (
         <VStack spacing={6}>
             {/* Configuration Form */}
-            <ConfigureOptions form={form} updateForm={updateForm} />
+            <ConfigureOptions form={form} />
             {/* Progress Section */}
             {isGenerating && progress && (
                 <Box w="full">
@@ -111,7 +129,11 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                     boxShadow: 'lg'
                 }}
                 transition="all 0.2s"
-                disabled={!cardsData?.cards || cardsData.cards.length === 0}
+                disabled={
+                    !cardsData?.cards ||
+                    cardsData.cards.length === 0 ||
+                    !formState.isValid
+                }
             >
                 Generate Deck Image
             </Button>
