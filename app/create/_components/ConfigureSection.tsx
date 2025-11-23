@@ -68,6 +68,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
         resolver: resolver
     })
     const { getValues, formState } = form
+    console.log('Form State:', formState)
 
     const handleGenerate = () => {
         analytics.trackButtonClick('Generate Deck Image', {
@@ -132,7 +133,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                 disabled={
                     !cardsData?.cards ||
                     cardsData.cards.length === 0 ||
-                    !formState.isValid
+                    formState.errors.imageSize !== undefined
                 }
             >
                 Generate Deck Image

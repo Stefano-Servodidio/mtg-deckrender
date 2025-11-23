@@ -348,7 +348,8 @@ export async function POST(request: NextRequest) {
                 'Content-Type': 'text/plain; charset=utf-8',
                 'Cache-Control': 'no-cache',
                 Connection: 'keep-alive',
-                'X-Accel-Buffering': 'no' // Disable nginx buffering
+                'X-Accel-Buffering': 'no', // Disable nginx buffering
+                'X-File-Type': options.fileType || 'png' // Add file type to response headers
             }
         })
     } catch (error) {

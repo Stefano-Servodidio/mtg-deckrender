@@ -27,25 +27,16 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
     const { control, watch, formState } = hookForm
     const [editing, setEditing] = React.useState(false)
     const form = watch()
-    const [fileType, backgroundStyle, customBackgroundColor] = watch([
-        'fileType',
-        'backgroundStyle',
-        'customBackgroundColor'
-    ])
+    const [fileType, backgroundStyle] = watch(['fileType', 'backgroundStyle'])
     console.log('formState.errors', formState.errors)
     console.log('form values', hookForm.getValues())
     useEffect(() => {
         // If fileType is jpeg and backgroundStyle is transparent, change backgroundStyle to white
         if (fileType === 'jpeg' && backgroundStyle === 'transparent') {
+            hookForm.setValue('backgroundStyle', 'custom_color')
             hookForm.setValue('customBackgroundColor', '#FFFFFF')
-        } else if (
-            (fileType === 'png' || fileType === 'webp') &&
-            customBackgroundColor === '#FFFFFF'
-        ) {
-            // If fileType is not jpeg and backgroundStyle is white, change backgroundStyle to transparent
-            hookForm.setValue('backgroundStyle', 'transparent')
         }
-    }, [fileType, backgroundStyle, customBackgroundColor, hookForm])
+    }, [fileType, backgroundStyle, hookForm])
 
     const imageSizes: { [_key in ImageSize]: string } = {
         ig_portrait: 'Instagram Post (1080x1350)',
@@ -113,14 +104,14 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                             <strong>Variant:</strong> {form.imageVariant}
                         </Text>
                         <Text fontSize="sm">
-                            <strong>Background:</strong> {form.backgroundStyle}
+                            <strong>File type:</strong> {form.fileType}
                         </Text>
                         <Text fontSize="sm">
                             <strong>Include card count:</strong>{' '}
                             {form.includeCardCount ? 'Yes' : 'No'}
                         </Text>
                         <Text fontSize="sm">
-                            <strong>File type:</strong> {form.fileType}
+                            <strong>Background:</strong> {form.backgroundStyle}
                         </Text>
                     </SimpleGrid>
                     {formState.errors &&
@@ -192,18 +183,6 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                         value: 'stacks',
                                         disabled: true
                                     }
-                                ]}
-                            />
-                        </FilterItem.Wrapper>
-                        <FilterItem.Wrapper label="File type">
-                            <FilterItem.Radio
-                                control={control}
-                                name="fileType"
-                                colorScheme="blue"
-                                options={[
-                                    { label: 'PNG', value: 'png' },
-                                    { label: 'JPEG', value: 'jpeg' },
-                                    { label: 'WebP', value: 'webp' }
                                 ]}
                             />
                         </FilterItem.Wrapper>

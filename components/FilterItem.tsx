@@ -183,8 +183,6 @@ function Toggle<T extends FieldValues>({
 
 Toggle.displayName = 'FilterItem.Toggle'
 
-Toggle.displayName = 'FilterItem.Toggle'
-
 interface FilterItemWrapperProps extends CardBodyProps {
     children: React.ReactNode
     label?: string
