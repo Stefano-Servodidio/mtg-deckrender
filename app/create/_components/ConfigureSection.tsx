@@ -61,7 +61,9 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
             imageVariant: 'grid',
             imageResolution: 'standard',
             backgroundStyle: 'transparent',
-            includeCardCount: true
+            includeCardCount: true,
+            customBackgroundColor: '#FFFFFF',
+            customBackgroundImage: undefined
         },
         resolver: resolver
     })
@@ -130,7 +132,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                 disabled={
                     !cardsData?.cards ||
                     cardsData.cards.length === 0 ||
-                    !formState.isValid
+                    formState.errors.imageSize !== undefined
                 }
             >
                 Generate Deck Image

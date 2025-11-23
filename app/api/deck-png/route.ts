@@ -24,7 +24,9 @@ const defaultOptions: DeckPngOptions = {
     sortBy: 'cmc' as const,
     sortDirection: 'asc' as const,
     fileType: 'png' as const,
-    includeCardCount: true as const
+    includeCardCount: true as const,
+    customBackgroundColor: undefined,
+    customBackgroundImage: undefined
 }
 
 export async function POST(request: NextRequest) {
@@ -233,10 +235,11 @@ export async function POST(request: NextRequest) {
                     )
 
                     // Create base canvas with background style
+                    // For custom images, the image will be used as base in createCompositeImage
                     const canvas = createCanvas(
                         canvasDimensions,
                         options.backgroundStyle,
-                        options.customBackground
+                        options.customBackgroundColor
                     )
 
                     controller.enqueue(
@@ -284,7 +287,9 @@ export async function POST(request: NextRequest) {
                         canvas,
                         cardOperations,
                         overlayOperations,
-                        options.fileType
+                        options.fileType,
+                        options.customBackgroundImage,
+                        canvasDimensions
                     )
 
                     console.log(
@@ -343,7 +348,8 @@ export async function POST(request: NextRequest) {
                 'Content-Type': 'text/plain; charset=utf-8',
                 'Cache-Control': 'no-cache',
                 Connection: 'keep-alive',
-                'X-Accel-Buffering': 'no' // Disable nginx buffering
+                'X-Accel-Buffering': 'no', // Disable nginx buffering
+                'X-File-Type': options.fileType || 'png' // Add file type to response headers
             }
         })
     } catch (error) {
@@ -391,7 +397,11 @@ export async function GET() {
                 imageSize: "'ig_square' | 'ig_portrait' | 'standard' | 'large'",
                 imageVariant: "'grid' | 'stacked'",
                 imageResolution: "'standard' | 'high'",
-                backgroundStyle: "'transparent' | 'white' | 'custom'",
+                backgroundStyle:
+                    "'transparent' | 'custom_color' | 'custom_image'",
+                customBackgroundColor: 'string (hex color for custom_color)',
+                customBackgroundImage:
+                    'string (base64 encoded image for custom_image)',
                 sortBy: "'name' | 'cmc' | 'typeLine' | 'colors' | 'rarity'",
                 sortDirection: "'asc' | 'desc'",
                 fileType: "'png' | 'jpeg' | 'webp'",

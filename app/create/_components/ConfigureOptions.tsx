@@ -1,7 +1,7 @@
 // Configuration options for the create page
 
 import { DeckPngOptions, ImageSize } from '@/types/api'
-import { DropZone } from '@/components/DropZone'
+import { BackgroundImageUpload } from '@/components/BackgroundImageUpload'
 import FilterItem from '@/components/FilterItem'
 import {
     SimpleGrid,
@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react'
 import React, { useEffect } from 'react'
 import { FaCogs, FaPen } from 'react-icons/fa'
+import { HexColorInput, HexColorPicker } from 'react-colorful'
 import { UseFormReturn } from 'react-hook-form'
 export interface ConfigureOptionsProps {
     form: UseFormReturn<DeckPngOptions>
@@ -27,18 +28,12 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
     const [editing, setEditing] = React.useState(false)
     const form = watch()
     const [fileType, backgroundStyle] = watch(['fileType', 'backgroundStyle'])
-    console.log('formState.errors', formState.errors)
-    console.log('form values', hookForm.getValues())
+
     useEffect(() => {
         // If fileType is jpeg and backgroundStyle is transparent, change backgroundStyle to white
         if (fileType === 'jpeg' && backgroundStyle === 'transparent') {
-            hookForm.setValue('backgroundStyle', 'white')
-        } else if (
-            (fileType === 'png' || fileType === 'webp') &&
-            backgroundStyle === 'white'
-        ) {
-            // If fileType is not jpeg and backgroundStyle is white, change backgroundStyle to transparent
-            hookForm.setValue('backgroundStyle', 'transparent')
+            hookForm.setValue('backgroundStyle', 'custom_color')
+            hookForm.setValue('customBackgroundColor', '#FFFFFF')
         }
     }, [fileType, backgroundStyle, hookForm])
 
@@ -108,14 +103,14 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                             <strong>Variant:</strong> {form.imageVariant}
                         </Text>
                         <Text fontSize="sm">
-                            <strong>Background:</strong> {form.backgroundStyle}
+                            <strong>File type:</strong> {form.fileType}
                         </Text>
                         <Text fontSize="sm">
                             <strong>Include card count:</strong>{' '}
                             {form.includeCardCount ? 'Yes' : 'No'}
                         </Text>
                         <Text fontSize="sm">
-                            <strong>File type:</strong> {form.fileType}
+                            <strong>Background:</strong> {form.backgroundStyle}
                         </Text>
                     </SimpleGrid>
                     {formState.errors &&
@@ -202,7 +197,17 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                 ]}
                             />
                         </FilterItem.Wrapper>
-                        <FilterItem.Wrapper label="Background">
+                        <FilterItem.Wrapper label="Include card count">
+                            <FilterItem.Toggle
+                                control={control}
+                                name="includeCardCount"
+                                label="Show quantity on cards"
+                            />
+                        </FilterItem.Wrapper>
+                        <FilterItem.Wrapper
+                            label="Background"
+                            justifyContent={'space-between'}
+                        >
                             <FilterItem.Radio
                                 control={control}
                                 name="backgroundStyle"
@@ -211,33 +216,69 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
                                     {
                                         label: 'Transparent',
                                         value: 'transparent',
-                                        disabled: fileType === 'jpeg'
+                                        disabled: form.fileType === 'jpeg'
                                     },
-                                    { label: 'White', value: 'white' },
                                     {
-                                        label: 'Custom',
-                                        value: 'custom',
-                                        disabled: true
+                                        label: 'Custom Color',
+                                        value: 'custom_color'
+                                    },
+                                    {
+                                        label: 'Custom Image',
+                                        value: 'custom_image'
                                     }
                                 ]}
                             />
-                            {form.backgroundStyle === 'custom' && (
-                                <DropZone
-                                    onFileUpload={() => {}}
-                                    colorScheme="blue"
-                                    wrapperProps={{ mt: 4 }}
-                                />
+                        </FilterItem.Wrapper>
+                        <Box>
+                            {form.backgroundStyle === 'custom_color' && (
+                                <FilterItem.Wrapper label="Custom Background Color">
+                                    <VStack
+                                        spacing={2}
+                                        align="flex-start"
+                                        sx={{
+                                            '.react-colorful': {
+                                                height: '150px',
+                                                borderRadius: '.25rem'
+                                            }
+                                        }}
+                                    >
+                                        <HexColorPicker
+                                            color={form.customBackgroundColor}
+                                            onChange={(color) =>
+                                                hookForm.setValue(
+                                                    'customBackgroundColor',
+                                                    color
+                                                )
+                                            }
+                                        />
+                                        <HexColorInput
+                                            color={form.customBackgroundColor}
+                                            onChange={(color) =>
+                                                hookForm.setValue(
+                                                    'customBackgroundColor',
+                                                    color
+                                                )
+                                            }
+                                        />
+                                    </VStack>
+                                </FilterItem.Wrapper>
                             )}
-                        </FilterItem.Wrapper>
-
-                        <FilterItem.Wrapper label="Include card count">
-                            <FilterItem.Toggle
-                                control={control}
-                                name="includeCardCount"
-                                label="Show quantity on cards"
-                                colorScheme="blue"
-                            />
-                        </FilterItem.Wrapper>
+                            {form.backgroundStyle === 'custom_image' && (
+                                <FilterItem.Wrapper label="Custom Background Image">
+                                    <BackgroundImageUpload
+                                        onImageUpload={(imageData) =>
+                                            hookForm.setValue(
+                                                'customBackgroundImage',
+                                                imageData || undefined
+                                            )
+                                        }
+                                        colorScheme="blue"
+                                        wrapperProps={{ mt: 4 }}
+                                        maxSizeBytes={1024 * 1024}
+                                    />
+                                </FilterItem.Wrapper>
+                            )}
+                        </Box>
                     </SimpleGrid>
                     <HStack width={'100%'} justify="space-between">
                         <Box>

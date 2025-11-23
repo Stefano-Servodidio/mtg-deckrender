@@ -14,7 +14,8 @@ import {
     SwitchProps,
     RadioGroupProps,
     Heading,
-    Box
+    Box,
+    CardBodyProps
 } from '@chakra-ui/react'
 import React from 'react'
 import { Control, Controller, FieldValues, Path } from 'react-hook-form'
@@ -182,11 +183,17 @@ function Toggle<T extends FieldValues>({
 
 Toggle.displayName = 'FilterItem.Toggle'
 
-const Wrapper: React.FC<{
+interface FilterItemWrapperProps extends CardBodyProps {
     children: React.ReactNode
     label?: string
     error?: boolean
-}> = ({ children, label, error }) => (
+}
+const Wrapper: React.FC<FilterItemWrapperProps> = ({
+    children,
+    label,
+    error,
+    ...props
+}) => (
     <Card variant="outlined" size="sm">
         {label && (
             <CardHeader>
@@ -195,7 +202,13 @@ const Wrapper: React.FC<{
                 </Heading>
             </CardHeader>
         )}
-        <CardBody paddingTop={0} gap={2} display="flex" flexDirection="column">
+        <CardBody
+            paddingTop={0}
+            gap={2}
+            display="flex"
+            flexDirection="column"
+            {...props}
+        >
             {children}
         </CardBody>
     </Card>
