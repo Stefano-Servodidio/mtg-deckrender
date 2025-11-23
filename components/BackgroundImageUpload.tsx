@@ -33,7 +33,6 @@ export function BackgroundImageUpload({
 }: BackgroundImageUploadProps) {
     const [fileName, setFileName] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
-
     const onDrop = useCallback(
         (acceptedFiles: File[]) => {
             setError(null)
@@ -41,14 +40,6 @@ export function BackgroundImageUpload({
             if (acceptedFiles.length === 0) return
 
             const file = acceptedFiles[0]
-
-            // Check file size
-            if (file.size > maxSizeBytes) {
-                setError(
-                    `File size exceeds ${(maxSizeBytes / (1024 * 1024)).toFixed(0)}MB limit`
-                )
-                return
-            }
 
             // Read file as base64
             const reader = new FileReader()
@@ -62,7 +53,7 @@ export function BackgroundImageUpload({
             }
             reader.readAsDataURL(file)
         },
-        [onImageUpload, maxSizeBytes]
+        [onImageUpload]
     )
 
     const handleClear = () => {
@@ -71,16 +62,18 @@ export function BackgroundImageUpload({
         onImageUpload(null)
     }
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'image/png': ['.png'],
-            'image/jpeg': ['.jpg', '.jpeg'],
-            'image/webp': ['.webp']
-        },
-        multiple: false,
-        maxSize: maxSizeBytes
-    })
+    const { getRootProps, getInputProps, isDragActive, fileRejections } =
+        useDropzone({
+            onDrop,
+            accept: {
+                'image/png': ['.png'],
+                'image/jpeg': ['.jpg', '.jpeg'],
+                'image/webp': ['.webp']
+            },
+            multiple: false,
+            maxFiles: 1,
+            maxSize: maxSizeBytes
+        })
 
     const bg = useColorModeValue('gray.50', 'gray.700')
     const borderColor = isDragActive ? `${colorScheme}.400` : 'gray.300'
@@ -176,11 +169,12 @@ export function BackgroundImageUpload({
                     )}
                 </VStack>
             </Box>
-            {error && (
-                <Text fontSize="xs" color="red.500" mt={2}>
-                    {error}
-                </Text>
-            )}
+            {!!error ||
+                (fileRejections.length > 0 && (
+                    <Text mt={2} fontSize="sm" color="red.500">
+                        {error || fileRejections[0].errors[0].message}
+                    </Text>
+                ))}
         </Box>
     )
 }

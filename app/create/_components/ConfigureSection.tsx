@@ -68,7 +68,6 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
         resolver: resolver
     })
     const { getValues, formState } = form
-    console.log('Form State:', formState)
 
     const handleGenerate = () => {
         analytics.trackButtonClick('Generate Deck Image', {

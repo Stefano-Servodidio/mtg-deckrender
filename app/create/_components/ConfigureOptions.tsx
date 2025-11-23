@@ -28,8 +28,7 @@ const ConfigureOptions: React.FC<ConfigureOptionsProps> = ({
     const [editing, setEditing] = React.useState(false)
     const form = watch()
     const [fileType, backgroundStyle] = watch(['fileType', 'backgroundStyle'])
-    console.log('formState.errors', formState.errors)
-    console.log('form values', hookForm.getValues())
+
     useEffect(() => {
         // If fileType is jpeg and backgroundStyle is transparent, change backgroundStyle to white
         if (fileType === 'jpeg' && backgroundStyle === 'transparent') {
