@@ -76,6 +76,14 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
         handleGenerateImage(getValues())
     }
 
+    if (!cardsData?.cards || cardsData.cards.length === 0) {
+        return (
+            <Text color="gray.500" textAlign="center">
+                Upload your decklist first to configure the image.
+            </Text>
+        )
+    }
+
     return (
         <VStack spacing={6}>
             {/* Configuration Form */}
@@ -130,9 +138,7 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
                 }}
                 transition="all 0.2s"
                 disabled={
-                    !cardsData?.cards ||
-                    cardsData.cards.length === 0 ||
-                    formState.errors.imageSize !== undefined
+                    formState.errors.imageSize !== undefined || isGenerating
                 }
             >
                 Generate Deck Image
