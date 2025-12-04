@@ -109,9 +109,7 @@ Cypress.Commands.add(
         if (params) {
             // Check if gtag was called with the event and matching parameters
             cy.get('@gtag').should((stub) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const calls = (stub as any).getCalls()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const eventCall = calls.find(
                     (call: any) =>
                         call.args[0] === 'event' && call.args[1] === eventName
@@ -135,9 +133,7 @@ Cypress.Commands.add(
         } else {
             // Just check if the event was called
             cy.get('@gtag').should((stub) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const calls = (stub as any).getCalls()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const eventCall = calls.find(
                     (call: any) =>
                         call.args[0] === 'event' && call.args[1] === eventName
@@ -154,9 +150,7 @@ Cypress.Commands.add(
 // Assert that GA page view was tracked
 Cypress.Commands.add('assertGAPageView', (pagePath?: string) => {
     cy.get('@gtag').should((stub) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const calls = (stub as any).getCalls()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const pageViewCall = calls.find(
             (call: any) =>
                 call.args[0] === 'event' && call.args[1] === 'page_view'

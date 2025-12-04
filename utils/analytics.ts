@@ -43,7 +43,7 @@ export const initGA = (measurementId: string): void => {
 
     // Define gtag function
     window.gtag = function gtag() {
-        // eslint-disable-next-line prefer-rest-params
+         
         window.dataLayer?.push(arguments)
     }
 

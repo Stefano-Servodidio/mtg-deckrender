@@ -211,7 +211,7 @@ describe('Google Analytics 4 Integration', () => {
             // In actual app, GA component won't render without NEXT_PUBLIC_GA_ID
             // Note: This would require a separate test environment without GA_ID set
 
-            cy.window().then((win) => {
+            cy.window().then((_win) => {
                 // If GA is configured, gtag should exist (either real or stubbed)
                 // If not configured, the GoogleAnalytics component won't render
                 // This is tested in unit tests rather than E2E
@@ -224,9 +224,7 @@ describe('Google Analytics 4 Integration', () => {
             cy.get('[data-testid="hero-cta-button"]').click()
 
             cy.get('@gtag').should((stub) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const calls = (stub as any).getCalls()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const buttonClickCall = calls.find(
                     (call: any) =>
                         call.args[0] === 'event' &&
@@ -253,9 +251,7 @@ describe('Google Analytics 4 Integration', () => {
             ).click()
 
             cy.get('@gtag').should((stub) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const calls = (stub as any).getCalls()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const linkClickCall = calls.find(
                     (call: any) =>
                         call.args[0] === 'event' &&

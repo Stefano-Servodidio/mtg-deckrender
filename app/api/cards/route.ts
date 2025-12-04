@@ -195,6 +195,7 @@ export async function POST(request: NextRequest) {
                                     })}\n\n`
                                 )
                             )
+                            // eslint-disable-next-line unused-imports/no-unused-vars
                         } catch (_fetchError) {
                             // Fallback to mock data for demonstration
                             console.log(

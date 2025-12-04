@@ -9,7 +9,6 @@ declare global {
         gtag?: (
             command: 'config' | 'event' | 'js' | 'set',
             targetIdOrDate: string | Date,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             config?: Record<string, any>
         ) => void
         dataLayer?: unknown[]
@@ -21,7 +20,6 @@ export interface GAEventParams {
     event_category?: string
     event_label?: string
     value?: number
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any
 }
 
