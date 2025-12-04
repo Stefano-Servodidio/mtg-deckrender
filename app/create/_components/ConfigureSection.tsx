@@ -78,7 +78,11 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
 
     if (!cardsData?.cards || cardsData.cards.length === 0) {
         return (
-            <Text color="gray.500" textAlign="center">
+            <Text
+                data-testid="no-cards-text"
+                color="gray.500"
+                textAlign="center"
+            >
                 Upload your decklist first to configure the image.
             </Text>
         )

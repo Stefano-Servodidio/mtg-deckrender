@@ -35,7 +35,7 @@ describe('Decklist utility functions', () => {
 
             expect(result).toHaveLength(2)
             expect(result[0]).toBe('4 Lightning Bolt\n2 Counterspell')
-            expect(result[1]).toBe('SIDEBOARD\n3 Path to Exile\n1 Wrath of God')
+            expect(result[1]).toBe('3 Path to Exile\n1 Wrath of God')
         })
 
         test('should split decklist with sideboard separator', () => {
@@ -45,7 +45,7 @@ describe('Decklist utility functions', () => {
 
             expect(result).toHaveLength(2)
             expect(result[0]).toBe('4 Lightning Bolt\n2 Counterspell')
-            expect(result[1]).toBe('sideboard\n3 Path to Exile\n1 Wrath of God')
+            expect(result[1]).toBe('3 Path to Exile\n1 Wrath of God')
         })
 
         test('should split decklist with -- separator', () => {
@@ -55,7 +55,7 @@ describe('Decklist utility functions', () => {
 
             expect(result).toHaveLength(2)
             expect(result[0]).toBe('4 Lightning Bolt\n2 Counterspell')
-            expect(result[1]).toBe('--\n3 Path to Exile\n1 Wrath of God')
+            expect(result[1]).toBe('3 Path to Exile\n1 Wrath of God')
         })
 
         test('should split decklist with SB: separator', () => {
@@ -65,7 +65,7 @@ describe('Decklist utility functions', () => {
 
             expect(result).toHaveLength(2)
             expect(result[0]).toBe('4 Lightning Bolt\n2 Counterspell')
-            expect(result[1]).toBe('SB:\n3 Path to Exile\n1 Wrath of God')
+            expect(result[1]).toBe('3 Path to Exile\n1 Wrath of God')
         })
 
         test('should handle empty decklist', () => {

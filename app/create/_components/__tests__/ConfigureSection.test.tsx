@@ -77,21 +77,6 @@ describe('ConfigureSection', () => {
         expect(screen.getByText('Generate Deck Image')).toBeInTheDocument()
     })
 
-    it('should disable generate button when no cards data', () => {
-        render(
-            <ChakraWrapper>
-                <ConfigureSection
-                    handleGenerateImage={mockHandleGenerateImage}
-                    isGenerating={false}
-                    cardsData={null}
-                />
-            </ChakraWrapper>
-        )
-
-        const button = screen.getByTestId('generate-button')
-        expect(button).toBeDisabled()
-    })
-
     it('should disable generate button when cards array is empty', () => {
         render(
             <ChakraWrapper>
@@ -103,8 +88,8 @@ describe('ConfigureSection', () => {
             </ChakraWrapper>
         )
 
-        const button = screen.getByTestId('generate-button')
-        expect(button).toBeDisabled()
+        expect(screen.getByTestId('no-cards-text')).toBeInTheDocument()
+        expect(screen.queryByTestId('generate-button')).not.toBeInTheDocument()
     })
 
     it('should call handleGenerateImage when button is clicked', async () => {

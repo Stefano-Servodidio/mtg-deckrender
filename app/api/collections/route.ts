@@ -29,14 +29,8 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             )
         }
-        console.log(chalk.yellow('Raw decklist'))
-        console.log(chalk.magentaBright(JSON.stringify(decklist, null, 2)))
 
         const groups = parseDecklist(decklist)
-        console.log(
-            chalk.yellow('Parsed', groups.length, 'groups from decklist')
-        )
-        console.log(chalk.magentaBright(JSON.stringify(groups, null, 2)))
 
         // Parse the decklist to get unique cards and their quantities
         const uniqueCards = groups
@@ -59,10 +53,6 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        console.log(
-            chalk.yellow('Fetching data for', uniqueCards.length, 'cards')
-        )
-        console.log(chalk.magentaBright(JSON.stringify(uniqueCards, null, 2)))
         // Create a readable stream for real-time progress updates
         const stream = new ReadableStream({
             async start(controller) {

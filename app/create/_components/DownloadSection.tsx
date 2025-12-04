@@ -18,7 +18,11 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 
     if (!generatedImage) {
         return (
-            <Text color="gray.500" textAlign="center">
+            <Text
+                data-testid="no-image-text"
+                color="gray.500"
+                textAlign="center"
+            >
                 Generate your deck image first to download it.
             </Text>
         )

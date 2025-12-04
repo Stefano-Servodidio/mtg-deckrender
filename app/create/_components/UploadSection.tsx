@@ -57,7 +57,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
         const lineCount = decklistText.trim().split('\n').length
         analytics.trackDeckUpload(lineCount)
 
-        await fetchCards(decklistText)
+        await fetchCards(decklistText.trim())
     }
 
     const handleFileUpload = useCallback(
@@ -70,7 +70,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 const reader = new FileReader()
                 reader.onload = (e) => {
                     const content = e.target?.result as string
-                    setDecklistText(content)
+                    setDecklistText(content.trim)
                     toast({
                         title: 'File uploaded successfully',
                         description: 'Your decklist has been loaded.',
