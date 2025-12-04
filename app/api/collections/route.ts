@@ -29,8 +29,14 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             )
         }
+        console.log(chalk.yellow('Raw decklist'))
+        console.log(chalk.magentaBright(JSON.stringify(decklist, null, 2)))
 
         const groups = parseDecklist(decklist)
+        console.log(
+            chalk.yellow('Parsed', groups.length, 'groups from decklist')
+        )
+        console.log(chalk.magentaBright(JSON.stringify(groups, null, 2)))
 
         // Parse the decklist to get unique cards and their quantities
         const uniqueCards = groups
@@ -53,6 +59,10 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        console.log(
+            chalk.yellow('Fetching data for', uniqueCards.length, 'cards')
+        )
+        console.log(chalk.magentaBright(JSON.stringify(uniqueCards, null, 2)))
         // Create a readable stream for real-time progress updates
         const stream = new ReadableStream({
             async start(controller) {
@@ -83,6 +93,7 @@ export async function POST(request: NextRequest) {
                     }
 
                     let processedCards = 0
+                    let cachedCardsCount = 0
 
                     // Process each batch
                     for (
@@ -107,6 +118,7 @@ export async function POST(request: NextRequest) {
                                     groupId: card.groupId
                                 }
                                 cachedCards.push(cardData)
+                                cachedCardsCount++
                                 console.log(
                                     chalk.cyan(
                                         `Cache hit for card: ${card.name}`
@@ -175,7 +187,6 @@ export async function POST(request: NextRequest) {
                                 )
 
                                 if (!response.ok) {
-                                    // If batch request fails, fall back to mock data for all cards in batch
                                     console.log(
                                         chalk.yellow(
                                             `Batch ${batchIndex + 1} failed: `
@@ -190,28 +201,6 @@ export async function POST(request: NextRequest) {
                                         },
                                         { status: 500 }
                                     )
-
-                                    // for (const card of cardsToFetch) {
-                                    //     const mockCardData = createMockCardItem(
-                                    //         card.name,
-                                    //         card.quantity,
-                                    //         card.groupId
-                                    //     )
-                                    //     cards.push(mockCardData)
-
-                                    //     processedCards++
-                                    //     controller.enqueue(
-                                    //         new TextEncoder().encode(
-                                    //             `data: ${JSON.stringify({
-                                    //                 type: 'progress',
-                                    //                 current: processedCards,
-                                    //                 total: totalCards,
-                                    //                 message: `Loaded ${card.name} (mock data)`,
-                                    //                 card: mockCardData
-                                    //             })}\n\n`
-                                    //         )
-                                    //     )
-                                    // }
                                 } else {
                                     const batchData = await response.json()
                                     const foundCards = batchData.data || []
@@ -361,12 +350,23 @@ export async function POST(request: NextRequest) {
                         }
                     }
 
+                    let sortedByGroup = cards
+                    if (
+                        cachedCardsCount > 0 &&
+                        cachedCardsCount < cards.length
+                    ) {
+                        // If we used a mix of  cached and non-cached cards, re-sort the final list by groupId to maintain original order
+                        sortedByGroup = cards.sort(
+                            (a, b) => a.groupId - b.groupId
+                        )
+                    }
+
                     // Send final result
                     controller.enqueue(
                         new TextEncoder().encode(
                             `data: ${JSON.stringify({
                                 type: 'complete',
-                                result: { cards, errors },
+                                result: { cards: sortedByGroup, errors },
                                 message: `Completed! Loaded ${cards.length} cards`
                             })}\n\n`
                         )

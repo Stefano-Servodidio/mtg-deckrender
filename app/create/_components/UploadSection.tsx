@@ -57,7 +57,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
         const lineCount = decklistText.trim().split('\n').length
         analytics.trackDeckUpload(lineCount)
 
-        await fetchCards(decklistText.trim())
+        await fetchCards(decklistText)
     }
 
     const handleFileUpload = useCallback(
