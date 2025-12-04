@@ -5,32 +5,20 @@ import { CardItem } from '@/types/api'
 import { ScryfallCard } from '@/types/scryfall'
 
 const decklistSeparators = [
+    'SIDEBOARD',
+    'Sideboard',
+    'sideboard',
+    'SIDEBOARD:',
+    'Sideboard:',
+    'sideboard:',
+    'SB:',
+    'sb:',
+    'SB',
+    'Sb',
+    'sb',
+    '--',
     '\n\n',
-    '\r\n\r\n',
-    '\nSIDEBOARD\n',
-    '\nSideboard\n',
-    '\nsideboard\n',
-    '\nSIDEBOARD:\n',
-    '\nSideboard:\n',
-    '\nsideboard:\n',
-    '\nSB:\n',
-    '\nsb:\n',
-    '\nSB\n',
-    '\nSb\n',
-    '\nsb\n',
-    '\n--\n',
-    '\n\nSIDEBOARD\n',
-    '\n\nSideboard\n',
-    '\n\nsideboard\n',
-    '\n\nSIDEBOARD:\n',
-    '\n\nSideboard:\n',
-    '\n\nsideboard:\n',
-    '\n\nSB:\n',
-    '\n\nsb:\n',
-    '\n\nSB\n',
-    '\n\nSb\n',
-    '\n\nsb\n',
-    '\n\n--\n'
+    '\r\n\r\n'
 ]
 
 const decklistSeparatorRegex = new RegExp(decklistSeparators.join('|'), 'g')
@@ -49,9 +37,9 @@ export function parseDecklist(decklist: string): string[] {
     let cardStrings: string[] = parsedList
         .split(decklistSeparatorRegex)
         .reduce<string[]>((acc, section) => {
-            const trimmed = section.trim()
-            if (trimmed) {
-                acc.push(trimmed)
+            const cleaned = section.trim().replace(decklistSeparatorRegex, '')
+            if (cleaned) {
+                acc.push(cleaned)
             }
             return acc
         }, [])

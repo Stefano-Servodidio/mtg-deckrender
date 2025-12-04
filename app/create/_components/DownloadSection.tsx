@@ -16,6 +16,14 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 }) => {
     const analytics = useAnalytics()
 
+    if (!generatedImage) {
+        return (
+            <Text color="gray.500" textAlign="center">
+                Generate your deck image first to download it.
+            </Text>
+        )
+    }
+
     const handleDownload = async () => {
         analytics.trackImageDownload('png', cardCount)
 
@@ -52,62 +60,52 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 
     return (
         <VStack spacing={6}>
-            {generatedImage ? (
-                <>
-                    <Text color="gray.600" textAlign="center">
-                        Your deck image has been generated successfully!
-                    </Text>
+            <Text color="gray.600" textAlign="center">
+                Your deck image has been generated successfully!
+            </Text>
 
-                    {/* Generated Image Preview */}
-                    <Box
-                        borderRadius="md"
-                        overflow="hidden"
-                        border="1px solid"
-                        borderColor="gray.200"
-                        maxW="400px"
-                        // Add checkered background for transparency indication
-                        backgroundImage="repeating-conic-gradient(#f0f0f0 0% 25%, transparent 0% 50%)"
-                        backgroundSize="20px 20px"
-                    >
-                        <Image
-                            src={generatedImage}
-                            alt="Generated deck image"
-                            width={400}
-                            height={500}
-                            style={{
-                                objectFit: 'scale-down'
-                            }}
-                        />
-                    </Box>
+            {/* Generated Image Preview */}
+            <Box
+                borderRadius="md"
+                overflow="hidden"
+                border="1px solid"
+                borderColor="gray.200"
+                maxW="400px"
+                // Add checkered background for transparency indication
+                backgroundImage="repeating-conic-gradient(#f0f0f0 0% 25%, transparent 0% 50%)"
+                backgroundSize="20px 20px"
+            >
+                <Image
+                    src={generatedImage}
+                    alt="Generated deck image"
+                    width={400}
+                    height={500}
+                    style={{
+                        objectFit: 'scale-down'
+                    }}
+                />
+            </Box>
 
-                    {/* Download Button */}
-                    <Button
-                        data-testid="download-button"
-                        size="lg"
-                        colorScheme="green"
-                        leftIcon={<FaDownload />}
-                        onClick={handleDownload}
-                        w={{
-                            base: 'full',
-                            md: 'auto'
-                        }}
-                        px={8}
-                        _hover={{
-                            transform: 'translateY(-2px)',
-                            boxShadow: 'lg'
-                        }}
-                        transition="all 0.2s"
-                    >
-                        {isIOS && isSafari
-                            ? 'Open Image in New Tab'
-                            : 'Download PNG'}
-                    </Button>
-                </>
-            ) : (
-                <Text color="gray.500" textAlign="center">
-                    Generate your deck image first to download it.
-                </Text>
-            )}
+            {/* Download Button */}
+            <Button
+                data-testid="download-button"
+                size="lg"
+                colorScheme="green"
+                leftIcon={<FaDownload />}
+                onClick={handleDownload}
+                w={{
+                    base: 'full',
+                    md: 'auto'
+                }}
+                px={8}
+                _hover={{
+                    transform: 'translateY(-2px)',
+                    boxShadow: 'lg'
+                }}
+                transition="all 0.2s"
+            >
+                {isIOS && isSafari ? 'Open Image in New Tab' : 'Download PNG'}
+            </Button>
         </VStack>
     )
 }
