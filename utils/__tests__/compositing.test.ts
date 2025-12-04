@@ -176,7 +176,11 @@ describe('Compositing utility functions', () => {
         })
 
         test('should create canvas with white background', () => {
-            const result = createCanvas(mockDimensions, 'white')
+            const result = createCanvas(
+                mockDimensions,
+                'custom_color',
+                '#FFFFFF'
+            )
             expect(result).toBeDefined()
         })
 

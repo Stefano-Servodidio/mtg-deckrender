@@ -33,7 +33,7 @@ describe('useDeckPng', () => {
         rarity: 'common',
         image_uri: 'https://example.com/card.jpg',
         colors: ['R'],
-        legalities: {},
+        legalities: {} as CardItem['legalities'],
         quantity: 4,
         groupId: 1
     }

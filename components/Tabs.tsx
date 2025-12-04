@@ -7,7 +7,7 @@ import {
     TabsProps as ChakraTabsProps
 } from '@chakra-ui/react'
 
-export interface TabsProps extends ChakraTabsProps {
+export interface TabsProps extends Omit<ChakraTabsProps, 'children'> {
     name: string
     tabs: { title: string; content: React.ReactNode }[]
 }

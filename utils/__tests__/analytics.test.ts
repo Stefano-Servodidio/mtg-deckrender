@@ -126,7 +126,9 @@ describe('Analytics Utilities', () => {
             expect(typeof window.gtag).toBe('function')
 
             // The dataLayer should contain the initialization calls
-            expect(window.dataLayer?.length).toBeGreaterThan(0)
+            expect(
+                (window.dataLayer as unknown as Array<unknown>)?.length
+            ).toBeGreaterThan(0)
         })
 
         it('should not throw when window is undefined', () => {
