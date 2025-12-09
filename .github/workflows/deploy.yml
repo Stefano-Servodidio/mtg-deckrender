@@ -1,9 +1,8 @@
 name: Deploy
 
 on:
-    push:
-        tags:
-            - 'v*'
+    release:
+        types: ['published']
 
 jobs:
     deploy:
@@ -24,15 +23,9 @@ jobs:
               run: npm run build
 
             - name: Deploy to Netlify
-              uses: nwtgck/actions-netlify@v2.1
+              uses: jsmrcaga/action-netlify-deploy@v2.0.0
               with:
-                  publish-dir: './.next'
-                  production-deploy: true
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  deploy-message: 'Deploy ${{ github.ref_name }}'
-                  enable-pull-request-comment: false
-                  enable-commit-comment: false
-              env:
                   NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
                   NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-              timeout-minutes: 5
+                  NETLIFY_DEPLOY_MESSAGE: 'Deploy ${{ github.ref_name }}'
+                  NETLIFY_DEPLOY_TO_PROD: true
