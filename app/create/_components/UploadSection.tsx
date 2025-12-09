@@ -70,7 +70,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 const reader = new FileReader()
                 reader.onload = (e) => {
                     const content = e.target?.result as string
-                    setDecklistText(content.trim)
+                    setDecklistText(content.trim())
                     toast({
                         title: 'File uploaded successfully',
                         description: 'Your decklist has been loaded.',
@@ -224,7 +224,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                     boxShadow: 'lg'
                 }}
                 transition="all 0.2s"
-                disabled={!decklistText.trim() || isLoadingCards}
+                disabled={!decklistText || isLoadingCards}
             >
                 Upload Decklist
             </Button>
