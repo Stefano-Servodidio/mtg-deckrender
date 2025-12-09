@@ -66,15 +66,8 @@ jobs:
               run: npm run build
 
             - name: Deploy to Netlify
-              uses: nwtgck/actions-netlify@v2.1
-              with:
-                  publish-dir: './.next'
-                  production-deploy: true
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  deploy-message: 'Deploy ${{ github.ref_name }}'
-                  enable-pull-request-comment: false
-                  enable-commit-comment: false
+              run: npx netlify-cli deploy --prod --message "Deploy v${{ steps.version.outputs.new_version }}"
               env:
                   NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
                   NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-              timeout-minutes: 5
+              timeout-minutes: 10
