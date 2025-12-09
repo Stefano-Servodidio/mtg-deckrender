@@ -62,9 +62,6 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build
-              run: npm run build
-
             - name: Deploy to Netlify
               run: npx netlify-cli deploy --prod --message "Deploy v${{ steps.version.outputs.new_version }}"
               env:
