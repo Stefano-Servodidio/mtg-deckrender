@@ -51,10 +51,8 @@ jobs:
                   npm version $VERSION_TYPE -m "%s release"
                   echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-            - name: Push changes
-              run: |
-                  git push
-                  git push --tags
+            - name: Push version commit
+              run: git push
 
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v1
