@@ -24,7 +24,7 @@ jobs:
 
             - uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: 22
                   cache: 'npm'
 
             - name: Configure Git
@@ -48,7 +48,7 @@ jobs:
               id: version
               run: |
                   VERSION_TYPE="${{ github.event.inputs.version_type || 'patch' }}"
-                  npm version $VERSION_TYPE -m "chore: bump version to %s [skip ci]"
+                  npm version $VERSION_TYPE -m "%s release"
                   echo "new_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
             - name: Push changes
@@ -57,11 +57,12 @@ jobs:
                   git push --tags
 
             - name: Create GitHub Release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              uses: softprops/action-gh-release@v1
               with:
                   tag_name: v${{ steps.version.outputs.new_version }}
-                  release_name: Release v${{ steps.version.outputs.new_version }}
+                  name: Release v${{ steps.version.outputs.new_version }}
                   draft: false
                   prerelease: false
+                  generate_release_notes: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
