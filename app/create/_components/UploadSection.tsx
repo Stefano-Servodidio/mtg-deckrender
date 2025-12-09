@@ -63,27 +63,37 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     const handleFileUpload = useCallback(
         (files: File[]) => {
             const file = files[0]
-            if (file && file.type === 'text/plain') {
-                // Track file upload
-                analytics.trackFileUpload(file.name, file.type)
+            try {
+                if (file && file.type === 'text/plain') {
+                    // Track file upload
+                    analytics.trackFileUpload(file.name, file.type)
 
-                const reader = new FileReader()
-                reader.onload = (e) => {
-                    const content = e.target?.result as string
-                    setDecklistText(content.trim())
+                    const reader = new FileReader()
+                    reader.onload = (e) => {
+                        const content = e.target?.result as string
+                        setDecklistText(content.trim())
+                        toast({
+                            title: 'File uploaded successfully',
+                            description: 'Your decklist has been loaded.',
+                            status: 'success',
+                            duration: 3000,
+                            isClosable: true
+                        })
+                    }
+                    reader.readAsText(file)
+                } else {
                     toast({
-                        title: 'File uploaded successfully',
-                        description: 'Your decklist has been loaded.',
-                        status: 'success',
+                        title: 'Invalid file type',
+                        description: 'Please upload a text file (.txt).',
+                        status: 'error',
                         duration: 3000,
                         isClosable: true
                     })
                 }
-                reader.readAsText(file)
-            } else {
+            } catch (error) {
                 toast({
-                    title: 'Invalid file type',
-                    description: 'Please upload a text file (.txt).',
+                    title: 'File upload error',
+                    description: 'An error occurred while uploading the file.',
                     status: 'error',
                     duration: 3000,
                     isClosable: true
