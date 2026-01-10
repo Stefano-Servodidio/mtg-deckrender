@@ -29,8 +29,6 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
     }
 
     const handleDownload = async () => {
-        analytics.trackImageDownload('png', cardCount)
-
         try {
             // For iOS Safari, open in new tab instead of downloading
             // This avoids the unreliable download behavior in iOS Safari
@@ -46,12 +44,16 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
             const response = await fetch(generatedImage!)
             const blob = await response.blob()
 
+            // Infer file type from blob MIME type (e.g., 'image/png' -> 'png')
+            const fileType = blob.type.split('/')[1] || 'png'
+            analytics.trackImageDownload(fileType, cardCount)
+
             // Use data URL for download
             const reader = new FileReader()
             reader.onloadend = () => {
                 const link = document.createElement('a')
                 link.href = reader.result as string
-                link.download = `mtg-deck-${Date.now()}.png`
+                link.download = `mtg-deck-render-${Date.now()}.${fileType}`
                 document.body.appendChild(link)
                 link.click()
                 document.body.removeChild(link)
@@ -108,7 +110,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                 }}
                 transition="all 0.2s"
             >
-                {isIOS && isSafari ? 'Open Image in New Tab' : 'Download PNG'}
+                {isIOS && isSafari ? 'Open Image in New Tab' : `Download Image`}
             </Button>
         </VStack>
     )
