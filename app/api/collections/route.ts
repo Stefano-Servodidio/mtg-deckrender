@@ -10,6 +10,7 @@ import {
 import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
+import { createSSEStream } from '@/utils/stream'
 
 export async function POST(request: NextRequest) {
     if (isMaintenanceMode()) {
@@ -54,263 +55,215 @@ export async function POST(request: NextRequest) {
         }
 
         // Create a readable stream for real-time progress updates
-        const stream = new ReadableStream({
-            async start(controller) {
-                const cards: CardItem[] = []
-                const errors: string[] = []
-                const now = Date.now()
-                const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in ms
-                const totalCards = uniqueCards.length
-                const BATCH_SIZE = 75
+        return createSSEStream(async (controller) => {
+            const cards: CardItem[] = []
+            const errors: string[] = []
+            const now = Date.now()
+            const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in ms
+            const totalCards = uniqueCards.length
+            const BATCH_SIZE = 75
 
-                try {
-                    // Send initial progress
-                    controller.enqueue(
-                        new TextEncoder().encode(
-                            `data: ${JSON.stringify({
-                                type: 'progress',
-                                current: 0,
-                                total: totalCards,
-                                message: 'Starting to fetch cards...'
-                            })}\n\n`
+            // Send initial progress
+            controller.send({
+                type: 'progress',
+                current: 0,
+                total: totalCards,
+                message: 'Starting to fetch cards...'
+            })
+
+            // Split cards into batches
+            const batches: (typeof uniqueCards)[] = []
+            for (let i = 0; i < uniqueCards.length; i += BATCH_SIZE) {
+                batches.push(uniqueCards.slice(i, i + BATCH_SIZE))
+            }
+
+            let processedCards = 0
+            let cachedCardsCount = 0
+
+            // Process each batch
+            for (
+                let batchIndex = 0;
+                batchIndex < batches.length;
+                batchIndex++
+            ) {
+                const batch = batches[batchIndex]
+
+                // Check cache first and separate cached vs non-cached cards
+                const cachedCards: CardItem[] = []
+                const cardsToFetch: typeof uniqueCards = []
+
+                for (const card of batch) {
+                    const cacheKey = card.name.toLowerCase()
+                    const cached = collectionCardCache.get(cacheKey)
+
+                    if (cached && cached.expires > now) {
+                        const cardData = {
+                            ...cached.data,
+                            quantity: card.quantity,
+                            groupId: card.groupId
+                        }
+                        cachedCards.push(cardData)
+                        cachedCardsCount++
+                        console.log(
+                            chalk.cyan(`Cache hit for card: ${card.name}`)
                         )
-                    )
 
-                    // Split cards into batches
-                    const batches: (typeof uniqueCards)[] = []
-                    for (let i = 0; i < uniqueCards.length; i += BATCH_SIZE) {
-                        batches.push(uniqueCards.slice(i, i + BATCH_SIZE))
+                        processedCards++
+                        // Send progress update for cached card
+                        controller.send({
+                            type: 'progress',
+                            current: processedCards,
+                            total: totalCards,
+                            message: `Loaded ${card.name} (cached)`,
+                            card: cardData
+                        })
+                    } else {
+                        cardsToFetch.push(card)
                     }
+                }
 
-                    let processedCards = 0
-                    let cachedCardsCount = 0
+                cards.push(...cachedCards)
 
-                    // Process each batch
-                    for (
-                        let batchIndex = 0;
-                        batchIndex < batches.length;
-                        batchIndex++
-                    ) {
-                        const batch = batches[batchIndex]
+                // Fetch non-cached cards using Collections API
+                if (cardsToFetch.length > 0) {
+                    // Send progress update for batch fetching
+                    controller.send({
+                        type: 'progress',
+                        current: processedCards,
+                        total: totalCards,
+                        message: `Fetching batch ${batchIndex + 1}/${batches.length} (${cardsToFetch.length} cards)...`
+                    })
 
-                        // Check cache first and separate cached vs non-cached cards
-                        const cachedCards: CardItem[] = []
-                        const cardsToFetch: typeof uniqueCards = []
+                    try {
+                        const identifiers = cardsToFetch.map((card) => ({
+                            name: card.name
+                        }))
 
-                        for (const card of batch) {
-                            const cacheKey = card.name.toLowerCase()
-                            const cached = collectionCardCache.get(cacheKey)
+                        const response = await fetch(
+                            `${process.env.API_URL_SCRYFALL}/cards/collection`,
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'User-Agent':
+                                        process.env.API_USER_AGENT ||
+                                        'mtg-deck-to-png/1.0'
+                                },
+                                body: JSON.stringify({ identifiers })
+                            }
+                        )
 
-                            if (cached && cached.expires > now) {
-                                const cardData = {
-                                    ...cached.data,
-                                    quantity: card.quantity,
-                                    groupId: card.groupId
-                                }
-                                cachedCards.push(cardData)
-                                cachedCardsCount++
-                                console.log(
-                                    chalk.cyan(
-                                        `Cache hit for card: ${card.name}`
-                                    )
+                        console.log(
+                            chalk.cyan(
+                                `Fetching batch ${batchIndex + 1}, Status: ${response.status}`
+                            )
+                        )
+
+                        if (!response.ok) {
+                            console.log(
+                                chalk.yellow(
+                                    `Batch ${batchIndex + 1} failed: `
+                                ),
+                                response.status,
+                                response.statusText
+                            )
+
+                            // Add all cards to errors and continue with mock data
+                            for (const card of cardsToFetch) {
+                                errors.push(card.name)
+                                const mockCardData = createMockCardItem(
+                                    card.name,
+                                    card.quantity,
+                                    card.groupId
                                 )
+                                cards.push(mockCardData)
 
                                 processedCards++
-                                // Send progress update for cached card
-                                controller.enqueue(
-                                    new TextEncoder().encode(
-                                        `data: ${JSON.stringify({
+                                controller.send({
+                                    type: 'progress',
+                                    current: processedCards,
+                                    total: totalCards,
+                                    message: `Batch ${batchIndex + 1} failed, using mock data for ${card.name}`,
+                                    card: mockCardData
+                                })
+                            }
+                        } else {
+                            const batchData = await response.json()
+                            const foundCards = batchData.data || []
+
+                            // Process each card in the fetch list
+                            for (const card of cardsToFetch) {
+                                const cacheKey = card.name.toLowerCase()
+                                let scryfallData = null
+
+                                for (const foundCard of foundCards) {
+                                    // Exact match first
+                                    if (
+                                        foundCard.name.toLowerCase() ===
+                                        cacheKey
+                                    ) {
+                                        scryfallData = foundCard
+                                        break
+                                    } else if (
+                                        foundCard.name
+                                            .toLowerCase()
+                                            .includes(cacheKey) &&
+                                        !cards.find(
+                                            (c) =>
+                                                c.name.toLowerCase() ===
+                                                foundCard.name.toLowerCase()
+                                        )
+                                    ) {
+                                        // Partial match if no exact match and not already added
+                                        scryfallData = foundCard
+                                    }
+                                }
+
+                                if (scryfallData) {
+                                    const cardData = createCardItem(
+                                        scryfallData,
+                                        card.quantity,
+                                        card.groupId
+                                    )
+
+                                    if (cardData.image_uri === null) {
+                                        errors.push(card.name)
+                                        processedCards++
+                                        controller.send({
                                             type: 'progress',
                                             current: processedCards,
                                             total: totalCards,
-                                            message: `Loaded ${card.name} (cached)`,
-                                            card: cardData
-                                        })}\n\n`
-                                    )
-                                )
-                            } else {
-                                cardsToFetch.push(card)
-                            }
-                        }
+                                            message: `No image available for ${card.name}`,
+                                            error: card.name
+                                        })
+                                        continue
+                                    }
 
-                        cards.push(...cachedCards)
+                                    cards.push(cardData)
 
-                        // Fetch non-cached cards using Collections API
-                        if (cardsToFetch.length > 0) {
-                            // Send progress update for batch fetching
-                            controller.enqueue(
-                                new TextEncoder().encode(
-                                    `data: ${JSON.stringify({
+                                    // Cache the card data for 24 hours
+                                    collectionCardCache.set(cacheKey, {
+                                        data: cardData,
+                                        expires: now + CACHE_DURATION
+                                    })
+
+                                    processedCards++
+                                    controller.send({
                                         type: 'progress',
                                         current: processedCards,
                                         total: totalCards,
-                                        message: `Fetching batch ${batchIndex + 1}/${batches.length} (${cardsToFetch.length} cards)...`
-                                    })}\n\n`
-                                )
-                            )
-
-                            try {
-                                const identifiers = cardsToFetch.map(
-                                    (card) => ({
-                                        name: card.name
+                                        message: `Loaded ${card.name}`,
+                                        card: cardData
                                     })
-                                )
-
-                                const response = await fetch(
-                                    `${process.env.API_URL_SCRYFALL}/cards/collection`,
-                                    {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'User-Agent':
-                                                process.env.API_USER_AGENT ||
-                                                'mtg-deck-to-png/1.0'
-                                        },
-                                        body: JSON.stringify({ identifiers })
-                                    }
-                                )
-
-                                console.log(
-                                    chalk.cyan(
-                                        `Fetching batch ${batchIndex + 1}, Status: ${response.status}`
-                                    )
-                                )
-
-                                if (!response.ok) {
+                                } else {
+                                    // Card not found, add to errors or use mock
+                                    errors.push(card.name)
                                     console.log(
                                         chalk.yellow(
-                                            `Batch ${batchIndex + 1} failed: `
-                                        ),
-                                        response.status,
-                                        response.statusText
+                                            `Card not found: ${card.name}, using mock data`
+                                        )
                                     )
 
-                                    return NextResponse.json(
-                                        {
-                                            error: 'Failed to fetch cards.'
-                                        },
-                                        { status: 500 }
-                                    )
-                                } else {
-                                    const batchData = await response.json()
-                                    const foundCards = batchData.data || []
-
-                                    // Process each card in the fetch list
-                                    for (const card of cardsToFetch) {
-                                        const cacheKey = card.name.toLowerCase()
-                                        let scryfallData = null
-
-                                        for (const foundCard of foundCards) {
-                                            // Exact match first
-                                            if (
-                                                foundCard.name.toLowerCase() ===
-                                                cacheKey
-                                            ) {
-                                                scryfallData = foundCard
-                                                break
-                                            } else if (
-                                                foundCard.name
-                                                    .toLowerCase()
-                                                    .includes(cacheKey) &&
-                                                !cards.find(
-                                                    (c) =>
-                                                        c.name.toLowerCase() ===
-                                                        foundCard.name.toLowerCase()
-                                                )
-                                            ) {
-                                                // Partial match if no exact match and not already added
-                                                scryfallData = foundCard
-                                            }
-                                        }
-
-                                        if (scryfallData) {
-                                            const cardData = createCardItem(
-                                                scryfallData,
-                                                card.quantity,
-                                                card.groupId
-                                            )
-
-                                            if (cardData.image_uri === null) {
-                                                errors.push(card.name)
-                                                processedCards++
-                                                controller.enqueue(
-                                                    new TextEncoder().encode(
-                                                        `data: ${JSON.stringify(
-                                                            {
-                                                                type: 'progress',
-                                                                current:
-                                                                    processedCards,
-                                                                total: totalCards,
-                                                                message: `No image available for ${card.name}`,
-                                                                error: card.name
-                                                            }
-                                                        )}\n\n`
-                                                    )
-                                                )
-                                                continue
-                                            }
-
-                                            cards.push(cardData)
-
-                                            // Cache the card data for 24 hours
-                                            collectionCardCache.set(cacheKey, {
-                                                data: cardData,
-                                                expires: now + CACHE_DURATION
-                                            })
-
-                                            processedCards++
-                                            controller.enqueue(
-                                                new TextEncoder().encode(
-                                                    `data: ${JSON.stringify({
-                                                        type: 'progress',
-                                                        current: processedCards,
-                                                        total: totalCards,
-                                                        message: `Loaded ${card.name}`,
-                                                        card: cardData
-                                                    })}\n\n`
-                                                )
-                                            )
-                                        } else {
-                                            // Card not found, add to errors or use mock
-                                            errors.push(card.name)
-                                            console.log(
-                                                chalk.yellow(
-                                                    `Card not found: ${card.name}, using mock data`
-                                                )
-                                            )
-
-                                            const mockCardData =
-                                                createMockCardItem(
-                                                    card.name,
-                                                    card.quantity,
-                                                    card.groupId
-                                                )
-                                            cards.push(mockCardData)
-
-                                            processedCards++
-                                            controller.enqueue(
-                                                new TextEncoder().encode(
-                                                    `data: ${JSON.stringify({
-                                                        type: 'progress',
-                                                        current: processedCards,
-                                                        total: totalCards,
-                                                        message: `Loaded ${card.name} (mock data)`,
-                                                        card: mockCardData
-                                                    })}\n\n`
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            } catch {
-                                // Fallback to mock data for all cards in batch
-                                console.log(
-                                    chalk.yellow(
-                                        `API unavailable for batch ${batchIndex + 1}, using mock data`
-                                    )
-                                )
-
-                                for (const card of cardsToFetch) {
                                     const mockCardData = createMockCardItem(
                                         card.name,
                                         card.quantity,
@@ -319,72 +272,62 @@ export async function POST(request: NextRequest) {
                                     cards.push(mockCardData)
 
                                     processedCards++
-                                    controller.enqueue(
-                                        new TextEncoder().encode(
-                                            `data: ${JSON.stringify({
-                                                type: 'progress',
-                                                current: processedCards,
-                                                total: totalCards,
-                                                message: `Loaded ${card.name} (mock data)`,
-                                                card: mockCardData
-                                            })}\n\n`
-                                        )
-                                    )
+                                    controller.send({
+                                        type: 'progress',
+                                        current: processedCards,
+                                        total: totalCards,
+                                        message: `Loaded ${card.name} (mock data)`,
+                                        card: mockCardData
+                                    })
                                 }
                             }
                         }
+                    } catch {
+                        // Fallback to mock data for all cards in batch
+                        console.log(
+                            chalk.yellow(
+                                `API unavailable for batch ${batchIndex + 1}, using mock data`
+                            )
+                        )
 
-                        // Sleep for 50ms between batches to respect rate limits
-                        if (batchIndex < batches.length - 1) {
-                            await sleep(50)
+                        for (const card of cardsToFetch) {
+                            const mockCardData = createMockCardItem(
+                                card.name,
+                                card.quantity,
+                                card.groupId
+                            )
+                            cards.push(mockCardData)
+
+                            processedCards++
+                            controller.send({
+                                type: 'progress',
+                                current: processedCards,
+                                total: totalCards,
+                                message: `Loaded ${card.name} (mock data)`,
+                                card: mockCardData
+                            })
                         }
                     }
+                }
 
-                    let sortedByGroup = cards
-                    if (
-                        cachedCardsCount > 0 &&
-                        cachedCardsCount < cards.length
-                    ) {
-                        // If we used a mix of  cached and non-cached cards, re-sort the final list by groupId to maintain original order
-                        sortedByGroup = cards.sort(
-                            (a, b) => a.groupId - b.groupId
-                        )
-                    }
-
-                    // Send final result
-                    controller.enqueue(
-                        new TextEncoder().encode(
-                            `data: ${JSON.stringify({
-                                type: 'complete',
-                                result: { cards: sortedByGroup, errors },
-                                message: `Completed! Loaded ${cards.length} cards`
-                            })}\n\n`
-                        )
-                    )
-                } catch (error) {
-                    console.error('Error in stream:', error)
-                    controller.enqueue(
-                        new TextEncoder().encode(
-                            `data: ${JSON.stringify({
-                                type: 'error',
-                                error: 'Internal server error',
-                                message: 'Failed to fetch cards'
-                            })}\n\n`
-                        )
-                    )
-                } finally {
-                    controller.close()
+                // Sleep for 50ms between batches to respect rate limits
+                if (batchIndex < batches.length - 1) {
+                    await sleep(50)
                 }
             }
-        })
 
-        return new Response(stream, {
-            headers: {
-                'Content-Type': 'text/plain; charset=utf-8',
-                'Cache-Control': 'no-cache',
-                Connection: 'keep-alive',
-                'X-Accel-Buffering': 'no' // Disable nginx buffering
+            let sortedByGroup = cards
+            if (cachedCardsCount > 0 && cachedCardsCount < cards.length) {
+                // If we used a mix of  cached and non-cached cards, re-sort the final list by groupId to maintain original order
+                sortedByGroup = cards.sort((a, b) => a.groupId - b.groupId)
             }
+
+            // Send final result
+            controller.send({
+                type: 'complete',
+                result: { cards: sortedByGroup, errors },
+                message: `Completed! Loaded ${cards.length} cards`
+            })
         })
     } catch (error) {
         console.error('Error fetching card images:', error)
