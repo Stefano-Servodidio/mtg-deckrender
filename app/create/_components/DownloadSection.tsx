@@ -110,7 +110,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                 }}
                 transition="all 0.2s"
             >
-                {isIOS && isSafari ? 'Open Image in New Tab' : `Download Image`}
+                {isIOS && isSafari ? 'Open Image in New Tab' : 'Download Image'}
             </Button>
         </VStack>
     )
