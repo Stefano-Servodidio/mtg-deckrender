@@ -29,11 +29,9 @@ class StreamEncoder {
  */
 export class StreamController {
     private controller: ReadableStreamDefaultController<Uint8Array>
-    private encoder: TextEncoder
 
     constructor(controller: ReadableStreamDefaultController<Uint8Array>) {
         this.controller = controller
-        this.encoder = StreamEncoder.getInstance()
     }
 
     /**
@@ -42,7 +40,7 @@ export class StreamController {
      */
     send(data: unknown): void {
         const message = `data: ${JSON.stringify(data)}\n\n`
-        this.controller.enqueue(this.encoder.encode(message))
+        this.controller.enqueue(StreamEncoder.encode(message))
     }
 
     /**
