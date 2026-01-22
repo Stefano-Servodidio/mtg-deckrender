@@ -9,6 +9,12 @@ import {
     trackTiming
 } from '../analytics'
 import { GA_EVENTS } from '@/types/analytics'
+import * as cookieConsent from '../cookieConsent'
+
+// Mock cookieConsent module
+vi.mock('../cookieConsent', () => ({
+    canUseAnalytics: vi.fn(() => true)
+}))
 
 describe('Analytics Utilities', () => {
     let originalWindow: Window & typeof globalThis
@@ -82,15 +88,23 @@ describe('Analytics Utilities', () => {
 
     describe('shouldTrack', () => {
         it('should return true when conditions are met', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             expect(shouldTrack()).toBe(true)
         })
 
+        it('should return false when user has not consented to analytics', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(false)
+            expect(shouldTrack()).toBe(false)
+        })
+
         it('should return false when GA_ID is not set', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             delete process.env.NEXT_PUBLIC_GA_ID
             expect(shouldTrack()).toBe(false)
         })
 
         it('should return false when Do Not Track is enabled', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             // Mock navigator with DNT enabled
             Object.defineProperty(global, 'navigator', {
                 value: {
@@ -146,6 +160,7 @@ describe('Analytics Utilities', () => {
 
     describe('trackPageView', () => {
         it('should track page view with correct parameters', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             const url = '/test-page'
             const title = 'Test Page Title'
 
@@ -163,6 +178,7 @@ describe('Analytics Utilities', () => {
         })
 
         it('should use document title if no title provided', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             const url = '/test-page'
             trackPageView(url)
 
@@ -176,12 +192,20 @@ describe('Analytics Utilities', () => {
         })
 
         it('should not track when shouldTrack returns false', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             delete process.env.NEXT_PUBLIC_GA_ID
             trackPageView('/test')
             expect(window.gtag).not.toHaveBeenCalled()
         })
 
+        it('should not track when user has not consented', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(false)
+            trackPageView('/test')
+            expect(window.gtag).not.toHaveBeenCalled()
+        })
+
         it('should handle errors gracefully', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             window.gtag = vi.fn(() => {
                 throw new Error('GA Error')
             })
@@ -193,6 +217,7 @@ describe('Analytics Utilities', () => {
 
     describe('trackEvent', () => {
         it('should track event with parameters', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             const eventName = GA_EVENTS.BUTTON_CLICK
             const params = {
                 click_text: 'Test Button',
@@ -205,6 +230,7 @@ describe('Analytics Utilities', () => {
         })
 
         it('should track event without parameters', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             const eventName = GA_EVENTS.BUTTON_CLICK
             trackEvent(eventName)
 
@@ -216,6 +242,7 @@ describe('Analytics Utilities', () => {
         })
 
         it('should not track when shouldTrack returns false', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             // Mock navigator with DNT enabled
             Object.defineProperty(global, 'navigator', {
                 value: {
@@ -229,7 +256,14 @@ describe('Analytics Utilities', () => {
             expect(window.gtag).not.toHaveBeenCalled()
         })
 
+        it('should not track when user has not consented', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(false)
+            trackEvent(GA_EVENTS.BUTTON_CLICK)
+            expect(window.gtag).not.toHaveBeenCalled()
+        })
+
         it('should handle errors gracefully', () => {
+            vi.mocked(cookieConsent.canUseAnalytics).mockReturnValue(true)
             window.gtag = vi.fn(() => {
                 throw new Error('GA Error')
             })

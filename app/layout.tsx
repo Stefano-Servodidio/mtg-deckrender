@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Providers } from './providers'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
+import { CookieBanner } from '@/components/CookieBanner'
 
 export const metadata: Metadata = {
     title: 'MTG Deck to PNG - Convert Your Magic Decklists',
@@ -45,6 +46,7 @@ export default function RootLayout({
             <body>
                 <GoogleAnalytics />
                 <Providers>{children}</Providers>
+                <CookieBanner />
             </body>
         </html>
     )
