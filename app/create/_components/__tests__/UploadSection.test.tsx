@@ -24,8 +24,7 @@ vi.mock('@/utils/storage/localStorage', () => ({
         OPTIONS: 'mtg-deck-to-png:options'
     },
     saveToLocalStorage: (...args: any[]) => mockSaveToLocalStorage(...args),
-    loadFromLocalStorage: (...args: any[]) =>
-        mockLoadFromLocalStorage(...args),
+    loadFromLocalStorage: (...args: any[]) => mockLoadFromLocalStorage(...args),
     removeFromLocalStorage: (...args: any[]) =>
         mockRemoveFromLocalStorage(...args)
 }))
@@ -333,7 +332,8 @@ describe('UploadSection', () => {
             )
 
             await waitFor(() => {
-                const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
+                const textarea =
+                    screen.getByPlaceholderText(/1x Lightning Bolt/)
                 expect(textarea).toHaveValue('4 Lightning Bolt\n2 Mountain')
             })
 

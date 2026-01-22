@@ -24,8 +24,7 @@ vi.mock('@/utils/storage/localStorage', () => ({
         OPTIONS: 'mtg-deck-to-png:options'
     },
     saveToLocalStorage: (...args: any[]) => mockSaveToLocalStorage(...args),
-    loadFromLocalStorage: (...args: any[]) =>
-        mockLoadFromLocalStorage(...args),
+    loadFromLocalStorage: (...args: any[]) => mockLoadFromLocalStorage(...args),
     removeFromLocalStorage: (...args: any[]) =>
         mockRemoveFromLocalStorage(...args)
 }))

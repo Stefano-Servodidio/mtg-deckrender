@@ -117,7 +117,10 @@ describe('localStorage utilities', () => {
 
         it('should return default value when key does not exist', () => {
             const defaultValue = { default: true }
-            const result = loadFromLocalStorage('non-existent-key', defaultValue)
+            const result = loadFromLocalStorage(
+                'non-existent-key',
+                defaultValue
+            )
 
             expect(result).toEqual(defaultValue)
         })

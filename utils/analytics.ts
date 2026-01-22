@@ -43,7 +43,6 @@ export const initGA = (measurementId: string): void => {
 
     // Define gtag function
     window.gtag = function gtag() {
-         
         window.dataLayer?.push(arguments)
     }
 
