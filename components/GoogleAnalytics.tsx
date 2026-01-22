@@ -50,11 +50,15 @@ export function GoogleAnalytics() {
         // Check initial consent
         checkConsent()
 
-        // Listen for consent updates
-        window.addEventListener('consentUpdated', checkConsent)
+        // Listen for consent updates (using custom event)
+        const handleConsentUpdate = () => {
+            checkConsent()
+        }
+
+        window.addEventListener('consentUpdated', handleConsentUpdate)
 
         return () => {
-            window.removeEventListener('consentUpdated', checkConsent)
+            window.removeEventListener('consentUpdated', handleConsentUpdate)
         }
     }, [])
 

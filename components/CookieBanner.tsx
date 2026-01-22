@@ -11,7 +11,6 @@ import {
     Button,
     Flex,
     Text,
-    Link,
     HStack,
     VStack,
     Collapse,
@@ -113,17 +112,20 @@ export function CookieBanner() {
                                 experience, analyze site traffic, and improve
                                 our services. By clicking "Accept All", you
                                 consent to our use of cookies.{' '}
-                                <Link
-                                    href="#"
-                                    onClick={(e) => {
-                                        e.preventDefault()
-                                        toggleSettings()
-                                    }}
+                                <Button
+                                    variant="link"
                                     color="blue.300"
                                     textDecoration="underline"
+                                    fontSize="xs"
+                                    fontWeight="normal"
+                                    minW="auto"
+                                    h="auto"
+                                    p={0}
+                                    onClick={toggleSettings}
+                                    verticalAlign="baseline"
                                 >
                                     Customize your preferences
-                                </Link>
+                                </Button>
                                 .
                             </Text>
                         </Box>

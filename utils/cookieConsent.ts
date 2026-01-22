@@ -61,7 +61,12 @@ const setCookie = (
 
     const expires = new Date()
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000)
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax;Secure`
+
+    // Only add Secure flag on HTTPS
+    const isSecure = window.location.protocol === 'https:'
+    const secureFlag = isSecure ? ';Secure' : ''
+
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax${secureFlag}`
 }
 
 /**
