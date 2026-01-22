@@ -46,9 +46,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     // Load decklist from localStorage on mount
     useEffect(() => {
         const savedDecklist = loadFromLocalStorage(STORAGE_KEYS.DECKLIST, '')
-        if (savedDecklist) {
-            setDecklistText(savedDecklist)
-        }
+        setDecklistText(savedDecklist)
     }, [])
 
     // Save decklist to localStorage whenever it changes

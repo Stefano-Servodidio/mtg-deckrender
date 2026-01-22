@@ -80,22 +80,20 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
             STORAGE_KEYS.OPTIONS,
             {}
         )
-        // Merge saved options with defaults
-        if (Object.keys(savedOptions).length > 0) {
-            reset({
-                sortBy: savedOptions.sortBy ?? 'name',
-                sortDirection: savedOptions.sortDirection ?? 'asc',
-                fileType: savedOptions.fileType ?? 'png',
-                imageSize: savedOptions.imageSize ?? 'ig_portrait',
-                imageVariant: savedOptions.imageVariant ?? 'grid',
-                imageResolution: savedOptions.imageResolution ?? 'standard',
-                backgroundStyle: savedOptions.backgroundStyle ?? 'transparent',
-                includeCardCount: savedOptions.includeCardCount ?? true,
-                customBackgroundColor:
-                    savedOptions.customBackgroundColor ?? '#FFFFFF',
-                customBackgroundImage: savedOptions.customBackgroundImage
-            })
-        }
+        // Merge saved options with defaults, using saved values where available
+        reset({
+            sortBy: savedOptions.sortBy ?? 'name',
+            sortDirection: savedOptions.sortDirection ?? 'asc',
+            fileType: savedOptions.fileType ?? 'png',
+            imageSize: savedOptions.imageSize ?? 'ig_portrait',
+            imageVariant: savedOptions.imageVariant ?? 'grid',
+            imageResolution: savedOptions.imageResolution ?? 'standard',
+            backgroundStyle: savedOptions.backgroundStyle ?? 'transparent',
+            includeCardCount: savedOptions.includeCardCount ?? true,
+            customBackgroundColor:
+                savedOptions.customBackgroundColor ?? '#FFFFFF',
+            customBackgroundImage: savedOptions.customBackgroundImage
+        })
     }, [reset])
 
     // Save options to localStorage whenever form values change
