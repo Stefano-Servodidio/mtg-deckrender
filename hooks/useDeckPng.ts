@@ -70,6 +70,8 @@ export function useDeckPng(): UseDeckPngReturn {
                     const decoder = new TextDecoder()
                     let buffer = ''
 
+                    const fileType = response.headers.get('x-file-type')
+
                     try {
                         while (true) {
                             const { done, value } = await reader.read()
@@ -111,8 +113,11 @@ export function useDeckPng(): UseDeckPngReturn {
                                                 bytes[i] =
                                                     binaryString.charCodeAt(i)
                                             }
+                                            const mimeType = fileType
+                                                ? `image/${fileType}`
+                                                : 'image/png'
                                             const blob = new Blob([bytes], {
-                                                type: 'image/png'
+                                                type: mimeType
                                             })
                                             const imageUrl =
                                                 URL.createObjectURL(blob)
@@ -169,8 +174,7 @@ export function useDeckPng(): UseDeckPngReturn {
             URL.revokeObjectURL(data)
         }
         resetState()
-        setProgress(null)
-    }, [data, resetState, setProgress])
+    }, [data, resetState])
 
     const revokeUrl = useCallback(() => {
         if (data) {

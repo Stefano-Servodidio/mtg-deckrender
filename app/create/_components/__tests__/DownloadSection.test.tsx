@@ -89,7 +89,7 @@ describe('DownloadSection', () => {
 
         const button = screen.getByTestId('download-button')
         expect(button).toBeInTheDocument()
-        expect(screen.getByText('Download PNG')).toBeInTheDocument()
+        expect(screen.getByText('Download Image')).toBeInTheDocument()
     })
 
     it('should not have href or download attributes (programmatic download)', () => {
