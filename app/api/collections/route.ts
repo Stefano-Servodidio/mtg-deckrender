@@ -134,43 +134,113 @@ export async function POST(request: NextRequest) {
                         message: `Fetching batch ${batchIndex + 1}/${batches.length} (${cardsToFetch.length} cards)...`
                     })
 
-                    try {
-                        const identifiers = cardsToFetch.map((card) => ({
-                            name: card.name
-                        }))
+                    const identifiers = cardsToFetch.map((card) => ({
+                        name: card.name
+                    }))
 
-                        const response = await fetch(
-                            `${process.env.API_URL_SCRYFALL}/cards/collection`,
-                            {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'User-Agent':
-                                        process.env.API_USER_AGENT ||
-                                        'mtg-deck-to-png/1.0'
-                                },
-                                body: JSON.stringify({ identifiers })
-                            }
+                    const response = await fetch(
+                        `${process.env.API_URL_SCRYFALL}/cards/collection`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'User-Agent':
+                                    process.env.API_USER_AGENT ||
+                                    'mtg-deck-to-png/1.0'
+                            },
+                            body: JSON.stringify({ identifiers })
+                        }
+                    )
+
+                    console.log(
+                        chalk.cyan(
+                            `Fetching batch ${batchIndex + 1}, Status: ${response.status}`
                         )
+                    )
 
+                    if (!response.ok) {
                         console.log(
-                            chalk.cyan(
-                                `Fetching batch ${batchIndex + 1}, Status: ${response.status}`
-                            )
+                            chalk.yellow(`Batch ${batchIndex + 1} failed: `),
+                            response.status,
+                            response.statusText
                         )
+                        throw new Error(
+                            `HTTP ERROR POST ${process.env.API_URL_SCRYFALL}/cards/collection ${response.status}: ${response.statusText}`
+                        )
+                    } else {
+                        const batchData = await response.json()
+                        const foundCards = batchData.data || []
 
-                        if (!response.ok) {
-                            console.log(
-                                chalk.yellow(
-                                    `Batch ${batchIndex + 1} failed: `
-                                ),
-                                response.status,
-                                response.statusText
-                            )
+                        // Process each card in the fetch list
+                        for (const card of cardsToFetch) {
+                            const cacheKey = card.name.toLowerCase()
+                            let scryfallData = null
 
-                            // Add all cards to errors and continue with mock data
-                            for (const card of cardsToFetch) {
+                            for (const foundCard of foundCards) {
+                                // Exact match first
+                                if (foundCard.name.toLowerCase() === cacheKey) {
+                                    scryfallData = foundCard
+                                    break
+                                } else if (
+                                    foundCard.name
+                                        .toLowerCase()
+                                        .includes(cacheKey) &&
+                                    !cards.find(
+                                        (c) =>
+                                            c.name.toLowerCase() ===
+                                            foundCard.name.toLowerCase()
+                                    )
+                                ) {
+                                    // Partial match if no exact match and not already added
+                                    scryfallData = foundCard
+                                }
+                            }
+
+                            if (scryfallData) {
+                                const cardData = createCardItem(
+                                    scryfallData,
+                                    card.quantity,
+                                    card.groupId
+                                )
+
+                                if (cardData.image_uri === null) {
+                                    errors.push(card.name)
+                                    processedCards++
+                                    controller.send({
+                                        type: 'progress',
+                                        current: processedCards,
+                                        total: totalCards,
+                                        message: `No image available for ${card.name}`,
+                                        error: card.name
+                                    })
+                                    continue
+                                }
+
+                                cards.push(cardData)
+
+                                // Cache the card data for 24 hours
+                                collectionCardCache.set(cacheKey, {
+                                    data: cardData,
+                                    expires: now + CACHE_DURATION
+                                })
+
+                                processedCards++
+                                controller.send({
+                                    type: 'progress',
+                                    current: processedCards,
+                                    total: totalCards,
+                                    message: `Loaded ${card.name}`,
+                                    card: cardData
+                                })
+                            } else {
+                                // Card not found, add to errors or use mock
                                 errors.push(card.name)
+                                console.log(
+                                    chalk.yellow(
+                                        `Card not found: ${card.name}, using mock data`
+                                    )
+                                )
+
                                 const mockCardData = createMockCardItem(
                                     card.name,
                                     card.quantity,
@@ -183,129 +253,10 @@ export async function POST(request: NextRequest) {
                                     type: 'progress',
                                     current: processedCards,
                                     total: totalCards,
-                                    message: `Batch ${batchIndex + 1} failed, using mock data for ${card.name}`,
+                                    message: `Loaded ${card.name} (mock data)`,
                                     card: mockCardData
                                 })
                             }
-                        } else {
-                            const batchData = await response.json()
-                            const foundCards = batchData.data || []
-
-                            // Process each card in the fetch list
-                            for (const card of cardsToFetch) {
-                                const cacheKey = card.name.toLowerCase()
-                                let scryfallData = null
-
-                                for (const foundCard of foundCards) {
-                                    // Exact match first
-                                    if (
-                                        foundCard.name.toLowerCase() ===
-                                        cacheKey
-                                    ) {
-                                        scryfallData = foundCard
-                                        break
-                                    } else if (
-                                        foundCard.name
-                                            .toLowerCase()
-                                            .includes(cacheKey) &&
-                                        !cards.find(
-                                            (c) =>
-                                                c.name.toLowerCase() ===
-                                                foundCard.name.toLowerCase()
-                                        )
-                                    ) {
-                                        // Partial match if no exact match and not already added
-                                        scryfallData = foundCard
-                                    }
-                                }
-
-                                if (scryfallData) {
-                                    const cardData = createCardItem(
-                                        scryfallData,
-                                        card.quantity,
-                                        card.groupId
-                                    )
-
-                                    if (cardData.image_uri === null) {
-                                        errors.push(card.name)
-                                        processedCards++
-                                        controller.send({
-                                            type: 'progress',
-                                            current: processedCards,
-                                            total: totalCards,
-                                            message: `No image available for ${card.name}`,
-                                            error: card.name
-                                        })
-                                        continue
-                                    }
-
-                                    cards.push(cardData)
-
-                                    // Cache the card data for 24 hours
-                                    collectionCardCache.set(cacheKey, {
-                                        data: cardData,
-                                        expires: now + CACHE_DURATION
-                                    })
-
-                                    processedCards++
-                                    controller.send({
-                                        type: 'progress',
-                                        current: processedCards,
-                                        total: totalCards,
-                                        message: `Loaded ${card.name}`,
-                                        card: cardData
-                                    })
-                                } else {
-                                    // Card not found, add to errors or use mock
-                                    errors.push(card.name)
-                                    console.log(
-                                        chalk.yellow(
-                                            `Card not found: ${card.name}, using mock data`
-                                        )
-                                    )
-
-                                    const mockCardData = createMockCardItem(
-                                        card.name,
-                                        card.quantity,
-                                        card.groupId
-                                    )
-                                    cards.push(mockCardData)
-
-                                    processedCards++
-                                    controller.send({
-                                        type: 'progress',
-                                        current: processedCards,
-                                        total: totalCards,
-                                        message: `Loaded ${card.name} (mock data)`,
-                                        card: mockCardData
-                                    })
-                                }
-                            }
-                        }
-                    } catch {
-                        // Fallback to mock data for all cards in batch
-                        console.log(
-                            chalk.yellow(
-                                `API unavailable for batch ${batchIndex + 1}, using mock data`
-                            )
-                        )
-
-                        for (const card of cardsToFetch) {
-                            const mockCardData = createMockCardItem(
-                                card.name,
-                                card.quantity,
-                                card.groupId
-                            )
-                            cards.push(mockCardData)
-
-                            processedCards++
-                            controller.send({
-                                type: 'progress',
-                                current: processedCards,
-                                total: totalCards,
-                                message: `Loaded ${card.name} (mock data)`,
-                                card: mockCardData
-                            })
                         }
                     }
                 }

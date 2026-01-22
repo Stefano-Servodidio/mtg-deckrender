@@ -125,6 +125,11 @@ export function useCollections(): UseCollectionsReturn {
                                             parseError,
                                             line
                                         )
+                                        setError(
+                                            new Error(
+                                                'Failed to fetch card collections'
+                                            )
+                                        )
                                     }
                                 }
                             }
