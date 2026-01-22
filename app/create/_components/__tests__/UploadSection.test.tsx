@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
 import userEvent from '@testing-library/user-event'
@@ -11,6 +11,23 @@ vi.mock('@/hooks/useAnalytics', () => ({
         trackFileUpload: vi.fn(),
         trackDeckUpload: vi.fn()
     }))
+}))
+
+// Mock localStorage utilities
+const mockSaveToLocalStorage = vi.fn()
+const mockLoadFromLocalStorage = vi.fn()
+const mockRemoveFromLocalStorage = vi.fn()
+
+vi.mock('@/utils/storage/localStorage', () => ({
+    STORAGE_KEYS: {
+        DECKLIST: 'mtg-deck-to-png:decklist',
+        OPTIONS: 'mtg-deck-to-png:options'
+    },
+    saveToLocalStorage: (...args: any[]) => mockSaveToLocalStorage(...args),
+    loadFromLocalStorage: (...args: any[]) =>
+        mockLoadFromLocalStorage(...args),
+    removeFromLocalStorage: (...args: any[]) =>
+        mockRemoveFromLocalStorage(...args)
 }))
 
 const ChakraWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -28,6 +45,9 @@ describe('UploadSection', () => {
 
     beforeEach(() => {
         vi.clearAllMocks()
+        mockLoadFromLocalStorage.mockReturnValue('')
+        mockSaveToLocalStorage.mockReturnValue(true)
+        mockRemoveFromLocalStorage.mockReturnValue(true)
     })
 
     it('should render textarea for decklist input', () => {
@@ -294,5 +314,81 @@ describe('UploadSection', () => {
         await user.type(textarea, 'Test decklist')
 
         expect(textarea).toHaveValue('Test decklist')
+    })
+
+    describe('localStorage persistence', () => {
+        it('should load saved decklist from localStorage on mount', async () => {
+            // Mock a saved decklist
+            mockLoadFromLocalStorage.mockReturnValueOnce(
+                '4 Lightning Bolt\n2 Mountain'
+            )
+
+            render(
+                <ChakraWrapper>
+                    <UploadSection
+                        fetchCards={mockFetchCards}
+                        isLoadingCards={false}
+                    />
+                </ChakraWrapper>
+            )
+
+            await waitFor(() => {
+                const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
+                expect(textarea).toHaveValue('4 Lightning Bolt\n2 Mountain')
+            })
+
+            expect(mockLoadFromLocalStorage).toHaveBeenCalledWith(
+                'mtg-deck-to-png:decklist',
+                ''
+            )
+        })
+
+        it('should save decklist to localStorage when typing', async () => {
+            const user = userEvent.setup()
+
+            render(
+                <ChakraWrapper>
+                    <UploadSection
+                        fetchCards={mockFetchCards}
+                        isLoadingCards={false}
+                    />
+                </ChakraWrapper>
+            )
+
+            const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
+            await user.type(textarea, '4 Lightning Bolt')
+
+            await waitFor(() => {
+                expect(mockSaveToLocalStorage).toHaveBeenCalledWith(
+                    'mtg-deck-to-png:decklist',
+                    expect.stringContaining('4 Lightning Bolt')
+                )
+            })
+        })
+
+        it('should persist empty decklist', async () => {
+            const user = userEvent.setup()
+
+            render(
+                <ChakraWrapper>
+                    <UploadSection
+                        fetchCards={mockFetchCards}
+                        isLoadingCards={false}
+                    />
+                </ChakraWrapper>
+            )
+
+            // Type and then clear
+            const textarea = screen.getByPlaceholderText(/1x Lightning Bolt/)
+            await user.type(textarea, 'test')
+            await user.clear(textarea)
+
+            await waitFor(() => {
+                expect(mockSaveToLocalStorage).toHaveBeenCalledWith(
+                    'mtg-deck-to-png:decklist',
+                    ''
+                )
+            })
+        })
     })
 })

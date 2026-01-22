@@ -12,9 +12,14 @@ import {
     Progress,
     useToast
 } from '@chakra-ui/react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { FaUpload } from 'react-icons/fa'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import {
+    saveToLocalStorage,
+    loadFromLocalStorage,
+    STORAGE_KEYS
+} from '@/utils/storage/localStorage'
 
 interface ProgressInfo {
     current: number
@@ -37,6 +42,19 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     const [decklistText, setDecklistText] = useState('')
     const toast = useToast()
     const analytics = useAnalytics()
+
+    // Load decklist from localStorage on mount
+    useEffect(() => {
+        const savedDecklist = loadFromLocalStorage(STORAGE_KEYS.DECKLIST, '')
+        if (savedDecklist) {
+            setDecklistText(savedDecklist)
+        }
+    }, [])
+
+    // Save decklist to localStorage whenever it changes
+    useEffect(() => {
+        saveToLocalStorage(STORAGE_KEYS.DECKLIST, decklistText)
+    }, [decklistText])
 
     /* Handlers */
     const handleUpload = async () => {

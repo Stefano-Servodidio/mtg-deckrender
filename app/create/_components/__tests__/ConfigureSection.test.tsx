@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ChakraProvider } from '@chakra-ui/react'
 import userEvent from '@testing-library/user-event'
@@ -11,6 +11,23 @@ vi.mock('@/hooks/useAnalytics', () => ({
     useAnalytics: vi.fn(() => ({
         trackButtonClick: vi.fn()
     }))
+}))
+
+// Mock localStorage utilities
+const mockSaveToLocalStorage = vi.fn()
+const mockLoadFromLocalStorage = vi.fn()
+const mockRemoveFromLocalStorage = vi.fn()
+
+vi.mock('@/utils/storage/localStorage', () => ({
+    STORAGE_KEYS: {
+        DECKLIST: 'mtg-deck-to-png:decklist',
+        OPTIONS: 'mtg-deck-to-png:options'
+    },
+    saveToLocalStorage: (...args: any[]) => mockSaveToLocalStorage(...args),
+    loadFromLocalStorage: (...args: any[]) =>
+        mockLoadFromLocalStorage(...args),
+    removeFromLocalStorage: (...args: any[]) =>
+        mockRemoveFromLocalStorage(...args)
 }))
 
 const ChakraWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -46,6 +63,9 @@ describe('ConfigureSection', () => {
 
     beforeEach(() => {
         vi.clearAllMocks()
+        mockLoadFromLocalStorage.mockReturnValue({})
+        mockSaveToLocalStorage.mockReturnValue(true)
+        mockRemoveFromLocalStorage.mockReturnValue(true)
     })
 
     it('should render ConfigureOptions component', () => {
@@ -224,5 +244,56 @@ describe('ConfigureSection', () => {
         expect(screen.getByText(/name/)).toBeInTheDocument()
         expect(screen.getByText(/png/)).toBeInTheDocument()
         expect(screen.getByText(/transparent/)).toBeInTheDocument()
+    })
+
+    describe('localStorage persistence', () => {
+        it('should load saved options from localStorage on mount', async () => {
+            const savedOptions = {
+                sortBy: 'cmc',
+                fileType: 'jpeg',
+                imageSize: 'ig_square',
+                imageVariant: 'spoiler',
+                imageResolution: 'high',
+                backgroundStyle: 'custom_color',
+                customBackgroundColor: '#FF0000',
+                includeCardCount: false
+            }
+
+            mockLoadFromLocalStorage.mockReturnValueOnce(savedOptions)
+
+            render(
+                <ChakraWrapper>
+                    <ConfigureSection
+                        handleGenerateImage={mockHandleGenerateImage}
+                        isGenerating={false}
+                        cardsData={mockCardsData}
+                    />
+                </ChakraWrapper>
+            )
+
+            expect(mockLoadFromLocalStorage).toHaveBeenCalledWith(
+                'mtg-deck-to-png:options',
+                {}
+            )
+        })
+
+        it('should use default values when localStorage is empty', async () => {
+            mockLoadFromLocalStorage.mockReturnValueOnce({})
+
+            render(
+                <ChakraWrapper>
+                    <ConfigureSection
+                        handleGenerateImage={mockHandleGenerateImage}
+                        isGenerating={false}
+                        cardsData={mockCardsData}
+                    />
+                </ChakraWrapper>
+            )
+
+            // Verify default values are shown
+            expect(screen.getByText(/name/)).toBeInTheDocument()
+            expect(screen.getByText(/png/)).toBeInTheDocument()
+            expect(screen.getByText(/transparent/)).toBeInTheDocument()
+        })
     })
 })

@@ -1,12 +1,17 @@
 'use client'
 
 import { Box, Button, Text, VStack, Progress, HStack } from '@chakra-ui/react'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FaImage } from 'react-icons/fa'
 import ConfigureOptions from './ConfigureOptions'
 import { DeckPngOptions, CardsResponse } from '@/types/api'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { Resolver, useForm, ResolverResult } from 'react-hook-form'
+import {
+    saveToLocalStorage,
+    loadFromLocalStorage,
+    STORAGE_KEYS
+} from '@/utils/storage/localStorage'
 
 interface ProgressInfo {
     current: number
@@ -67,7 +72,39 @@ const ConfigureSection: React.FC<ConfigureSectionProps> = ({
         },
         resolver: resolver
     })
-    const { getValues, formState } = form
+    const { getValues, formState, reset } = form
+
+    // Load options from localStorage on mount
+    useEffect(() => {
+        const savedOptions = loadFromLocalStorage<DeckPngOptions>(
+            STORAGE_KEYS.OPTIONS,
+            {}
+        )
+        // Merge saved options with defaults
+        if (Object.keys(savedOptions).length > 0) {
+            reset({
+                sortBy: savedOptions.sortBy ?? 'name',
+                sortDirection: savedOptions.sortDirection ?? 'asc',
+                fileType: savedOptions.fileType ?? 'png',
+                imageSize: savedOptions.imageSize ?? 'ig_portrait',
+                imageVariant: savedOptions.imageVariant ?? 'grid',
+                imageResolution: savedOptions.imageResolution ?? 'standard',
+                backgroundStyle: savedOptions.backgroundStyle ?? 'transparent',
+                includeCardCount: savedOptions.includeCardCount ?? true,
+                customBackgroundColor:
+                    savedOptions.customBackgroundColor ?? '#FFFFFF',
+                customBackgroundImage: savedOptions.customBackgroundImage
+            })
+        }
+    }, [reset])
+
+    // Save options to localStorage whenever form values change
+    useEffect(() => {
+        const subscription = form.watch((values) => {
+            saveToLocalStorage(STORAGE_KEYS.OPTIONS, values)
+        })
+        return () => subscription.unsubscribe()
+    }, [form])
 
     const handleGenerate = () => {
         analytics.trackButtonClick('Generate Deck Image', {
