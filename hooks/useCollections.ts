@@ -125,10 +125,10 @@ export function useCollections(): UseCollectionsReturn {
                                             parseError,
                                             line
                                         )
-                                        setError(
-                                            new Error(
-                                                'Failed to fetch card collections'
-                                            )
+                                        // Propagate a standardized error so the outer catch
+                                        // can handle state updates (setError) in one place.
+                                        throw new Error(
+                                            'Failed to fetch card collections'
                                         )
                                     }
                                 }
