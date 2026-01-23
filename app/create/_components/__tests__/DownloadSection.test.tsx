@@ -256,6 +256,75 @@ describe('DownloadSection', () => {
         consoleErrorSpy.mockRestore()
     })
 
+    it('should not show Ko-fi CTA section before download', () => {
+        render(
+            <ChakraWrapper>
+                <DownloadSection generatedImage="blob:test-image" />
+            </ChakraWrapper>
+        )
+
+        expect(screen.queryByTestId('kofi-cta-section')).not.toBeInTheDocument()
+    })
+
+    it('should show Ko-fi CTA section after download button is clicked', async () => {
+        // Mock fetch
+        const mockBlob = new Blob(['test'], { type: 'image/png' })
+        global.fetch = vi.fn().mockResolvedValue({
+            blob: vi.fn().mockResolvedValue(mockBlob)
+        })
+
+        const user = userEvent.setup()
+
+        render(
+            <ChakraWrapper>
+                <DownloadSection generatedImage="blob:test-image" />
+            </ChakraWrapper>
+        )
+
+        // Initially should not show
+        expect(screen.queryByTestId('kofi-cta-section')).not.toBeInTheDocument()
+
+        const button = screen.getByTestId('download-button')
+        await user.click(button)
+
+        // Wait for state update
+        await new Promise((resolve) => setTimeout(resolve, 0))
+
+        // Should now show the CTA
+        expect(screen.getByTestId('kofi-cta-section')).toBeInTheDocument()
+        expect(
+            screen.getByText(/Enjoying MTG DeckRender\? Support this project!/)
+        ).toBeInTheDocument()
+        expect(
+            screen.getByTestId('kofi-button-placeholder')
+        ).toBeInTheDocument()
+    })
+
+    it('should render Ko-fi button placeholder with correct text', async () => {
+        // Mock fetch
+        const mockBlob = new Blob(['test'], { type: 'image/png' })
+        global.fetch = vi.fn().mockResolvedValue({
+            blob: vi.fn().mockResolvedValue(mockBlob)
+        })
+
+        const user = userEvent.setup()
+
+        render(
+            <ChakraWrapper>
+                <DownloadSection generatedImage="blob:test-image" />
+            </ChakraWrapper>
+        )
+
+        const button = screen.getByTestId('download-button')
+        await user.click(button)
+
+        // Wait for state update
+        await new Promise((resolve) => setTimeout(resolve, 0))
+
+        const kofiButton = screen.getByTestId('kofi-button-placeholder')
+        expect(kofiButton).toHaveTextContent('Support via Ko-fi (Coming Soon)')
+    })
+
     it('should open image in new tab on iOS Safari', async () => {
         // Mock react-device-detect for iOS Safari by re-mocking the module
         vi.doMock('react-device-detect', () => ({

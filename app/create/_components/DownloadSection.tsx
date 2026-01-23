@@ -1,6 +1,6 @@
 'use client'
 import { Box, Button, Text, VStack } from '@chakra-ui/react'
-import React from 'react'
+import React, { useState } from 'react'
 import { FaDownload } from 'react-icons/fa'
 import Image from 'next/image'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -15,6 +15,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
     cardCount = 0
 }) => {
     const analytics = useAnalytics()
+    const [hasDownloaded, setHasDownloaded] = useState(false)
 
     if (!generatedImage) {
         return (
@@ -30,6 +31,9 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
 
     const handleDownload = async () => {
         try {
+            // Mark that download has been initiated
+            setHasDownloaded(true)
+
             // For iOS Safari, open in new tab instead of downloading
             // This avoids the unreliable download behavior in iOS Safari
             // IMPORTANT: window.open must be called synchronously to avoid popup blockers
@@ -112,6 +116,43 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
             >
                 {isIOS && isSafari ? 'Open Image in New Tab' : 'Download Image'}
             </Button>
+
+            {/* Ko-fi CTA - shown only after download */}
+            {hasDownloaded && (
+                <VStack
+                    spacing={4}
+                    pt={6}
+                    borderTop="1px solid"
+                    borderColor="gray.200"
+                    w="full"
+                    data-testid="kofi-cta-section"
+                >
+                    <Text
+                        fontSize="md"
+                        color="gray.700"
+                        textAlign="center"
+                        fontWeight="medium"
+                    >
+                        Enjoying MTG DeckRender? Support this project! ☕
+                    </Text>
+                    <Text fontSize="sm" color="gray.600" textAlign="center">
+                        Your support helps keep this tool free and constantly
+                        improving
+                    </Text>
+                    <Button
+                        data-testid="kofi-button-placeholder"
+                        colorScheme="orange"
+                        size="md"
+                        variant="outline"
+                        px={6}
+                        _hover={{
+                            bg: 'orange.50'
+                        }}
+                    >
+                        Support via Ko-fi (Coming Soon)
+                    </Button>
+                </VStack>
+            )}
         </VStack>
     )
 }

@@ -94,4 +94,44 @@ describe('Footer', () => {
             )
         ).toBeInTheDocument()
     })
+
+    it('should render "Report a bug" link with correct mailto', () => {
+        render(
+            <ChakraWrapper>
+                <Footer />
+            </ChakraWrapper>
+        )
+
+        const reportBugLink = screen.getByText('Report a bug')
+        expect(reportBugLink).toBeInTheDocument()
+        expect(reportBugLink.closest('a')).toHaveAttribute(
+            'href',
+            'mailto:info@mtgdeckrender.com?subject=MTG%20DeckRender%20bug%20report'
+        )
+    })
+
+    it('should render "Buy me a coffee" link', () => {
+        render(
+            <ChakraWrapper>
+                <Footer />
+            </ChakraWrapper>
+        )
+
+        const kofiLink = screen.getByText(/Buy me a coffee/)
+        expect(kofiLink).toBeInTheDocument()
+        expect(kofiLink.closest('a')).toHaveAttribute(
+            'href',
+            'https://ko-fi.com/stefanoservodidio'
+        )
+    })
+
+    it('should render "Quick Links" section', () => {
+        render(
+            <ChakraWrapper>
+                <Footer />
+            </ChakraWrapper>
+        )
+
+        expect(screen.getByText('Quick Links')).toBeInTheDocument()
+    })
 })

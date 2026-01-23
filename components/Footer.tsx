@@ -5,7 +5,8 @@ import {
     VStack,
     HStack,
     Link,
-    Divider
+    Divider,
+    Flex
     // useColorModeValue
 } from '@chakra-ui/react'
 
@@ -22,9 +23,20 @@ export function Footer() {
     return (
         <Box bg={bg} borderTop="1px solid" borderColor={borderColor} mt="auto">
             <Container data-testid="footer-container" maxW="7xl" py={8}>
-                <VStack spacing={6}>
-                    <VStack spacing={4} textAlign="center">
-                        <Text fontSize="sm" color={textColor} maxW="4xl">
+                <Flex
+                    direction={{ base: 'column', md: 'row' }}
+                    gap={8}
+                    align="start"
+                    justify="space-between"
+                >
+                    {/* Left side: Disclaimers */}
+                    <VStack
+                        spacing={4}
+                        align={{ base: 'center', md: 'start' }}
+                        textAlign={{ base: 'center', md: 'left' }}
+                        flex={1}
+                    >
+                        <Text fontSize="sm" color={textColor}>
                             <strong>Legal Disclaimer:</strong> All Magic: The
                             Gathering card images, names, and related
                             intellectual property are owned by{' '}
@@ -53,19 +65,63 @@ export function Footer() {
                             . This tool is created for educational and personal
                             use only.
                         </Text>
+
+                        <HStack
+                            spacing={4}
+                            justify={{ base: 'center', md: 'start' }}
+                            wrap="wrap"
+                        >
+                            <Text fontSize="xs" color={textColor}>
+                                © 2024 MTG Deck to PNG
+                            </Text>
+                            <Text fontSize="xs" color={textColor}>
+                                Made for the Magic: The Gathering community
+                            </Text>
+                        </HStack>
                     </VStack>
 
-                    <Divider />
+                    {/* Vertical separator */}
+                    <Divider
+                        orientation="vertical"
+                        display={{ base: 'none', md: 'block' }}
+                        h="auto"
+                        minH="120px"
+                    />
+                    <Divider display={{ base: 'block', md: 'none' }} />
 
-                    <HStack spacing={8} justify="center" wrap="wrap">
-                        <Text fontSize="xs" color={textColor}>
-                            © 2024 MTG Deck to PNG
+                    {/* Right side: Links */}
+                    <VStack
+                        spacing={4}
+                        align={{ base: 'center', md: 'start' }}
+                        minW={{ base: 'full', md: '200px' }}
+                    >
+                        <Text
+                            fontSize="sm"
+                            fontWeight="bold"
+                            color={textColor}
+                            mb={2}
+                        >
+                            Quick Links
                         </Text>
-                        <Text fontSize="xs" color={textColor}>
-                            Made for the Magic: The Gathering community
-                        </Text>
-                    </HStack>
-                </VStack>
+                        <Link
+                            href="mailto:info@mtgdeckrender.com?subject=MTG%20DeckRender%20bug%20report"
+                            color={linkColor}
+                            fontSize="sm"
+                            _hover={{ textDecoration: 'underline' }}
+                        >
+                            Report a bug
+                        </Link>
+                        <Link
+                            href="https://ko-fi.com/stefanoservodidio"
+                            color={linkColor}
+                            fontSize="sm"
+                            isExternal
+                            _hover={{ textDecoration: 'underline' }}
+                        >
+                            Buy me a coffee ☕
+                        </Link>
+                    </VStack>
+                </Flex>
             </Container>
         </Box>
     )
