@@ -39,8 +39,6 @@ describe('Footer', () => {
         )
     })
 
-
-
     it('should render copyright information', () => {
         render(
             <ChakraWrapper>
@@ -48,13 +46,13 @@ describe('Footer', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('© 2026 Stefano Servodidio')).toBeInTheDocument()
+        expect(
+            screen.getByText('© 2026 Stefano Servodidio')
+        ).toBeInTheDocument()
         expect(
             screen.getByText('Made for the Magic: The Gathering community')
         ).toBeInTheDocument()
     })
-
-
 
     it('should render not affiliated disclaimer', () => {
         render(
@@ -99,6 +97,4 @@ describe('Footer', () => {
             'https://ko-fi.com/stefanoservodidio'
         )
     })
-
-
 })
