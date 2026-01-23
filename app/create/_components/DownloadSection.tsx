@@ -164,7 +164,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                                 width={24}
                                 height={24}
                                 alt="Ko-fi donation platform logo"
-                                src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png?_gl=1*q56s0b*_gcl_au*MjU2MzI4NTQuMTc2OTA4ODQzMA..*_ga*MTIxNjcwMzMzMS4xNzY5MDg4NDMw*_ga_M13FZ7VQ2C*czE3NjkxNzU5MzEkbzYkZzEkdDE3NjkxNzY2MTQkajYwJGwwJGgw"
+                                src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png"
                             />
                         }
                     >
