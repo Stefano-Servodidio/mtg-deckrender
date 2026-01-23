@@ -6,23 +6,17 @@ import {
     Flex,
     Heading,
     Button,
-    // useColorModeValue,
     HStack,
     MenuButton
 } from '@chakra-ui/react'
 import { FaHome, FaImage } from 'react-icons/fa'
 import Link from 'next/link'
-import Image from 'next/image'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
 export function Navbar() {
     const analytics = useAnalytics()
-    // const pathname = window?.location?.pathname
-    // const bg = useColorModeValue('white', 'gray.800')
-    // const borderColor = useColorModeValue('gray.200', 'gray.700')
-    // const menuHighlightBg = useColorModeValue('purple.50', 'purple.900')
     const bg = 'white'
     const borderColor = 'gray.200'
 
@@ -49,7 +43,7 @@ export function Navbar() {
                             }}
                             minH="60px"
                         >
-                            <Box
+                            {/* <Box
                                 position="relative"
                                 width="60px"
                                 height="60px"
@@ -63,14 +57,14 @@ export function Navbar() {
                                     style={{ objectFit: 'scale-down' }}
                                     priority
                                 />
-                            </Box>
+                            </Box> */}
                             <Heading
                                 size="lg"
                                 bgGradient="linear(to-r, purple.400, blue.400)"
                                 bgClip="text"
                                 whiteSpace={'nowrap'}
                             >
-                                MTG Deck to PNG
+                                MTG DeckRender
                             </Heading>
                         </HStack>
                     </Link>

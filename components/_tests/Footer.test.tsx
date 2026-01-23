@@ -39,21 +39,6 @@ describe('Footer', () => {
         )
     })
 
-    it('should render Scryfall API link', () => {
-        render(
-            <ChakraWrapper>
-                <Footer />
-            </ChakraWrapper>
-        )
-
-        const scryfallLink = screen.getByText('Scryfall API')
-        expect(scryfallLink).toBeInTheDocument()
-        expect(scryfallLink.closest('a')).toHaveAttribute(
-            'href',
-            'https://scryfall.com/'
-        )
-    })
-
     it('should render copyright information', () => {
         render(
             <ChakraWrapper>
@@ -61,23 +46,11 @@ describe('Footer', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('© 2024 MTG Deck to PNG')).toBeInTheDocument()
+        expect(
+            screen.getByText('© 2026 Stefano Servodidio')
+        ).toBeInTheDocument()
         expect(
             screen.getByText('Made for the Magic: The Gathering community')
-        ).toBeInTheDocument()
-    })
-
-    it('should render educational use disclaimer', () => {
-        render(
-            <ChakraWrapper>
-                <Footer />
-            </ChakraWrapper>
-        )
-
-        expect(
-            screen.getByText(
-                /This tool is created for educational and personal use only/
-            )
         ).toBeInTheDocument()
     })
 
@@ -93,5 +66,35 @@ describe('Footer', () => {
                 /This application is not affiliated with or endorsed by Wizards of the Coast LLC/
             )
         ).toBeInTheDocument()
+    })
+
+    it('should render "Report a bug" link with correct mailto', () => {
+        render(
+            <ChakraWrapper>
+                <Footer />
+            </ChakraWrapper>
+        )
+
+        const reportBugLink = screen.getByText('Report a bug')
+        expect(reportBugLink).toBeInTheDocument()
+        expect(reportBugLink.closest('a')).toHaveAttribute(
+            'href',
+            'mailto:info@mtgdeckrender.com?subject=MTG%20DeckRender%20bug%20report'
+        )
+    })
+
+    it('should render "Buy me a coffee" link', () => {
+        render(
+            <ChakraWrapper>
+                <Footer />
+            </ChakraWrapper>
+        )
+
+        const kofiLink = screen.getByText(/Buy me a coffee/)
+        expect(kofiLink).toBeInTheDocument()
+        expect(kofiLink.closest('a')).toHaveAttribute(
+            'href',
+            'https://ko-fi.com/stefanoservodidio'
+        )
     })
 })
