@@ -27,7 +27,7 @@ const DEFAULT_CONSENT: ConsentPreferences = {
 }
 
 // Cookie name for storing consent
-const CONSENT_COOKIE_NAME = 'mtg_deck_cookie_consent'
+const CONSENT_COOKIE_NAME = 'mtg_deckrender_cookie_consent'
 const CONSENT_COOKIE_EXPIRY_DAYS = 365
 
 /**

@@ -62,7 +62,7 @@ describe('cookieConsent utilities', () => {
                 marketing: false,
                 timestamp: Date.now()
             }
-            cookieStore['mtg_deck_cookie_consent'] = encodeURIComponent(
+            cookieStore['mtg_deckrender_cookie_consent'] = encodeURIComponent(
                 JSON.stringify(mockPreferences)
             )
 
@@ -71,14 +71,14 @@ describe('cookieConsent utilities', () => {
         })
 
         it('should return null for invalid consent data', () => {
-            cookieStore['mtg_deck_cookie_consent'] = 'invalid-json'
+            cookieStore['mtg_deckrender_cookie_consent'] = 'invalid-json'
 
             const preferences = getConsentPreferences()
             expect(preferences).toBeNull()
         })
 
         it('should return null for malformed consent structure', () => {
-            cookieStore['mtg_deck_cookie_consent'] = encodeURIComponent(
+            cookieStore['mtg_deckrender_cookie_consent'] = encodeURIComponent(
                 JSON.stringify({ foo: 'bar' })
             )
 
@@ -94,9 +94,9 @@ describe('cookieConsent utilities', () => {
                 [ConsentCategory.MARKETING]: false
             })
 
-            expect(cookieStore['mtg_deck_cookie_consent']).toBeDefined()
+            expect(cookieStore['mtg_deckrender_cookie_consent']).toBeDefined()
             const saved = JSON.parse(
-                decodeURIComponent(cookieStore['mtg_deck_cookie_consent'])
+                decodeURIComponent(cookieStore['mtg_deckrender_cookie_consent'])
             )
             expect(saved.analytics).toBe(true)
             expect(saved.marketing).toBe(false)
@@ -111,7 +111,7 @@ describe('cookieConsent utilities', () => {
             })
 
             const saved = JSON.parse(
-                decodeURIComponent(cookieStore['mtg_deck_cookie_consent'])
+                decodeURIComponent(cookieStore['mtg_deckrender_cookie_consent'])
             )
             expect(saved.necessary).toBe(true)
         })

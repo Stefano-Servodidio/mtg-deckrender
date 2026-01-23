@@ -45,8 +45,10 @@ export default function RootLayout({
         <html lang="en">
             <body>
                 <GoogleAnalytics />
-                <Providers>{children}</Providers>
-                <CookieBanner />
+                <Providers>
+                    {children}
+                    <CookieBanner />
+                </Providers>
             </body>
         </html>
     )

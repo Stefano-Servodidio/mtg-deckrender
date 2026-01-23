@@ -87,7 +87,7 @@ export function CookieBanner() {
             bottom={0}
             left={0}
             right={0}
-            bg="gray.900"
+            bg="gray.700"
             color="white"
             zIndex={9999}
             boxShadow="0 -2px 10px rgba(0,0,0,0.3)"
@@ -110,8 +110,8 @@ export function CookieBanner() {
                             <Text fontSize="xs" color="gray.300">
                                 We use cookies to enhance your browsing
                                 experience, analyze site traffic, and improve
-                                our services. By clicking "Accept All", you
-                                consent to our use of cookies.{' '}
+                                our services. By clicking &quot;Accept
+                                All&quot;, you consent to our use of cookies.{' '}
                                 <Button
                                     variant="link"
                                     color="blue.300"
@@ -140,7 +140,7 @@ export function CookieBanner() {
                             <Button
                                 size="sm"
                                 variant="ghost"
-                                colorScheme="gray"
+                                colorScheme="white"
                                 onClick={handleRejectAll}
                             >
                                 Reject All
@@ -148,7 +148,7 @@ export function CookieBanner() {
                             <Button
                                 size="sm"
                                 variant="outline"
-                                colorScheme="blue"
+                                colorScheme="white"
                                 onClick={toggleSettings}
                             >
                                 Settings
