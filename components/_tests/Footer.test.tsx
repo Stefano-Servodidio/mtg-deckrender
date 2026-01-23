@@ -39,20 +39,7 @@ describe('Footer', () => {
         )
     })
 
-    it('should render Scryfall API link', () => {
-        render(
-            <ChakraWrapper>
-                <Footer />
-            </ChakraWrapper>
-        )
 
-        const scryfallLink = screen.getByText('Scryfall API')
-        expect(scryfallLink).toBeInTheDocument()
-        expect(scryfallLink.closest('a')).toHaveAttribute(
-            'href',
-            'https://scryfall.com/'
-        )
-    })
 
     it('should render copyright information', () => {
         render(
@@ -61,25 +48,13 @@ describe('Footer', () => {
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('© 2024 MTG Deck to PNG')).toBeInTheDocument()
+        expect(screen.getByText('© 2026 Stefano Servodidio')).toBeInTheDocument()
         expect(
             screen.getByText('Made for the Magic: The Gathering community')
         ).toBeInTheDocument()
     })
 
-    it('should render educational use disclaimer', () => {
-        render(
-            <ChakraWrapper>
-                <Footer />
-            </ChakraWrapper>
-        )
 
-        expect(
-            screen.getByText(
-                /This tool is created for educational and personal use only/
-            )
-        ).toBeInTheDocument()
-    })
 
     it('should render not affiliated disclaimer', () => {
         render(
@@ -125,13 +100,5 @@ describe('Footer', () => {
         )
     })
 
-    it('should render "Quick Links" section', () => {
-        render(
-            <ChakraWrapper>
-                <Footer />
-            </ChakraWrapper>
-        )
 
-        expect(screen.getByText('Quick Links')).toBeInTheDocument()
-    })
 })
