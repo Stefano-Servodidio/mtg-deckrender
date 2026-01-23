@@ -167,6 +167,12 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                                 src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png"
                             />
                         }
+                        onClick={() => {
+                            analytics.trackLinkClick(
+                                'Download Section - Buy me a coffee',
+                                'https://ko-fi.com/stefanoservodidio'
+                            )
+                        }}
                     >
                         Buy me a coffee
                     </Button>

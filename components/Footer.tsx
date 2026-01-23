@@ -1,3 +1,4 @@
+import { useAnalytics } from '@/hooks/useAnalytics'
 import {
     Box,
     Container,
@@ -14,6 +15,8 @@ export function Footer() {
     const borderColor = 'gray.200'
     const textColor = 'gray.600'
     const linkColor = 'purple.600'
+
+    const analytics = useAnalytics()
 
     return (
         <Box bg={bg} borderTop="1px solid" borderColor={borderColor} mt="auto">
@@ -81,6 +84,12 @@ export function Footer() {
                             color={linkColor}
                             fontSize="sm"
                             _hover={{ textDecoration: 'underline' }}
+                            onClick={() =>
+                                analytics.trackLinkClick(
+                                    'Report a bug',
+                                    'mailto:info@mtgdeckrender.com?subject=MTG%20DeckRender%20bug%20report'
+                                )
+                            }
                         >
                             Report a bug
                         </Link>
@@ -90,6 +99,12 @@ export function Footer() {
                             fontSize="sm"
                             isExternal
                             _hover={{ textDecoration: 'underline' }}
+                            onClick={() =>
+                                analytics.trackLinkClick(
+                                    'Footer - Buy me a coffee',
+                                    'https://ko-fi.com/stefanoservodidio'
+                                )
+                            }
                         >
                             Buy me a coffee
                         </Link>
