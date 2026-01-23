@@ -9,6 +9,7 @@ import {
     GAEventName,
     GA_EVENTS
 } from '@/types/analytics'
+import { canUseAnalytics } from './cookieConsent'
 
 // Check if GA is available and enabled
 export const isGAEnabled = (): boolean => {
@@ -20,6 +21,9 @@ export const isGAEnabled = (): boolean => {
 // Check if we're in production or if debug mode is enabled
 export const shouldTrack = (): boolean => {
     if (typeof window === 'undefined') return false
+
+    // Check if user has consented to analytics cookies
+    if (!canUseAnalytics()) return false
 
     // Always allow tracking if GA_ID is set (including development with dummy ID)
     const gaId = process.env.NEXT_PUBLIC_GA_ID

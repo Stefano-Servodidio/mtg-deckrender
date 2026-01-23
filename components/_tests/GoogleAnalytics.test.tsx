@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { GoogleAnalytics } from '../GoogleAnalytics'
 
 // Mock Next.js modules
@@ -32,6 +32,11 @@ vi.mock('@/utils/analytics', () => ({
     trackPageView: vi.fn()
 }))
 
+// Mock cookie consent
+vi.mock('@/utils/cookieConsent', () => ({
+    canUseAnalytics: vi.fn(() => true)
+}))
+
 describe('GoogleAnalytics', () => {
     beforeEach(() => {
         vi.clearAllMocks()
@@ -43,35 +48,62 @@ describe('GoogleAnalytics', () => {
         expect(container.querySelector('script')).not.toBeInTheDocument()
     })
 
-    it('should render script when GA ID is set', () => {
+    it('should not render when user has not consented to analytics', async () => {
         process.env.NEXT_PUBLIC_GA_ID = 'G-TEST123'
+        const { canUseAnalytics } = await import('@/utils/cookieConsent')
+        vi.mocked(canUseAnalytics).mockReturnValue(false)
+
         const { container } = render(<GoogleAnalytics />)
 
-        const script = container.querySelector('script')
-        expect(script).toBeInTheDocument()
-        expect(script?.src).toContain('googletagmanager')
-        expect(script?.src).toContain('G-TEST123')
+        await waitFor(() => {
+            expect(container.querySelector('script')).not.toBeInTheDocument()
+        })
     })
 
-    it('should call initGA on script load', async () => {
+    it('should render script when GA ID is set and user has consented', async () => {
         process.env.NEXT_PUBLIC_GA_ID = 'G-TEST123'
+        const { canUseAnalytics } = await import('@/utils/cookieConsent')
+        vi.mocked(canUseAnalytics).mockReturnValue(true)
+
+        const { container } = render(<GoogleAnalytics />)
+
+        await waitFor(() => {
+            const script = container.querySelector('script')
+            expect(script).toBeInTheDocument()
+            expect(script?.src).toContain('googletagmanager')
+            expect(script?.src).toContain('G-TEST123')
+        })
+    })
+
+    it('should call initGA on script load when consent is given', async () => {
+        process.env.NEXT_PUBLIC_GA_ID = 'G-TEST123'
+        const { canUseAnalytics } = await import('@/utils/cookieConsent')
         const { initGA } = await import('@/utils/analytics')
+        vi.mocked(canUseAnalytics).mockReturnValue(true)
 
         render(<GoogleAnalytics />)
 
         // Wait for the async onLoad callback
-        await new Promise((resolve) => setTimeout(resolve, 10))
-
-        expect(initGA).toHaveBeenCalledWith('G-TEST123')
+        await waitFor(
+            () => {
+                expect(initGA).toHaveBeenCalledWith('G-TEST123')
+            },
+            { timeout: 100 }
+        )
     })
 
-    it('should use afterInteractive strategy', () => {
+    it('should use afterInteractive strategy', async () => {
         process.env.NEXT_PUBLIC_GA_ID = 'G-TEST123'
+        const { canUseAnalytics } = await import('@/utils/cookieConsent')
+        vi.mocked(canUseAnalytics).mockReturnValue(true)
+
         const { container } = render(<GoogleAnalytics />)
 
-        const script = container.querySelector('script')
-        // The strategy prop is not directly visible in the rendered output
-        // but we verify the script is rendered
-        expect(script).toBeInTheDocument()
+        await waitFor(() => {
+            const script = container.querySelector('script')
+            // The strategy prop is not directly visible in the rendered output
+            // but we verify the script is rendered
+            expect(script).toBeInTheDocument()
+        })
     })
 })
