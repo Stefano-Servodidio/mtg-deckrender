@@ -5,6 +5,7 @@ import { FaDownload } from 'react-icons/fa'
 import Image from 'next/image'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { isIOS, isSafari } from 'react-device-detect'
+import Link from 'next/link'
 
 export interface DownloadSectionProps {
     generatedImage: string | null
@@ -14,6 +15,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
     generatedImage,
     cardCount = 0
 }) => {
+    const kofiCtaBottomRef = React.useRef<HTMLDivElement>(null)
     const analytics = useAnalytics()
     const [hasDownloaded, setHasDownloaded] = useState(false)
 
@@ -33,6 +35,13 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
         try {
             // Mark that download has been initiated
             setHasDownloaded(true)
+            setTimeout(
+                () =>
+                    kofiCtaBottomRef.current?.scrollIntoView({
+                        behavior: 'smooth'
+                    }),
+                100
+            )
 
             // For iOS Safari, open in new tab instead of downloading
             // This avoids the unreliable download behavior in iOS Safari
@@ -118,41 +127,63 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
             </Button>
 
             {/* Ko-fi CTA - shown only after download */}
-            {hasDownloaded && (
-                <VStack
-                    spacing={4}
-                    pt={6}
-                    borderTop="1px solid"
-                    borderColor="gray.200"
-                    w="full"
-                    data-testid="kofi-cta-section"
+            <VStack
+                spacing={4}
+                p={12}
+                mt={12}
+                w="full"
+                data-testid="kofi-cta-section"
+                borderRadius="md"
+                background="orange.100"
+                display={hasDownloaded ? 'flex' : 'none'}
+            >
+                <Text
+                    fontSize="lg"
+                    color="gray.700"
+                    textAlign="center"
+                    fontWeight="medium"
                 >
-                    <Text
-                        fontSize="md"
-                        color="gray.700"
-                        textAlign="center"
-                        fontWeight="medium"
-                    >
-                        Enjoying MTG DeckRender? Support this project! ☕
-                    </Text>
-                    <Text fontSize="sm" color="gray.600" textAlign="center">
-                        Your support helps keep this tool free and constantly
-                        improving
-                    </Text>
+                    Enjoying MTG DeckRender? Support this project!
+                </Text>
+                <Text fontSize="md" color="gray.600" textAlign="center">
+                    Your support helps keep this tool free and constantly
+                    improving
+                </Text>
+                <Link
+                    href="https://ko-fi.com/stefanoservodidio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
                     <Button
                         data-testid="kofi-button-placeholder"
                         colorScheme="orange"
                         size="md"
-                        variant="outline"
                         px={6}
-                        _hover={{
-                            bg: 'orange.50'
+                        rightIcon={
+                            <Image
+                                width={24}
+                                height={24}
+                                alt="Ko-fi donation platform logo"
+                                src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png"
+                            />
+                        }
+                        onClick={() => {
+                            analytics.trackLinkClick(
+                                'Download Section - Buy me a coffee',
+                                'https://ko-fi.com/stefanoservodidio'
+                            )
                         }}
                     >
-                        Support via Ko-fi (Coming Soon)
+                        Buy me a coffee
                     </Button>
-                </VStack>
-            )}
+                </Link>
+            </VStack>
+            {/* Scroll target / IntersectionObserver marker for the Ko-fi CTA section */}
+            <div
+                ref={kofiCtaBottomRef}
+                id="kofi-cta-bottom-marker"
+                aria-hidden="true"
+            />
         </VStack>
     )
 }

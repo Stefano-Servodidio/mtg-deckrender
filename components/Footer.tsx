@@ -1,3 +1,4 @@
+import { useAnalytics } from '@/hooks/useAnalytics'
 import {
     Box,
     Container,
@@ -7,22 +8,19 @@ import {
     Link,
     Divider,
     Flex
-    // useColorModeValue
 } from '@chakra-ui/react'
 
 export function Footer() {
-    // const bg = useColorModeValue('gray.50', 'gray.900')
-    // const borderColor = useColorModeValue('gray.200', 'gray.700')
-    // const textColor = useColorModeValue('gray.600', 'gray.400')
-    // const linkColor = useColorModeValue('purple.600', 'purple.400')
     const bg = 'gray.50'
     const borderColor = 'gray.200'
     const textColor = 'gray.600'
     const linkColor = 'purple.600'
 
+    const analytics = useAnalytics()
+
     return (
         <Box bg={bg} borderTop="1px solid" borderColor={borderColor} mt="auto">
-            <Container data-testid="footer-container" maxW="7xl" py={8}>
+            <Container data-testid="footer-container" maxW="7xl" py={6}>
                 <Flex
                     direction={{ base: 'column', md: 'row' }}
                     gap={8}
@@ -52,27 +50,13 @@ export function Footer() {
                             endorsed by Wizards of the Coast LLC.
                         </Text>
 
-                        <Text fontSize="sm" color={textColor}>
-                            Card data and images are provided by the{' '}
-                            <Link
-                                href="https://scryfall.com/"
-                                color={linkColor}
-                                isExternal
-                                _hover={{ textDecoration: 'underline' }}
-                            >
-                                Scryfall API
-                            </Link>
-                            . This tool is created for educational and personal
-                            use only.
-                        </Text>
-
                         <HStack
                             spacing={4}
                             justify={{ base: 'center', md: 'start' }}
                             wrap="wrap"
                         >
                             <Text fontSize="xs" color={textColor}>
-                                © 2024 MTG Deck to PNG
+                                © 2026 Stefano Servodidio
                             </Text>
                             <Text fontSize="xs" color={textColor}>
                                 Made for the Magic: The Gathering community
@@ -84,8 +68,8 @@ export function Footer() {
                     <Divider
                         orientation="vertical"
                         display={{ base: 'none', md: 'block' }}
-                        h="auto"
-                        minH="120px"
+                        h="100%"
+                        minH="80px"
                     />
                     <Divider display={{ base: 'block', md: 'none' }} />
 
@@ -95,19 +79,17 @@ export function Footer() {
                         align={{ base: 'center', md: 'start' }}
                         minW={{ base: 'full', md: '200px' }}
                     >
-                        <Text
-                            fontSize="sm"
-                            fontWeight="bold"
-                            color={textColor}
-                            mb={2}
-                        >
-                            Quick Links
-                        </Text>
                         <Link
                             href="mailto:info@mtgdeckrender.com?subject=MTG%20DeckRender%20bug%20report"
                             color={linkColor}
                             fontSize="sm"
                             _hover={{ textDecoration: 'underline' }}
+                            onClick={() =>
+                                analytics.trackLinkClick(
+                                    'Report a bug',
+                                    'mailto:info@mtgdeckrender.com?subject=MTG%20DeckRender%20bug%20report'
+                                )
+                            }
                         >
                             Report a bug
                         </Link>
@@ -117,8 +99,14 @@ export function Footer() {
                             fontSize="sm"
                             isExternal
                             _hover={{ textDecoration: 'underline' }}
+                            onClick={() =>
+                                analytics.trackLinkClick(
+                                    'Footer - Buy me a coffee',
+                                    'https://ko-fi.com/stefanoservodidio'
+                                )
+                            }
                         >
-                            Buy me a coffee ☕
+                            Buy me a coffee
                         </Link>
                     </VStack>
                 </Flex>
