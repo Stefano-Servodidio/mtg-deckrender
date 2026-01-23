@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useDeckPng } from '../useDeckPng'
 import { CardItem } from '@/types/api'
-import { headers } from 'next/headers'
 
 // Mock useFetchState
 vi.mock('../useFetchState', () => ({
