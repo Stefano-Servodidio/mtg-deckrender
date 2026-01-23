@@ -150,7 +150,7 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                     improving
                 </Text>
                 <Link
-                    href="https://ko-fi.com/N4N41SRXRV"
+                    href="https://ko-fi.com/stefanoservodidio"
                     target="_blank"
                     rel="noopener noreferrer"
                 >
