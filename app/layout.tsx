@@ -3,35 +3,35 @@ import { Providers } from './providers'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 
 export const metadata: Metadata = {
-    title: 'MTG Deck to PNG - Convert Your Magic Decklists',
+    title: 'MTG DeckRender - Convert Your Magic Decklists',
     description:
-        'Convert your Magic: The Gathering decklists into beautiful PNG images. Fast, free, and easy to use.',
+        'Convert your Magic: The Gathering decklists into beautiful images. Fast, free, and easy to use.',
     keywords: [
         'MTG',
         'Magic The Gathering',
+        'Magic: The Gathering',
         'deck',
         'decklist',
-        'PNG',
         'image',
         'converter',
         'generator'
     ],
-    authors: [{ name: 'MTG Deck to PNG' }],
-    creator: 'MTG Deck to PNG',
-    publisher: 'MTG Deck to PNG',
+    authors: [{ name: 'Stefano Servodidio' }],
+    creator: 'Stefano Servodidio',
+    publisher: 'Stefano Servodidio',
     robots: 'index, follow',
     openGraph: {
-        title: 'MTG Deck to PNG - Convert Your Magic Decklists',
+        title: 'MTG DeckRender - Convert Your Magic Decklists',
         description:
-            'Convert your Magic: The Gathering decklists into beautiful PNG images. Fast, free, and easy to use.',
+            'Convert your Magic: The Gathering decklists into beautiful images. Fast, free, and easy to use.',
         type: 'website',
         locale: 'en_US'
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'MTG Deck to PNG - Convert Your Magic Decklists',
+        title: 'MTG DeckRender - Convert Your Magic Decklists',
         description:
-            'Convert your Magic: The Gathering decklists into beautiful PNG images. Fast, free, and easy to use.'
+            'Convert your Magic: The Gathering decklists into beautiful images. Fast, free, and easy to use.'
     }
 }
 

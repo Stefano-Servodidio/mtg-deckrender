@@ -68,7 +68,7 @@ export const SSE_HEADERS = {
  * @returns Response with ReadableStream body and appropriate headers
  */
 export function createSSEStream(
-    startHandler: (controller: StreamController) => Promise<void>,
+    startHandler: (_controller: StreamController) => Promise<void>,
     headers?: Record<string, string>
 ): Response {
     const stream = new ReadableStream({
