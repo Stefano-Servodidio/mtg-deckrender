@@ -47,7 +47,7 @@ export default function Home() {
                             bgClip="text"
                             fontWeight="bold"
                         >
-                            MTG Deck to PNG
+                            MTG DeckRender
                         </Heading>
                         <Text
                             fontSize={{ base: 'lg', md: 'xl' }}
@@ -55,7 +55,7 @@ export default function Home() {
                             maxW="2xl"
                         >
                             Transform your Magic: The Gathering decklists into
-                            beautiful, shareable PNG images. Perfect for social
+                            beautiful, shareable images. Perfect for social
                             media, forums, or keeping visual records of your
                             favorite decks.
                         </Text>

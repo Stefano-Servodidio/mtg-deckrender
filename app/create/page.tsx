@@ -261,8 +261,9 @@ export default function Create() {
                             Create Your Deck Image
                         </Heading>
                         <Text fontSize="lg" color="gray.600" maxW="2xl">
-                            Follow the steps below to generate a beautiful PNG
-                            image from your decklist
+                            Follow the steps below to generate a beautiful image
+                            from your decklist. Multiple styles and formats are
+                            available to suit your needs.
                         </Text>
                     </VStack>
 

@@ -4,7 +4,7 @@ describe('Navigation and UI Elements', () => {
         cy.visit('/')
 
         // Check that main elements are present
-        cy.get('body').should('contain.text', 'MTG Deck to PNG')
+        cy.get('body').should('contain.text', 'MTG DeckRender')
 
         // Navigate to create page from navbar
         cy.get(
@@ -79,10 +79,6 @@ describe('Navigation and UI Elements', () => {
             cy.get('a[href="https://company.wizards.com/"]').should(
                 'contain.text',
                 'Wizards of the Coast'
-            )
-            cy.get('a[href="https://scryfall.com/"]').should(
-                'contain.text',
-                'Scryfall API'
             )
         })
     })

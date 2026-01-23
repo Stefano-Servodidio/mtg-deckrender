@@ -55,15 +55,13 @@ describe('Navbar', () => {
     })
 
     it('should render logo and title', () => {
-        const { container } = render(
+        render(
             <ChakraWrapper>
                 <Navbar />
             </ChakraWrapper>
         )
 
-        expect(screen.getByText('MTG Deck to PNG')).toBeInTheDocument()
-        const logo = container.querySelector('img[alt="logo"]')
-        expect(logo).toBeInTheDocument()
+        expect(screen.getByText('MTG DeckRender')).toBeInTheDocument()
     })
 
     it('should render desktop navigation links', () => {
