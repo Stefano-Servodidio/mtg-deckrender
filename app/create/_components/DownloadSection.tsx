@@ -172,7 +172,8 @@ const DownloadSection: React.FC<DownloadSectionProps> = ({
                     </Button>
                 </Link>
             </VStack>
-            <div ref={kofiCtaBottomRef}></div>
+            {/* Scroll target / IntersectionObserver marker for the Ko-fi CTA section */}
+            <div ref={kofiCtaBottomRef} id="kofi-cta-bottom-marker" aria-hidden="true" />
         </VStack>
     )
 }
