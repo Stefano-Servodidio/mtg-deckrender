@@ -114,7 +114,7 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
             .type('invalid decklist format without numbers')
 
         // Try to upload
-        cy.get('button[data-testid="upload-button"]').click()
+        cy.get('[data-testid="upload-button"]').click()
 
         // Should handle the error gracefully (exact behavior depends on implementation)
         // This test ensures the app doesn't crash with invalid input
