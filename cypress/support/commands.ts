@@ -26,9 +26,9 @@ Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
     // }).should('be.visible')
 
     // Wait for the upload to finish (button no longer shows "Uploading...")
-    cy.get('[data-testid="upload-button"]')
+    cy.get('[data-testid="upload-button"]', { timeout: 60000 })
         .should('not.contain', 'Uploading...')
-        .and('be.visible', { timeout: 60000 })
+        .and('be.visible')
 })
 
 // Custom command to generate the deck image
@@ -45,11 +45,9 @@ Cypress.Commands.add('generateImage', (navigate = false) => {
     cy.get('[data-testid="generate-button"]').click()
 
     // Wait for generation to complete (button no longer shows "Generating...")
-    cy.get('[data-testid="generate-button"]')
+    cy.get('[data-testid="generate-button"]', { timeout: 60000 })
         .should('not.contain', 'Generating...')
-        .and('contain', 'Generate Deck Image', {
-            timeout: 60000
-        })
+        .and('contain', 'Generate Deck Image')
 })
 
 // Custom command to download the generated image
