@@ -49,13 +49,13 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
 
     it('should validate empty decklist handling', () => {
         // Try to upload without any text
-        cy.get('button[data-testid="upload-button"]').should('be.disabled')
+        cy.get('[data-testid="upload-button"]').should('be.disabled')
 
         // Enter some text and verify button becomes enabled
         cy.get('textarea[placeholder*="Paste the decklist"]').type(
             '4x Lightning Bolt'
         )
-        cy.get('button[data-testid="upload-button"]').should('not.be.disabled')
+        cy.get('[data-testid="upload-button"]').should('not.be.disabled')
     })
 
     it('should test image configuration options', () => {
@@ -69,17 +69,17 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
                 .and('contain', 'Instagram Square (1080x1080)')
 
             // Click configure section
-            cy.get('button[data-testid="configure-options-button"]').click()
+            cy.get('[data-testid="configure-options-button"]').click()
             cy.wait(500)
 
             // Test different configuration options
             // Note: These selectors might need adjustment based on actual implementation
-            cy.get('select[data-testid^="filter-select-imageSize"]')
+            cy.get('[data-testid^="filter-select-imageSize"]')
                 .should('be.visible')
                 .select('facebook_post')
 
             // Close configuration options
-            cy.get('button[data-testid="configure-options-button"]').click()
+            cy.get('[data-testid="configure-options-button"]').click()
             cy.wait(500)
 
             // Verify summary reflects changes

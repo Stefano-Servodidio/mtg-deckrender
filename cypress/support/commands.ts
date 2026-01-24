@@ -20,7 +20,7 @@ Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
         .type(decklistText, { delay: 10 })
 
     // Click the upload button
-    cy.get('button[data-testid="upload-button"]').click()
+    cy.get('[data-testid="upload-button"]').click()
 
     // Wait for the upload to complete - look for success indicators
     // cy.get('[data-testid="upload-progress"], .chakra-progress', {
@@ -28,7 +28,7 @@ Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
     // }).should('be.visible')
 
     // Wait for the upload to finish (progress disappears or shows completion)
-    cy.get('button[data-testid="upload-button"]').should('not.be.disabled', {
+    cy.get('[data-testid="upload-button"]').should('not.be.disabled', {
         timeout: 60000
     })
 })
@@ -44,10 +44,10 @@ Cypress.Commands.add('generateImage', (navigate = false) => {
     cy.wait(1000)
 
     // Click the generate button
-    cy.get('button[data-testid="generate-button"]').click()
+    cy.get('[data-testid="generate-button"]').click()
 
     // Wait for generation to complete
-    cy.get('button[data-testid="generate-button"]').contains(
+    cy.get('[data-testid="generate-button"]').contains(
         'Generate Deck Image',
         {
             timeout: 60000

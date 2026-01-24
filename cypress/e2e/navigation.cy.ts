@@ -86,9 +86,8 @@ describe('Navigation and UI Elements', () => {
     it('should handle keyboard navigation', () => {
         cy.visit('/create')
 
-        // Test tab navigation
-        // cy.get('body').tab()
-        cy.press(Cypress.Keyboard.Keys.TAB)
+        // Test tab navigation - focus on first interactive element and tab through
+        cy.get('body').type('{tab}')
         cy.focused().should('be.visible')
 
         // Test textarea focus
