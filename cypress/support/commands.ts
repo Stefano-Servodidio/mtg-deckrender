@@ -10,8 +10,6 @@ export {} // Make this file an external module
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-export {}
-
 // Custom command to upload a decklist
 Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
     // Find the textarea and enter the decklist
