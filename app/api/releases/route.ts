@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { Release, ReleaseApiResponse } from '@/types/release'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
+import packageJson from '@/package.json'
 
 const GITHUB_OWNER = 'Stefano-Servodidio'
 const GITHUB_REPO = 'mtg-deck-to-png'
@@ -52,9 +53,7 @@ async function fetchGitHubReleases(): Promise<Release[]> {
  * Gets the current app version from package.json
  */
 function getCurrentVersion(): string {
-    // In production, this would be read from package.json
-    // For now, we'll use the environment variable or fallback
-    return process.env.npm_package_version || '1.0.0'
+    return packageJson.version
 }
 
 /**

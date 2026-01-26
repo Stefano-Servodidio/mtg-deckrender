@@ -56,18 +56,22 @@ export function NewReleaseBanner() {
         checkForNewRelease()
     }, [])
 
+    const markVersionAsSeen = () => {
+        if (latestRelease) {
+            setLastSeenVersion(latestRelease.tagName)
+        }
+    }
+
     const handleDismiss = () => {
         if (latestRelease) {
             dismissRelease(latestRelease.tagName)
-            setLastSeenVersion(latestRelease.tagName)
         }
+        markVersionAsSeen()
         setShowBanner(false)
     }
 
     const handleViewReleaseNotes = () => {
-        if (latestRelease) {
-            setLastSeenVersion(latestRelease.tagName)
-        }
+        markVersionAsSeen()
         router.push('/release-notes')
     }
 

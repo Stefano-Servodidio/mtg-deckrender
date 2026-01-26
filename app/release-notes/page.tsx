@@ -218,16 +218,17 @@ function formatReleaseBody(body: string): string {
             /\[([^\]]+)\]\(([^)]+)\)/g,
             '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
         )
+        // Line breaks for spacing
+        .replace(/\n/g, '<br />')
         // Bullet points - convert individual items
         .replace(/^\* (.*)$/gim, '<li>$1</li>')
 
-    // Wrap consecutive <li> items in <ul>
-    html = html.replace(/(<li>[\s\S]*?<\/li>)/g, (match) => {
-        return `<ul>${match}</ul>`
+    // Wrap consecutive <li> items in a single <ul> tag
+    html = html.replace(/(<li>.*?<\/li>(?:<br \/>)?)+/g, (match) => {
+        // Remove <br /> tags between list items
+        const cleanMatch = match.replace(/<br \/>/g, '')
+        return `<ul>${cleanMatch}</ul>`
     })
-
-    // Line breaks
-    html = html.replace(/\n/g, '<br />')
 
     return html
 }
