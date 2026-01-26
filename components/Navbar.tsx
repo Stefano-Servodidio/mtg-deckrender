@@ -9,7 +9,7 @@ import {
     HStack,
     MenuButton
 } from '@chakra-ui/react'
-import { FaHome, FaImage } from 'react-icons/fa'
+import { FaHome, FaImage, FaBell } from 'react-icons/fa'
 import Link from 'next/link'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
@@ -111,6 +111,28 @@ export function Navbar() {
                                 Create
                             </Button>
                         </Link>
+                        <Link
+                            href="/release-notes"
+                            style={{ textDecoration: 'none' }}
+                        >
+                            <Button
+                                variant="ghost"
+                                leftIcon={<FaBell />}
+                                size="md"
+                                onClick={() =>
+                                    analytics.trackLinkClick(
+                                        'Release Notes',
+                                        '/release-notes'
+                                    )
+                                }
+                                _hover={{
+                                    bg: 'blue.50',
+                                    color: 'blue.600'
+                                }}
+                            >
+                                Release Notes
+                            </Button>
+                        </Link>
                     </HStack>
                     <Box
                         data-testid="navbar-links-mobile"
@@ -156,6 +178,22 @@ export function Navbar() {
                                         _hover={{ bg: 'orange.50' }}
                                     >
                                         Create
+                                    </MenuItem>
+                                </Link>
+                                <Link href="/release-notes" passHref>
+                                    <MenuItem
+                                        icon={<FaBell />}
+                                        fontWeight="bold"
+                                        color={'blue.600'}
+                                        onClick={() =>
+                                            analytics.trackLinkClick(
+                                                'Release Notes (Mobile)',
+                                                '/release-notes'
+                                            )
+                                        }
+                                        _hover={{ bg: 'blue.50' }}
+                                    >
+                                        Release Notes
                                     </MenuItem>
                                 </Link>
                             </MenuList>
