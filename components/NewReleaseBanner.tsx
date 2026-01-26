@@ -5,7 +5,7 @@
  * Shows a banner when a new release is available
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnnouncementBanner } from './AnnouncementBanner'
 import type { ReleaseApiResponse } from '@/types/release'
@@ -56,24 +56,24 @@ export function NewReleaseBanner() {
         checkForNewRelease()
     }, [])
 
-    const markVersionAsSeen = () => {
+    const markVersionAsSeen = useCallback(() => {
         if (latestRelease) {
             setLastSeenVersion(latestRelease.tagName)
         }
-    }
+    }, [latestRelease])
 
-    const handleDismiss = () => {
+    const handleDismiss = useCallback(() => {
         if (latestRelease) {
             dismissRelease(latestRelease.tagName)
         }
         markVersionAsSeen()
         setShowBanner(false)
-    }
+    }, [latestRelease, markVersionAsSeen])
 
-    const handleViewReleaseNotes = () => {
+    const handleViewReleaseNotes = useCallback(() => {
         markVersionAsSeen()
         router.push('/release-notes')
-    }
+    }, [markVersionAsSeen, router])
 
     if (!latestRelease) return null
 

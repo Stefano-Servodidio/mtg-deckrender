@@ -224,11 +224,15 @@ function formatReleaseBody(body: string): string {
         .replace(/^\* (.*)$/gim, '<li>$1</li>')
 
     // Wrap consecutive <li> items in a single <ul> tag
-    html = html.replace(/(<li>.*?<\/li>(?:<br \/>)?)+/g, (match) => {
-        // Remove <br /> tags between list items
-        const cleanMatch = match.replace(/<br \/>/g, '')
-        return `<ul>${cleanMatch}</ul>`
-    })
+    // Match one or more <li> tags with optional <br /> between them
+    html = html.replace(
+        /(?:<li>[^<]*(?:<[^/][^>]*>[^<]*<\/[^>]+>)*[^<]*<\/li>(?:<br \/>)?)+/g,
+        (match) => {
+            // Remove <br /> tags between list items
+            const cleanMatch = match.replace(/<br \/>/g, '')
+            return `<ul>${cleanMatch}</ul>`
+        }
+    )
 
     return html
 }
