@@ -13,7 +13,7 @@ export {} // Make this file an external module
 // Custom command to upload a decklist
 Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
     // Find the textarea and enter the decklist
-    cy.get('textarea[placeholder*="Paste the decklist"]')
+    cy.get('textarea[data-testid="upload-decklist-textarea"]')
         .clear()
         .type(decklistText, { delay: 10 })
 
@@ -61,7 +61,7 @@ Cypress.Commands.add('downloadImage', (navigate = false) => {
     cy.wait(1000)
 
     // Verify download button is available
-    cy.get('a[data-testid="download-button"]')
+    cy.get('button[data-testid="download-button"]')
         .should('be.visible')
         .and('not.be.disabled')
 })

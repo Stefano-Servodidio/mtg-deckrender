@@ -127,6 +127,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         Paste Decklist Text
                     </Text>
                     <Textarea
+                        data-testid="upload-decklist-textarea"
                         value={decklistText}
                         onChange={(e) => setDecklistText(e.target.value)}
                         placeholder={

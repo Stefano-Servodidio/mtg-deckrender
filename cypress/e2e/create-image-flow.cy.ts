@@ -52,7 +52,7 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
         cy.get('[data-testid="upload-button"]').should('be.disabled')
 
         // Enter some text and verify button becomes enabled
-        cy.get('textarea[placeholder*="Paste the decklist"]').type(
+        cy.get('textarea[data-testid="upload-decklist-textarea"]').type(
             '4x Lightning Bolt'
         )
         cy.get('[data-testid="upload-button"]').should('not.be.disabled')
@@ -109,7 +109,7 @@ describe('MTG Deck to PNG - Complete User Flow', () => {
 
     it('should display proper error handling for invalid decklist', () => {
         // Enter invalid decklist format
-        cy.get('textarea[placeholder*="Paste the decklist"]')
+        cy.get('textarea[data-testid="upload-decklist-textarea"]')
             .clear()
             .type('invalid decklist format without numbers')
 
