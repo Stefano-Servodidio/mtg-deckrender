@@ -58,6 +58,8 @@ on:
 jobs:
     manage-blog:
         runs-on: ubuntu-latest
+        permissions:
+            contents: read
 
         steps:
             - name: List all blog posts
