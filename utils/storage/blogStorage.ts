@@ -7,10 +7,17 @@ let blogStore: ReturnType<typeof getStore> | null = null
 
 function getBlogStore() {
     if (!blogStore) {
+        // Validate environment variables
+        if (!process.env.NETLIFY_SITE_ID || !process.env.NETLIFY_AUTH_TOKEN) {
+            throw new Error(
+                'Missing required environment variables: NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN must be set for blog storage'
+            )
+        }
+
         blogStore = getStore({
             name: 'blog-posts',
-            siteID: process.env.NETLIFY_SITE_ID!,
-            token: process.env.NETLIFY_AUTH_TOKEN!
+            siteID: process.env.NETLIFY_SITE_ID,
+            token: process.env.NETLIFY_AUTH_TOKEN
         })
     }
     return blogStore

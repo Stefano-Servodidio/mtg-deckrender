@@ -110,6 +110,11 @@ export default function BlogSection({ maxPosts = 3 }: BlogSectionProps) {
                                     transform: 'translateY(-4px)',
                                     boxShadow: 'xl'
                                 }}
+                                _focusWithin={{
+                                    outline: '2px solid',
+                                    outlineColor: 'purple.500',
+                                    outlineOffset: '2px'
+                                }}
                                 transition="all 0.2s"
                                 cursor="pointer"
                             >

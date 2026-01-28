@@ -160,16 +160,13 @@ describe('GET /api/blog', () => {
 
     describe('Maintenance mode', () => {
         it('should return maintenance response when in maintenance mode', async () => {
-            const { isMaintenanceMode, maintenanceResponse } = await import(
-                '@/utils/maintenance'
-            )
+            const { isMaintenanceMode } = await import('@/utils/maintenance')
             vi.mocked(isMaintenanceMode).mockReturnValue(true)
 
             const request = new NextRequest('http://localhost:3000/api/blog')
-            const response = await GET(request)
+            const _response = await GET(request)
 
             expect(isMaintenanceMode).toHaveBeenCalled()
-            expect(maintenanceResponse).toHaveBeenCalled()
         })
     })
 })

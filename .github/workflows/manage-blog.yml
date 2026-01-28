@@ -70,6 +70,7 @@ jobs:
             - name: Create blog post
               if: github.event.inputs.action == 'create'
               run: |
+                  set -e  # Exit on error
                   echo "Creating new blog post..."
 
                   # Build tags array
@@ -119,6 +120,7 @@ jobs:
             - name: Update blog post
               if: github.event.inputs.action == 'update'
               run: |
+                  set -e  # Exit on error
                   echo "Updating blog post..."
 
                   # Build tags array
@@ -170,6 +172,7 @@ jobs:
             - name: Delete blog post
               if: github.event.inputs.action == 'delete'
               run: |
+                  set -e  # Exit on error
                   echo "Deleting blog post..."
 
                   RESPONSE=$(curl -X DELETE \

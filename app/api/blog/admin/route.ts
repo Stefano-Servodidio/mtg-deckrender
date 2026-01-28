@@ -119,6 +119,16 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // Validate slug format (URL-safe)
+        if (body.slug && !/^[a-z0-9-]+$/.test(body.slug)) {
+            return NextResponse.json(
+                {
+                    error: 'Invalid slug format. Use only lowercase letters, numbers, and hyphens.'
+                },
+                { status: 400 }
+            )
+        }
+
         // Check if slug already exists
         const existingPosts = await getAllBlogPostsMetadata()
         if (existingPosts.some((p) => p.slug === body.slug)) {
@@ -131,7 +141,7 @@ export async function POST(request: NextRequest) {
         // Create new blog post
         const now = new Date().toISOString()
         const post: BlogPost = {
-            id: `post-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            id: `post-${Date.now()}-${crypto.randomUUID()}`,
             title: body.title,
             slug: body.slug,
             excerpt: body.excerpt,
@@ -205,10 +215,20 @@ export async function PUT(request: NextRequest) {
             }
         }
 
-        // Update post
+        // Update post - explicitly allow only certain fields
         const updatedPost: BlogPost = {
             ...existingPost,
-            ...body,
+            title: body.title ?? existingPost.title,
+            slug: body.slug ?? existingPost.slug,
+            excerpt: body.excerpt ?? existingPost.excerpt,
+            content: body.content ?? existingPost.content,
+            author: body.author ?? existingPost.author,
+            coverImage:
+                body.coverImage !== undefined
+                    ? body.coverImage
+                    : existingPost.coverImage,
+            tags: body.tags ?? existingPost.tags,
+            published: body.published ?? existingPost.published,
             updatedAt: new Date().toISOString()
         }
 
