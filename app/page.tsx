@@ -19,6 +19,7 @@ import UploadIcon from '@/components/icons/UploadIcon'
 import { gradients } from '@/theme/gradients'
 import FeatureCard from '@/components/FeatureCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import BlogSection from '@/components/BlogSection'
 
 export default function Home() {
     const analytics = useAnalytics()
@@ -168,6 +169,10 @@ export default function Home() {
                     </Flex>
                 </VStack>
             </Container>
+
+            {/* Blog Section */}
+            <BlogSection maxPosts={3} />
+
             <Footer />
         </Box>
     )
