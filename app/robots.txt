@@ -1,0 +1,28 @@
+# MTG DeckRender - robots.txt
+
+# Allow all good bots
+User-agent: *
+Allow: /
+
+# Block bad bots and scrapers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+# Disallow API endpoints from crawling (they require POST)
+User-agent: *
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://mtgdeckrender.com/sitemap.xml

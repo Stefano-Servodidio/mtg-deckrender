@@ -61,10 +61,18 @@ export function DropZone({
                 borderColor: `${colorScheme}.300`,
                 transform: 'scale(1.01)'
             }}
+            _focusVisible={{
+                outline: '3px solid',
+                outlineColor: `${colorScheme}.500`,
+                outlineOffset: '2px'
+            }}
             textAlign="center"
+            role="button"
+            aria-label="Upload decklist file"
+            tabIndex={0}
             {...wrapperProps}
         >
-            <input {...getInputProps()} />
+            <input {...getInputProps()} aria-label="File upload input" />
             <VStack spacing={4}>
                 <Icon
                     as={isDragActive ? FaFileAlt : FaCloudUploadAlt}
