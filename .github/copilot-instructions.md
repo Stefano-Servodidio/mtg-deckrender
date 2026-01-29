@@ -4,11 +4,122 @@
 
 A Next.js 14 web app that converts MTG decklists to PNG images using Scryfall API. Built with React 18, TypeScript, Chakra UI, deployed on Netlify.
 
-**Tech**: Next.js 14 App Router, React 18, TypeScript, Chakra UI, Sharp (image processing), Netlify Blobs (storage), Google Analytics 4  
+**Tech**: Next.js 15 App Router, React 18, TypeScript, Chakra UI, Sharp (image processing), Netlify Blobs (storage), Google Analytics 4  
 **Size**: ~130+ source files  
 **Node**: >= 22.12.0 (works with 20.x in CI)  
 **Package Manager**: npm  
 **Deployment**: Netlify with Blobs enabled
+
+## Security Best Practices
+
+### Rate Limiting & Bot Protection
+
+**CRITICAL**: All API endpoints are protected by rate limiting and bot detection in `middleware.ts`.
+
+**Rate Limits**:
+- Default: 10 requests per minute per IP
+- Expensive operations (`/api/deck-png`, `/api/collections`): 5 requests per minute per IP
+- Rate limit headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+**Bot Protection**:
+- Suspicious user agents are blocked (curl, wget, scrapers, undefined)
+- Legitimate bots are allowed (Googlebot, Bingbot, social media bots)
+- All blocking is logged to console
+
+**Implementation**:
+- `utils/rateLimit.ts`: In-memory rate limiter (resets on server restart)
+- `utils/security.ts`: Bot detection, IP extraction, input validation
+
+### Input Validation
+
+**ALWAYS** validate user input in API routes:
+
+```typescript
+import { validateDecklistInput } from '@/utils/security'
+
+const validation = validateDecklistInput(decklist)
+if (!validation.valid) {
+    return NextResponse.json({ error: validation.message }, { status: 400 })
+}
+```
+
+**Validation Rules**:
+- Decklist max length: 50KB (50,000 characters)
+- Max lines: 500
+- Cards API: Max 100 unique cards
+- Input sanitization: Remove HTML, JavaScript, SQL injection patterns
+
+### Security Headers
+
+Security headers are configured in `next.config.js`:
+- `X-Content-Type-Options: nosniff` - Prevents MIME sniffing
+- `X-Frame-Options: DENY` - Prevents clickjacking
+- `X-XSS-Protection: 1; mode=block` - XSS protection
+- `Referrer-Policy: strict-origin-when-cross-origin` - Referrer privacy
+- `Permissions-Policy` - Disables unused browser features
+- CORS headers for API routes
+
+### Maintenance Mode
+
+Set `NEXT_PUBLIC_MAINTENANCE=true` to enable maintenance mode:
+- Middleware redirects all routes to `/site-down` (503 for APIs)
+- Check with `isMaintenanceMode()` at the start of API routes
+
+## SEO Best Practices
+
+### Meta Tags & Structured Data
+
+**Layout.tsx** (`app/layout.tsx`):
+- Rich meta tags with Open Graph and Twitter Card support
+- Canonical URLs with `metadataBase`
+- JSON-LD structured data for WebApplication
+- Keywords: MTG-specific and tool-related
+
+**Per-Page Metadata**:
+- Use `export const metadata: Metadata` for page-specific meta tags
+- Override `title` with template: `'%s | MTG DeckRender'`
+
+### Robots & Sitemap
+
+- `app/robots.txt`: Allows good bots, blocks scrapers, disallows `/api/`
+- `app/sitemap.ts`: Dynamic sitemap with priorities and change frequencies
+- Update sitemap when adding new pages
+
+### Performance & SEO
+
+- Images: Use `next/image` with proper `alt` attributes
+- Links: Use `next/link` for internal navigation
+- Headings: Proper hierarchy (h1 → h2 → h3)
+- Semantic HTML: `<main>`, `<nav>`, `<article>`, `<section>`
+
+## Accessibility (A11y) Best Practices
+
+### Keyboard Navigation
+
+- **Skip links**: Added in `Navbar.tsx` (`#main-content`)
+- **Focus visible**: All interactive elements have `:focus-visible` styles
+- **Tab order**: Logical tab order maintained
+
+### ARIA Labels
+
+**ALWAYS** add ARIA labels to:
+- Icon-only buttons: `aria-label="Open menu"`
+- Icons: `aria-hidden="true"` if decorative
+- Form inputs: `aria-label` or `<label>` element
+- Navigation: `role="navigation"` with `aria-label="Main navigation"`
+
+### Color & Contrast
+
+- Test with WCAG AAA standards (7:1 for normal text, 4.5:1 for large text)
+- Don't rely on color alone for information
+- Use Chakra UI's semantic color tokens
+
+### Screen Reader Support
+
+- Proper heading hierarchy (h1 → h2 → h3)
+- `alt` text for all images
+- Meaningful link text (avoid "click here")
+- Form labels and error messages
 
 ## Critical Build and Test Information
 

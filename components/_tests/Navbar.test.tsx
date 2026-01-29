@@ -96,7 +96,7 @@ describe('Navbar', () => {
 
         const menuButton = screen.getByTestId('navbar-mobile-menu-button')
         expect(menuButton).toBeInTheDocument()
-        expect(menuButton).toHaveAttribute('aria-label', 'Open menu')
+        expect(menuButton).toHaveAttribute('aria-label', 'Open navigation menu')
     })
 
     it('should render Home and Create links in desktop menu', () => {
@@ -208,6 +208,6 @@ describe('Navbar', () => {
 
         const menuButton = screen.getByTestId('navbar-mobile-menu-button')
         expect(menuButton).toBeInTheDocument()
-        expect(menuButton).toHaveAttribute('aria-label', 'Open menu')
+        expect(menuButton).toHaveAttribute('aria-label', 'Open navigation menu')
     })
 })
