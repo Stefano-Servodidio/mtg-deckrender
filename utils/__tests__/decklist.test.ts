@@ -78,20 +78,33 @@ describe('Decklist utility functions', () => {
 
         test('should split properly with sb separator but not match within card names', () => {
             const decklist =
-                '4 Kinsbaile Aspirant\n2 Lightning Bolt\n\nsb\n3 Path to Exile\n1 Absorb'
+                '4 Kinsbaile Aspirant\n2 Lightning Bolt\n\nsb\n3 Path to Exile\n1 Aerith Gainsborough'
             const result = parseDecklist(decklist)
 
             expect(result).toHaveLength(2)
             expect(result[0]).toBe('4 Kinsbaile Aspirant\n2 Lightning Bolt')
-            expect(result[1]).toBe('3 Path to Exile\n1 Absorb')
+            expect(result[1]).toBe('3 Path to Exile\n1 Aerith Gainsborough')
         })
 
-        test('should not match "sb" in card name Absorb', () => {
-            const decklist = '4 Absorb\n2 Lightning Bolt\n3 Counterspell'
+        test('should not match "sb" in card name Aerith Gainsborough', () => {
+            const decklist =
+                '4 Aerith Gainsborough\n2 Lightning Bolt\n3 Counterspell'
             const result = parseDecklist(decklist)
 
             expect(result).toHaveLength(1)
-            expect(result[0]).toBe('4 Absorb\n2 Lightning Bolt\n3 Counterspell')
+            expect(result[0]).toBe(
+                '4 Aerith Gainsborough\n2 Lightning Bolt\n3 Counterspell'
+            )
+        })
+
+        test('should not match "sb" in card name Alms Beast', () => {
+            const decklist = '4 Alms Beast\n2 Lightning Bolt\n3 Counterspell'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(1)
+            expect(result[0]).toBe(
+                '4 Alms Beast\n2 Lightning Bolt\n3 Counterspell'
+            )
         })
 
         test('should match standalone SB separator with word boundary', () => {
@@ -137,12 +150,12 @@ describe('Decklist utility functions', () => {
 
         test('should handle multiple cards with "sb" in names without splitting', () => {
             const decklist =
-                '4 Kinsbaile Aspirant\n3 Absorb\n2 Auriok Steelshaper\n1 Obsessive Search'
+                '4 Kinsbaile Aspirant\n3 Aerith Gainsborough\n2 Alms Beast\n1 Obsessive Search'
             const result = parseDecklist(decklist)
 
             expect(result).toHaveLength(1)
             expect(result[0]).toBe(
-                '4 Kinsbaile Aspirant\n3 Absorb\n2 Auriok Steelshaper\n1 Obsessive Search'
+                '4 Kinsbaile Aspirant\n3 Aerith Gainsborough\n2 Alms Beast\n1 Obsessive Search'
             )
         })
 
