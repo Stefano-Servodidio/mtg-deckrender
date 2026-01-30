@@ -73,9 +73,6 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <head>
-                <link rel="canonical" href={siteUrl} />
-            </head>
             <body>
                 <GoogleAnalytics />
                 <Providers>
