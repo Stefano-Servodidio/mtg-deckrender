@@ -119,7 +119,7 @@ describe('Collections API', () => {
 
         test('should reject decklist exceeding 150 cards', async () => {
             // Create a decklist with 151 unique cards
-            const cards = Array.from({ length: 101 }, (_, i) => `1 Card ${i}`)
+            const cards = Array.from({ length: 151 }, (_, i) => `1 Card ${i}`)
             const decklist = cards.join('\n')
 
             const request = new NextRequest(
@@ -135,11 +135,11 @@ describe('Collections API', () => {
 
             expect(response.status).toBe(400)
             expect(data.error).toContain(
-                'exceeds the maximum of 100 unique cards'
+                'exceeds the maximum of 150 unique cards'
             )
         })
 
-        test('should accept valid decklist with less than 100 cards', async () => {
+        test('should accept valid decklist with less than 150 cards', async () => {
             // Create a decklist with 3 cards
             const decklist = '4 Lightning Bolt\n2 Counterspell\n1 Black Lotus'
 
