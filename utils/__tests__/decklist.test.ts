@@ -86,6 +86,66 @@ describe('Decklist utility functions', () => {
             expect(result[1]).toBe('3 Path to Exile\n1 Absorb')
         })
 
+        test('should not match "sb" in card name Absorb', () => {
+            const decklist = '4 Absorb\n2 Lightning Bolt\n3 Counterspell'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(1)
+            expect(result[0]).toBe('4 Absorb\n2 Lightning Bolt\n3 Counterspell')
+        })
+
+        test('should match standalone SB separator with word boundary', () => {
+            const decklist =
+                '4 Lightning Bolt\n2 Counterspell\n\nSB\n3 Path to Exile'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(2)
+            expect(result[0]).toBe('4 Lightning Bolt\n2 Counterspell')
+            expect(result[1]).toBe('3 Path to Exile')
+        })
+
+        test('should match standalone Sb separator with word boundary', () => {
+            const decklist =
+                '4 Lightning Bolt\n2 Counterspell\n\nSb\n3 Path to Exile'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(2)
+            expect(result[0]).toBe('4 Lightning Bolt\n2 Counterspell')
+            expect(result[1]).toBe('3 Path to Exile')
+        })
+
+        test('should match SIDEBOARD with word boundary', () => {
+            const decklist = '4 Lightning Bolt\n\nSIDEBOARD\n3 Path to Exile'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(2)
+            expect(result[0]).toBe('4 Lightning Bolt')
+            expect(result[1]).toBe('3 Path to Exile')
+        })
+
+        test('should not match "sideboard" within hypothetical card name', () => {
+            // Hypothetical edge case: if a card had "sideboard" in its name
+            const decklist =
+                '4 Mystic Sideboardkeeper\n2 Lightning Bolt\n\nsideboard\n3 Path to Exile'
+            const result = parseDecklist(decklist)
+
+            // Should split only on the standalone "sideboard" separator
+            expect(result).toHaveLength(2)
+            expect(result[0]).toBe('4 Mystic Sideboardkeeper\n2 Lightning Bolt')
+            expect(result[1]).toBe('3 Path to Exile')
+        })
+
+        test('should handle multiple cards with "sb" in names without splitting', () => {
+            const decklist =
+                '4 Kinsbaile Aspirant\n3 Absorb\n2 Auriok Steelshaper\n1 Obsessive Search'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(1)
+            expect(result[0]).toBe(
+                '4 Kinsbaile Aspirant\n3 Absorb\n2 Auriok Steelshaper\n1 Obsessive Search'
+            )
+        })
+
         test('should handle empty decklist', () => {
             const result = parseDecklist('')
             expect(result).toHaveLength(0)
