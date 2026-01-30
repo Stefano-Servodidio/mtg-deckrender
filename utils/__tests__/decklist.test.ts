@@ -68,6 +68,24 @@ describe('Decklist utility functions', () => {
             expect(result[1]).toBe('3 Path to Exile\n1 Wrath of God')
         })
 
+        test('should not match "sb" within card names like Kinsbaile Aspirant', () => {
+            const decklist = '4 Kinsbaile Aspirant\n2 Counterspell'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(1)
+            expect(result[0]).toBe('4 Kinsbaile Aspirant\n2 Counterspell')
+        })
+
+        test('should split properly with sb separator but not match within card names', () => {
+            const decklist =
+                '4 Kinsbaile Aspirant\n2 Lightning Bolt\n\nsb\n3 Path to Exile\n1 Absorb'
+            const result = parseDecklist(decklist)
+
+            expect(result).toHaveLength(2)
+            expect(result[0]).toBe('4 Kinsbaile Aspirant\n2 Lightning Bolt')
+            expect(result[1]).toBe('3 Path to Exile\n1 Absorb')
+        })
+
         test('should handle empty decklist', () => {
             const result = parseDecklist('')
             expect(result).toHaveLength(0)
