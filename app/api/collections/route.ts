@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             )
         }
-
-        if (uniqueCards.length > 100) {
+        console.log('Parsed unique cards:', uniqueCards.length)
+        if (uniqueCards.length > 150) {
             return NextResponse.json(
-                { error: 'Decklist exceeds the maximum of 100 unique cards.' },
+                { error: 'Decklist exceeds the maximum of 150 unique cards.' },
                 { status: 400 }
             )
         }
