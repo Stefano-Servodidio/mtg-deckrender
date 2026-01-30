@@ -11,7 +11,6 @@ import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
 import { createSSEStream } from '@/utils/stream'
-import { validateDecklistInput } from '@/utils/security'
 
 export async function POST(request: NextRequest) {
     if (isMaintenanceMode()) {
@@ -28,15 +27,6 @@ export async function POST(request: NextRequest) {
         if (!decklist || typeof decklist !== 'string') {
             return NextResponse.json(
                 { error: 'Invalid request. Expected decklist to be a string.' },
-                { status: 400 }
-            )
-        }
-
-        // Validate decklist input for security
-        const validation = validateDecklistInput(decklist)
-        if (!validation.valid) {
-            return NextResponse.json(
-                { error: validation.message },
                 { status: 400 }
             )
         }
