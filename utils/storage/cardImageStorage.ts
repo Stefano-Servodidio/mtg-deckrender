@@ -6,11 +6,16 @@ let cardImageStore: ReturnType<typeof getStore> | null = null
 
 function getCardImageStore() {
     if (!cardImageStore) {
-        cardImageStore = getStore({
-            name: 'card-images',
-            siteID: process.env.NETLIFY_SITE_ID!,
-            token: process.env.NETLIFY_AUTH_TOKEN!
-        })
+        // On Netlify, credentials are auto-detected. Only provide them for local development.
+        const config: any = { name: 'card-images' }
+
+        // Only explicitly set credentials if we're NOT on Netlify (local dev)
+        if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
+            config.siteID = process.env.NETLIFY_SITE_ID
+            config.token = process.env.NETLIFY_AUTH_TOKEN
+        }
+
+        cardImageStore = getStore(config)
     }
     return cardImageStore
 }
