@@ -59,3 +59,6 @@ export interface UpdateBlogPostRequest {
     tags?: string[]
     published?: boolean
 }
+
+export type BlogPostBySlugResponse = { post: BlogPost }
+export type BlogPostsResponse = { posts: BlogPostMetadata[]; count: number }

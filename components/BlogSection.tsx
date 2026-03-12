@@ -10,53 +10,32 @@ import {
     CardBody,
     CardHeader,
     Image,
-    Badge,
-    HStack,
-    Avatar,
     Skeleton,
     SkeletonText
 } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
-import { BlogPostMetadata } from '@/types/blog'
+import { useEffect } from 'react'
 import Link from 'next/link'
+import BlogHeader from './BlogHeader'
+import BlogFooter from './BlogFooter'
+import { usePosts } from '@/hooks/usePosts'
 
 interface BlogSectionProps {
     maxPosts?: number
 }
 
 export default function BlogSection({ maxPosts = 3 }: BlogSectionProps) {
-    const [posts, setPosts] = useState<BlogPostMetadata[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+    const { data, isLoading, error, fetchPosts } = usePosts()
+    const posts = data?.posts || []
 
     useEffect(() => {
-        async function fetchPosts() {
-            try {
-                const response = await fetch('/api/blog')
-                if (!response.ok) {
-                    throw new Error('Failed to fetch blog posts')
-                }
-                const data = await response.json()
-                setPosts(data.posts.slice(0, maxPosts))
-            } catch (err) {
-                setError(
-                    err instanceof Error
-                        ? err.message
-                        : 'Failed to load blog posts'
-                )
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchPosts()
-    }, [maxPosts])
+        fetchPosts(maxPosts)
+    }, [fetchPosts, maxPosts])
 
     if (error) {
         return null // Silently fail if blog posts can't be loaded
     }
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Container maxW="7xl" py={16}>
                 <VStack spacing={8}>
@@ -128,60 +107,20 @@ export default function BlogSection({ maxPosts = 3 }: BlogSectionProps) {
                                     />
                                 )}
                                 <CardHeader pb={2}>
-                                    <VStack align="start" spacing={2}>
-                                        <Heading size="md">
-                                            {post.title}
-                                        </Heading>
-                                        <HStack spacing={2} flexWrap="wrap">
-                                            {post.tags
-                                                .slice(0, 3)
-                                                .map((tag) => (
-                                                    <Badge
-                                                        key={tag}
-                                                        colorScheme="purple"
-                                                        fontSize="xs"
-                                                    >
-                                                        {tag}
-                                                    </Badge>
-                                                ))}
-                                        </HStack>
-                                    </VStack>
+                                    <BlogHeader
+                                        title={post.title}
+                                        tags={post.tags}
+                                    />
                                 </CardHeader>
                                 <CardBody pt={2}>
                                     <VStack align="start" spacing={4}>
                                         <Text color="gray.600" noOfLines={3}>
                                             {post.excerpt}
                                         </Text>
-                                        <HStack spacing={3}>
-                                            <Avatar
-                                                size="sm"
-                                                name={post.author.name}
-                                                src={post.author.avatar}
-                                            />
-                                            <VStack align="start" spacing={0}>
-                                                <Text
-                                                    fontSize="sm"
-                                                    fontWeight="semibold"
-                                                >
-                                                    {post.author.name}
-                                                </Text>
-                                                <Text
-                                                    fontSize="xs"
-                                                    color="gray.500"
-                                                >
-                                                    {new Date(
-                                                        post.createdAt
-                                                    ).toLocaleDateString(
-                                                        'en-US',
-                                                        {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric'
-                                                        }
-                                                    )}
-                                                </Text>
-                                            </VStack>
-                                        </HStack>
+                                        <BlogFooter
+                                            author={post.author}
+                                            createdAt={post.createdAt}
+                                        />
                                     </VStack>
                                 </CardBody>
                             </Card>

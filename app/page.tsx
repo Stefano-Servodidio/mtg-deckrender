@@ -7,8 +7,7 @@ import {
     Text,
     Button,
     VStack,
-    HStack,
-    Flex
+    HStack
 } from '@chakra-ui/react'
 import Link from 'next/link'
 import { Footer } from '@/components/Footer'
@@ -17,7 +16,6 @@ import ImageIcon from '@/components/icons/ImageIcon'
 import DownloadIcon from '@/components/icons/DownloadIcon'
 import UploadIcon from '@/components/icons/UploadIcon'
 import { gradients } from '@/theme/gradients'
-import FeatureCard from '@/components/FeatureCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import BlogSection from '@/components/BlogSection'
 
@@ -134,39 +132,6 @@ export default function Home() {
                             Create Deck Image
                         </Button>
                     </Link>
-                </VStack>
-            </Container>
-
-            {/* Features Section */}
-            <Container maxW="7xl" py={16}>
-                <VStack spacing={12}>
-                    <Heading size={{ base: 'lg', md: 'xl' }} textAlign="center">
-                        A deck image generator for the Magic community
-                    </Heading>
-
-                    <Flex
-                        direction={{ base: 'column', md: 'row' }}
-                        gap={8}
-                        w="full"
-                    >
-                        <FeatureCard
-                            icon={<ImageIcon w={6} h={6} />}
-                            title="Beautiful Formatting"
-                            description="Clean, professional deck images with proper card categorization and formatting that's easy to read and share."
-                        />
-
-                        <FeatureCard
-                            icon={<UploadIcon w={6} h={6} />}
-                            title="Multiple Input Methods"
-                            description="Paste your decklist directly or upload text files. Supports various decklist formats from popular platforms."
-                        />
-
-                        <FeatureCard
-                            icon={<DownloadIcon w={6} h={6} />}
-                            title="Instant Download"
-                            description="Generate and download your deck images instantly. No registration required, completely free to use."
-                        />
-                    </Flex>
                 </VStack>
             </Container>
 
