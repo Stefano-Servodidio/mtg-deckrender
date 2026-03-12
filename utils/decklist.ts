@@ -4,18 +4,21 @@
 import { CardItem } from '@/types/api'
 import { ScryfallCard } from '@/types/scryfall'
 
+// Regex patterns to match separator lines
+// Use word boundaries to prevent matching "sb" within card names like "Kinsbaile Aspirant"
+// Patterns with colons are safe as-is since card names don't contain colons
 const decklistSeparators = [
-    'SIDEBOARD',
-    'Sideboard',
-    'sideboard',
+    '\\bSIDEBOARD\\b',
+    '\\bSideboard\\b',
+    '\\bsideboard\\b',
     'SIDEBOARD:',
     'Sideboard:',
     'sideboard:',
     'SB:',
     'sb:',
-    'SB',
-    'Sb',
-    'sb',
+    '\\bSB\\b',
+    '\\bSb\\b',
+    '\\bsb\\b',
     '--',
     '\n\n',
     '\r\n\r\n'

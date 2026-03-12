@@ -29,7 +29,7 @@ export function calculateCardDimensions(
     const { card, row, spacing } = DECK_LAYOUT_CONFIG
     const baseWidth = card.baseWidth
     const baseHeight = card.baseHeight
-    const rowSize = getRowSize(imageSize, imageVariant)
+    const rowSize = getRowSize(imageSize, imageVariant, images.length)
 
     let groups = new Map<number, CardImageBuffer[]>()
 
@@ -265,7 +265,8 @@ export async function resizeImages(
 
 export function getRowSize(
     imageSize?: ImageSize,
-    imageVariant?: ImageVariant
+    imageVariant?: ImageVariant,
+    imageCount?: number
 ): number {
     let size =
         imageSize && ROW_SIZE[imageSize]
@@ -274,6 +275,10 @@ export function getRowSize(
     // Extend row size for spoiler variant to accommodate full card visibility
     if (imageVariant === 'spoiler') {
         size += 1
+    }
+    // if there are less images than the row size, adjust accordingly
+    if (imageCount && imageCount < size) {
+        size = imageCount
     }
     return size
 }

@@ -68,13 +68,13 @@ All tests pass.
 **Flow** (`utils/api.ts::downloadCardImage`):
 
 - Check memory → Check Blobs → Download from Scryfall → Save to Blobs + memory
-- Dev mode: `DEV_DEBUG_DISABLE_BLOBS=true` skips Blobs (forces Scryfall downloads)
+- Dev mode: Without credentials, skips Blobs (forces Scryfall downloads)
 
-**Environment Variables** (Netlify only):
+**Netlify Blobs Authentication**:
 
-- `NETLIFY_SITE_ID`: Required for Blobs
-- `NETLIFY_AUTH_TOKEN`: Required for Blobs
-- Set in Netlify dashboard, NOT in `.env.local`
+- **Production (on Netlify)**: Auto-detected, NO manual configuration needed
+- **Local Development**: Optional - set `NETLIFY_SITE_ID` and `NETLIFY_AUTH_TOKEN` in `.env.local`
+- **Important**: NEVER set these in `.env.production` or Netlify dashboard - use auto-detection
 
 ### Image Processing Pipeline
 
