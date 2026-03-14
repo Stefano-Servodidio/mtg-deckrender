@@ -84,8 +84,8 @@ export default function Blog() {
                                     Post Not Found
                                 </Heading>
                                 <Text color="gray.500">
-                                    The blog post you're looking for doesn't
-                                    exist or has been removed.
+                                    The blog post you&apos;re looking for
+                                    doesn&apos;t exist or has been removed.
                                 </Text>
                                 <Button
                                     colorScheme="purple"
