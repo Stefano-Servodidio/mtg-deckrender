@@ -1,20 +1,12 @@
-import { getStore } from '@netlify/blobs'
 import { NextResponse } from 'next/server'
+import { overlayCache } from '@/utils/cache'
 
 export async function GET() {
-    // On Netlify, credentials are auto-detected. Only provide them for local development.
-    const config: any = { name: 'overlay-images' }
-
-    if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
-        config.siteID = process.env.NETLIFY_SITE_ID
-        config.token = process.env.NETLIFY_AUTH_TOKEN
-    }
-
-    const store = getStore(config)
-    const { blobs } = await store.list()
+    const cacheSize = overlayCache.size()
+    const cacheKeys = overlayCache.getKeys()
 
     return NextResponse.json({
-        totalImages: blobs.length,
-        images: blobs.slice(0, 10) // First 10 for preview
+        totalImages: cacheSize,
+        images: cacheKeys.slice(0, 10) // First 10 for preview
     })
 }

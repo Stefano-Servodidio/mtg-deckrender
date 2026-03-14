@@ -14,7 +14,7 @@ import {
 import { calculateRowHeight, getRowSize } from './processing'
 import { overlayCache } from '@/utils/cache'
 import chalk from 'chalk'
-import { getOverlayFromBlobs } from './storage/overlayImageStorage'
+import { generateOverlayBuffer } from './svg'
 
 /**
  * Calculate position for a card in the grid based on layout settings
@@ -106,7 +106,17 @@ export function prepareCardOperations(
 }
 
 /**
- * Prepare quantity overlay operations for Sharp
+ * Prepare quantity overlay operations for Sharp.
+ *
+ * Overlays are generated dynamically from SVG (with an inline embedded font)
+ * rather than fetched from Netlify Blobs. This ensures they work in all
+ * environments, including Netlify serverless functions without system fonts.
+ *
+ * Caching strategy:
+ * - A request-scoped Map ensures each unique (quantity, size) is generated at
+ *   most once per request, even when multiple cards share the same quantity.
+ * - The module-level overlayCache persists generated buffers across requests
+ *   for the lifetime of the serverless function instance.
  */
 export async function prepareQuantityOverlayOperations(
     images: CardImageBuffer[],
@@ -134,87 +144,90 @@ export async function prepareQuantityOverlayOperations(
 
     const leftModifier = cardDimensions.width - scaledOverlayOffsetFromRight
 
-    let processedGroups: Set<number> = new Set()
-    let cardIndex = -1
+    const scaledOverlaySize = Math.floor(overlay.size * cardDimensions.scale!)
 
-    const overlayOperations = await Promise.all(
-        images.map(async (imageData) => {
-            // Reset card index when a new group is encountered
-            if (!processedGroups.has(imageData.groupId)) {
-                cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
-            } else {
-                cardIndex += 1
-            }
+    // Pre-generate overlay buffers for all unique quantities in this request.
+    // This ensures each unique (quantity, size) pair is generated exactly once
+    // per request, regardless of how many cards share the same quantity.
+    const overlayBuffersByKey = new Map<string, Buffer>()
 
-            processedGroups.add(imageData.groupId)
+    const uniqueQuantities = Array.from(
+        new Set(
+            images.filter((img) => img.quantity >= 2).map((img) => img.quantity)
+        )
+    )
 
-            if (imageData.quantity < 2) return null // No overlay for single cards
-
-            const topModifier =
-                (processedGroups.size - 1) * separator +
-                scaledOverlayOffsetFromTop
-            const mods = sumModifiers(
-                modifiers || {},
-                topModifier,
-                leftModifier
-            )
-            const { left, top } = calculateCardPosition(
-                cardIndex,
-                cardDimensions,
-                rowSize,
-                imageVariant,
-                imageSize,
-                mods
-            )
-            const scaledOverlaySize = Math.floor(
-                overlay.size * cardDimensions.scale!
-            )
-
-            // In your prepareQuantityOverlayOperations function:
-            const cacheKey = `x${imageData.quantity}_${scaledOverlaySize}`
+    await Promise.all(
+        uniqueQuantities.map(async (quantity) => {
+            const cacheKey = `x${quantity}_${scaledOverlaySize}`
 
             if (overlayCache.has(cacheKey)) {
-                const cachedBuffer = overlayCache.get(cacheKey)!
                 console.log(
                     chalk.blueBright(
-                        `Memory Cache hit for overlay: x${imageData.quantity}, scale: ${cardDimensions.scale}`
+                        `Memory Cache hit for overlay: x${quantity}, size: ${scaledOverlaySize}`
                     )
                 )
-                return {
-                    input: cachedBuffer,
-                    left: Math.floor(left),
-                    top: Math.floor(top)
-                }
+                overlayBuffersByKey.set(cacheKey, overlayCache.get(cacheKey)!)
             } else {
-                const buffer = await getOverlayFromBlobs(
-                    `x${imageData.quantity}`
-                )
-                if (!buffer) {
-                    console.warn(
-                        chalk.red(`Overlay not found: x${imageData.quantity}`)
-                    )
-                    return null
-                }
                 console.log(
                     chalk.grey(
-                        `Getting overlay from blob: x${imageData.quantity}, size: ${scaledOverlaySize}`
+                        `Generating SVG overlay: x${quantity}, size: ${scaledOverlaySize}`
                     )
                 )
-                const resizedBuffer = await sharp(buffer)
-                    .resize(scaledOverlaySize, null)
-                    .toBuffer()
-
-                // Cache the resized overlay
-                overlayCache.set(cacheKey, resizedBuffer)
-
-                return {
-                    input: resizedBuffer,
-                    left: Math.floor(left),
-                    top: Math.floor(top)
-                }
+                const buffer = await generateOverlayBuffer(
+                    quantity,
+                    scaledOverlaySize
+                )
+                overlayCache.set(cacheKey, buffer)
+                overlayBuffersByKey.set(cacheKey, buffer)
             }
         })
     )
+
+    let processedGroups: Set<number> = new Set()
+    let cardIndex = -1
+
+    const overlayOperations = images.map((imageData) => {
+        // Reset card index when a new group is encountered
+        if (!processedGroups.has(imageData.groupId)) {
+            cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
+        } else {
+            cardIndex += 1
+        }
+
+        processedGroups.add(imageData.groupId)
+
+        if (imageData.quantity < 2) return null // No overlay for single cards
+
+        const cacheKey = `x${imageData.quantity}_${scaledOverlaySize}`
+        const buffer = overlayBuffersByKey.get(cacheKey)
+        if (!buffer) {
+            console.warn(
+                chalk.red(
+                    `Expected overlay buffer missing for key: ${cacheKey} – skipping overlay`
+                )
+            )
+            return null
+        }
+
+        const topModifier =
+            (processedGroups.size - 1) * separator + scaledOverlayOffsetFromTop
+        const mods = sumModifiers(modifiers || {}, topModifier, leftModifier)
+        const { left, top } = calculateCardPosition(
+            cardIndex,
+            cardDimensions,
+            rowSize,
+            imageVariant,
+            imageSize,
+            mods
+        )
+
+        return {
+            input: buffer,
+            left: Math.floor(left),
+            top: Math.floor(top)
+        }
+    })
 
     return overlayOperations.filter(
         (op): op is NonNullable<typeof op> => op !== null
