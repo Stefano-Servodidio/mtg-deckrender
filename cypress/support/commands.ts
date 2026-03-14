@@ -10,27 +10,25 @@ export {} // Make this file an external module
 // https://on.cypress.io/custom-commands
 // ***********************************************
 
-export {}
-
 // Custom command to upload a decklist
 Cypress.Commands.add('uploadDecklist', (decklistText: string) => {
     // Find the textarea and enter the decklist
-    cy.get('textarea[placeholder*="Paste the decklist"]')
+    cy.get('textarea[data-testid="upload-decklist-textarea"]')
         .clear()
         .type(decklistText, { delay: 10 })
 
     // Click the upload button
-    cy.get('button[data-testid="upload-button"]').click()
+    cy.get('[data-testid="upload-button"]').click()
 
     // Wait for the upload to complete - look for success indicators
     // cy.get('[data-testid="upload-progress"], .chakra-progress', {
     //     timeout: 30000
     // }).should('be.visible')
 
-    // Wait for the upload to finish (progress disappears or shows completion)
-    cy.get('button[data-testid="upload-button"]').should('not.be.disabled', {
-        timeout: 60000
-    })
+    // Wait for the upload to finish (button no longer shows "Uploading...")
+    cy.get('[data-testid="upload-button"]', { timeout: 60000 })
+        .should('not.contain', 'Uploading...')
+        .and('be.visible')
 })
 
 // Custom command to generate the deck image
@@ -44,15 +42,12 @@ Cypress.Commands.add('generateImage', (navigate = false) => {
     cy.wait(1000)
 
     // Click the generate button
-    cy.get('button[data-testid="generate-button"]').click()
+    cy.get('[data-testid="generate-button"]').click()
 
-    // Wait for generation to complete
-    cy.get('button[data-testid="generate-button"]').contains(
-        'Generate Deck Image',
-        {
-            timeout: 60000
-        }
-    )
+    // Wait for generation to complete (button no longer shows "Generating...")
+    cy.get('[data-testid="generate-button"]', { timeout: 60000 })
+        .should('not.contain', 'Generating...')
+        .and('contain', 'Generate Deck Image')
 })
 
 // Custom command to download the generated image
@@ -66,7 +61,7 @@ Cypress.Commands.add('downloadImage', (navigate = false) => {
     cy.wait(1000)
 
     // Verify download button is available
-    cy.get('a[data-testid="download-button"]')
+    cy.get('button[data-testid="download-button"]')
         .should('be.visible')
         .and('not.be.disabled')
 })

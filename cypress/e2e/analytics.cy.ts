@@ -114,7 +114,7 @@ describe('Google Analytics 4 Integration', () => {
 
         it('should track upload button click', () => {
             // Add some text to enable the button
-            cy.get('textarea[placeholder*="Paste the decklist"]').type(
+            cy.get('textarea[data-testid="upload-decklist-textarea"]').type(
                 '4 Lightning Bolt',
                 { delay: 10 }
             )
@@ -132,7 +132,7 @@ describe('Google Analytics 4 Integration', () => {
             const decklistText =
                 '4 Lightning Bolt\n3 Counterspell\n2 Brainstorm'
 
-            cy.get('textarea[placeholder*="Paste the decklist"]').type(
+            cy.get('textarea[data-testid="upload-decklist-textarea"]').type(
                 decklistText,
                 { delay: 5 }
             )
@@ -194,7 +194,7 @@ describe('Google Analytics 4 Integration', () => {
             // This would trigger error tracking in the actual app
             // We're just verifying the error event can be tracked
 
-            cy.get('textarea[placeholder*="Paste the decklist"]').type(
+            cy.get('textarea[data-testid="upload-decklist-textarea"]').type(
                 'Invalid Card Name',
                 { delay: 10 }
             )

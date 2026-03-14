@@ -197,7 +197,7 @@ For complex pages, consider using page objects:
 ```typescript
 class CreatePage {
     uploadDecklist(text: string) {
-        cy.get('textarea[placeholder*="Paste the decklist"]').type(text)
+        cy.get('textarea[data-testid="upload-decklist-textarea"]').type(text)
         cy.get('button').contains('Upload Decklist').click()
     }
 }

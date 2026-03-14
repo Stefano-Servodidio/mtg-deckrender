@@ -83,6 +83,7 @@ export function CookieBanner() {
 
     return (
         <Box
+            data-testid="cookie-banner"
             position="fixed"
             bottom={0}
             left={0}
@@ -113,6 +114,7 @@ export function CookieBanner() {
                                 our services. By clicking &quot;Accept
                                 All&quot;, you consent to our use of cookies.{' '}
                                 <Button
+                                    data-testid="customize-preferences-button"
                                     variant="link"
                                     color="blue.300"
                                     textDecoration="underline"
@@ -138,6 +140,7 @@ export function CookieBanner() {
                             justify={{ base: 'flex-start', md: 'flex-end' }}
                         >
                             <Button
+                                data-testid="reject-all-button"
                                 size="sm"
                                 variant="ghost"
                                 colorScheme="white"
@@ -146,6 +149,7 @@ export function CookieBanner() {
                                 Reject All
                             </Button>
                             <Button
+                                data-testid="settings-button"
                                 size="sm"
                                 variant="outline"
                                 colorScheme="white"
@@ -154,6 +158,7 @@ export function CookieBanner() {
                                 Settings
                             </Button>
                             <Button
+                                data-testid="accept-all-button"
                                 size="sm"
                                 colorScheme="blue"
                                 onClick={handleAcceptAll}
@@ -179,6 +184,7 @@ export function CookieBanner() {
                                 {/* Necessary cookies - always on */}
                                 <FormControl display="flex" alignItems="center">
                                     <Switch
+                                        data-testid="necessary-cookies-switch"
                                         id="necessary-cookies"
                                         isChecked={true}
                                         isDisabled={true}
@@ -206,7 +212,7 @@ export function CookieBanner() {
                                 {/* Analytics cookies */}
                                 <FormControl display="flex" alignItems="center">
                                     <Switch
-                                        id="analytics-cookies"
+                                        data-testid="analytics-cookies-switch"
                                         isChecked={
                                             preferences[
                                                 ConsentCategory.ANALYTICS
@@ -241,6 +247,7 @@ export function CookieBanner() {
                                 {/* Marketing cookies */}
                                 <FormControl display="flex" alignItems="center">
                                     <Switch
+                                        data-testid="marketing-cookies-switch"
                                         id="marketing-cookies"
                                         isChecked={
                                             preferences[
@@ -277,6 +284,7 @@ export function CookieBanner() {
                             {/* Save preferences button */}
                             <Flex justify="flex-end" mt={4}>
                                 <Button
+                                    data-testid="save-preferences-button"
                                     size="sm"
                                     colorScheme="blue"
                                     onClick={handleSavePreferences}

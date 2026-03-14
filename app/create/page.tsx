@@ -247,6 +247,7 @@ export default function Create() {
             bgGradient={gradients.background.orange}
             display="flex"
             flexDirection="column"
+            data-testid="create-page"
         >
             <Navbar />
 

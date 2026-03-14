@@ -32,7 +32,11 @@ export function Navbar() {
         >
             <Container data-testid="navbar-container" maxW="7xl" py={4}>
                 <Flex justify="space-between" align="center">
-                    <Link href="/" style={{ textDecoration: 'none' }}>
+                    <Link
+                        data-testid="navbar-home-link"
+                        href="/"
+                        style={{ textDecoration: 'none' }}
+                    >
                         <HStack
                             spacing={3}
                             align="center"
