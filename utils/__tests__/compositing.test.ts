@@ -1,6 +1,7 @@
-import { describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi, beforeEach } from 'vitest'
 import {
     prepareCardOperations,
+    prepareQuantityOverlayOperations,
     createCanvas,
     createCompositeImage
 } from '../compositing'
@@ -26,11 +27,21 @@ vi.mock('sharp', () => {
     }
 })
 
+// Use vi.hoisted to avoid initialization-before-use issues with vi.mock hoisting
+const mockOverlayCache = vi.hoisted(() => ({
+    has: vi.fn(),
+    get: vi.fn(),
+    set: vi.fn()
+}))
+
 vi.mock('@/utils/cache', () => ({
-    overlayCache: {
-        get: vi.fn(),
-        set: vi.fn()
-    }
+    overlayCache: mockOverlayCache
+}))
+
+vi.mock('@/utils/svg', () => ({
+    generateOverlayBuffer: vi
+        .fn()
+        .mockResolvedValue(Buffer.from('svg-overlay-buffer'))
 }))
 
 vi.mock('@/utils/assets', () => ({
@@ -161,6 +172,156 @@ describe('Compositing utility functions', () => {
 
             // Should only include images with valid buffers
             expect(result).toHaveLength(3)
+        })
+    })
+
+    describe('prepareQuantityOverlayOperations', () => {
+        const mockImages: CardImageBuffer[] = [
+            {
+                name: 'Card 1',
+                groupId: 0,
+                buffer: Buffer.from('image1'),
+                quantity: 4
+            },
+            {
+                name: 'Card 2',
+                groupId: 0,
+                buffer: Buffer.from('image2'),
+                quantity: 2
+            },
+            {
+                name: 'Card 3',
+                groupId: 0,
+                buffer: Buffer.from('image3'),
+                quantity: 1
+            }
+        ]
+
+        const mockCardDimensions: Dimensions = {
+            width: 100,
+            height: 140,
+            scale: 1
+        }
+
+        beforeEach(() => {
+            vi.clearAllMocks()
+            mockOverlayCache.has.mockReturnValue(false)
+            mockOverlayCache.get.mockReturnValue(undefined)
+        })
+
+        test('should return overlay operations for cards with quantity >= 2', async () => {
+            const { generateOverlayBuffer } = await import('@/utils/svg')
+            vi.mocked(generateOverlayBuffer).mockResolvedValue(
+                Buffer.from('svg-overlay')
+            )
+
+            const result = await prepareQuantityOverlayOperations(
+                mockImages,
+                mockCardDimensions,
+                'grid',
+                'ig_square'
+            )
+
+            // Cards with quantity 4 and 2 should have overlays; quantity 1 should not
+            expect(result).toHaveLength(2)
+            result.forEach((op) => {
+                expect(op).toHaveProperty('input')
+                expect(op).toHaveProperty('left')
+                expect(op).toHaveProperty('top')
+            })
+        })
+
+        test('should use memory cache when overlay is already cached', async () => {
+            const cachedBuffer = Buffer.from('cached-overlay')
+            mockOverlayCache.has.mockReturnValue(true)
+            mockOverlayCache.get.mockReturnValue(cachedBuffer)
+
+            const { generateOverlayBuffer } = await import('@/utils/svg')
+
+            await prepareQuantityOverlayOperations(
+                mockImages,
+                mockCardDimensions,
+                'grid',
+                'ig_square'
+            )
+
+            // generateOverlayBuffer should not be called when cache hits
+            expect(generateOverlayBuffer).not.toHaveBeenCalled()
+        })
+
+        test('should generate each unique quantity only once per request', async () => {
+            const imagesWithDuplicateQuantity: CardImageBuffer[] = [
+                {
+                    name: 'Card A',
+                    groupId: 0,
+                    buffer: Buffer.from('img1'),
+                    quantity: 4
+                },
+                {
+                    name: 'Card B',
+                    groupId: 0,
+                    buffer: Buffer.from('img2'),
+                    quantity: 4
+                },
+                {
+                    name: 'Card C',
+                    groupId: 0,
+                    buffer: Buffer.from('img3'),
+                    quantity: 4
+                }
+            ]
+
+            const { generateOverlayBuffer } = await import('@/utils/svg')
+            vi.mocked(generateOverlayBuffer).mockResolvedValue(
+                Buffer.from('svg-overlay')
+            )
+
+            await prepareQuantityOverlayOperations(
+                imagesWithDuplicateQuantity,
+                mockCardDimensions,
+                'grid',
+                'ig_square'
+            )
+
+            // Should only generate the overlay once for quantity 4
+            expect(generateOverlayBuffer).toHaveBeenCalledTimes(1)
+        })
+
+        test('should return empty array when all cards have quantity 1', async () => {
+            const singleCards: CardImageBuffer[] = [
+                {
+                    name: 'Card 1',
+                    groupId: 0,
+                    buffer: Buffer.from('img1'),
+                    quantity: 1
+                },
+                {
+                    name: 'Card 2',
+                    groupId: 0,
+                    buffer: Buffer.from('img2'),
+                    quantity: 1
+                }
+            ]
+
+            const result = await prepareQuantityOverlayOperations(
+                singleCards,
+                mockCardDimensions,
+                'grid',
+                'ig_square'
+            )
+
+            expect(result).toHaveLength(0)
+        })
+
+        test('should return empty array for empty input', async () => {
+            const result = await prepareQuantityOverlayOperations(
+                [],
+                mockCardDimensions,
+                'grid',
+                'ig_square'
+            )
+
+            expect(result).toHaveLength(0)
         })
     })
 
