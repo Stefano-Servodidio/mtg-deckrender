@@ -3,10 +3,17 @@ import { Providers } from './providers'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import { CookieBanner } from '@/components/CookieBanner'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mtgdeckrender.com'
+
 export const metadata: Metadata = {
-    title: 'MTG DeckRender - Convert Your Magic Decklists',
+    metadataBase: new URL(siteUrl),
+    title: {
+        default:
+            'MTG DeckRender - Convert Your Magic Decklists to Beautiful Images',
+        template: '%s | MTG DeckRender'
+    },
     description:
-        'Convert your Magic: The Gathering decklists into beautiful images. Fast, free, and easy to use.',
+        'Transform your Magic: The Gathering decklists into stunning, shareable images. Free online tool for MTG players. Create beautiful deck visualizations for social media, forums, and more.',
     keywords: [
         'MTG',
         'Magic The Gathering',
@@ -15,25 +22,48 @@ export const metadata: Metadata = {
         'decklist',
         'image',
         'converter',
-        'generator'
+        'generator',
+        'deck builder',
+        'deck visualizer',
+        'MTG decklist',
+        'card game',
+        'trading card game'
     ],
-    authors: [{ name: 'Stefano Servodidio' }],
+    authors: [{ name: 'Stefano Servodidio', url: siteUrl }],
     creator: 'Stefano Servodidio',
     publisher: 'Stefano Servodidio',
-    robots: 'index, follow',
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1
+        }
+    },
+    alternates: {
+        canonical: siteUrl
+    },
     openGraph: {
-        title: 'MTG DeckRender - Convert Your Magic Decklists',
-        description:
-            'Convert your Magic: The Gathering decklists into beautiful images. Fast, free, and easy to use.',
         type: 'website',
-        locale: 'en_US'
+        locale: 'en_US',
+        url: siteUrl,
+        title: 'MTG DeckRender - Convert Your Magic Decklists to Beautiful Images',
+        description:
+            'Transform your Magic: The Gathering decklists into stunning, shareable images. Free online tool for MTG players.',
+        siteName: 'MTG DeckRender'
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'MTG DeckRender - Convert Your Magic Decklists',
+        title: 'MTG DeckRender - Convert Your Magic Decklists to Beautiful Images',
         description:
-            'Convert your Magic: The Gathering decklists into beautiful images. Fast, free, and easy to use.'
-    }
+            'Transform your Magic: The Gathering decklists into stunning, shareable images. Free online tool for MTG players.',
+        creator: '@stefanoservodidio'
+    },
+    category: 'Gaming',
+    classification: 'Card Game Tools'
 }
 
 export default function RootLayout({

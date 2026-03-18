@@ -6,11 +6,16 @@ let overlayStore: ReturnType<typeof getStore> | null = null
 
 function getOverlayStore() {
     if (!overlayStore) {
-        overlayStore = getStore({
-            name: 'overlay-images',
-            siteID: process.env.NETLIFY_SITE_ID!,
-            token: process.env.NETLIFY_AUTH_TOKEN!
-        })
+        // On Netlify, credentials are auto-detected. Only provide them for local development.
+        const config: any = { name: 'overlay-images' }
+
+        // Only explicitly set credentials if we're NOT on Netlify (local dev)
+        if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
+            config.siteID = process.env.NETLIFY_SITE_ID
+            config.token = process.env.NETLIFY_AUTH_TOKEN
+        }
+
+        overlayStore = getStore(config)
     }
     return overlayStore
 }

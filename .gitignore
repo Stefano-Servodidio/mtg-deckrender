@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# task files
+TASK.MD
+# Local Netlify folder
+.netlify

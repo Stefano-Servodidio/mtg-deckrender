@@ -22,6 +22,7 @@ import { getOverlayFromBlobs } from './storage/overlayImageStorage'
 function calculateCardPosition(
     index: number,
     cardDimensions: Dimensions,
+    rowSize: number,
     imageVariant?: ImageVariant,
     imageSize?: ImageSize,
     modifiers?: Modifiers
@@ -31,7 +32,7 @@ function calculateCardPosition(
     } = DECK_LAYOUT_CONFIG
 
     const { topModifier, leftModifier } = modifiers || {}
-    const cardsPerRow = getRowSize(imageSize, imageVariant)
+    const cardsPerRow = rowSize
 
     const rowHeight = calculateRowHeight(imageVariant, cardDimensions.height)
 
@@ -63,6 +64,7 @@ export function prepareCardOperations(
     modifiers?: Modifiers
 ): sharp.OverlayOptions[] {
     let separator = DECK_LAYOUT_CONFIG.spacing.groupSeparator
+    const rowSize = getRowSize(imageSize, imageVariant, images.length)
 
     if (imageVariant === 'grid') {
         separator +=
@@ -76,7 +78,6 @@ export function prepareCardOperations(
         .map((imageData) => {
             if (!processedGroups.has(imageData.groupId)) {
                 // Skip to the next row when a new group is encountered
-                const rowSize = getRowSize(imageSize, imageVariant)
                 cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
             } else {
                 cardIndex += 1
@@ -89,6 +90,7 @@ export function prepareCardOperations(
             const { left, top } = calculateCardPosition(
                 cardIndex,
                 cardDimensions,
+                rowSize,
                 imageVariant,
                 imageSize,
                 mods
@@ -116,6 +118,7 @@ export async function prepareQuantityOverlayOperations(
     const { overlay } = DECK_LAYOUT_CONFIG
 
     let separator = DECK_LAYOUT_CONFIG.spacing.groupSeparator
+    const rowSize = getRowSize(imageSize, imageVariant, images.length)
 
     if (imageVariant === 'grid') {
         separator +=
@@ -138,7 +141,6 @@ export async function prepareQuantityOverlayOperations(
         images.map(async (imageData) => {
             // Reset card index when a new group is encountered
             if (!processedGroups.has(imageData.groupId)) {
-                const rowSize = getRowSize(imageSize, imageVariant)
                 cardIndex = Math.floor(cardIndex / rowSize) * rowSize + rowSize
             } else {
                 cardIndex += 1
@@ -159,6 +161,7 @@ export async function prepareQuantityOverlayOperations(
             const { left, top } = calculateCardPosition(
                 cardIndex,
                 cardDimensions,
+                rowSize,
                 imageVariant,
                 imageSize,
                 mods

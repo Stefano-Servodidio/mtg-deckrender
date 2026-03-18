@@ -1,0 +1,185 @@
+name: Manage Blog Post
+
+on:
+    workflow_dispatch:
+        inputs:
+            action:
+                description: 'Action to perform'
+                required: true
+                type: choice
+                options:
+                    - create
+                    - update
+                    - delete
+                    - list
+            post_id:
+                description: 'Post ID (required for update/delete)'
+                required: false
+                type: string
+            title:
+                description: 'Post title'
+                required: false
+                type: string
+            slug:
+                description: 'Post slug (URL-friendly, e.g., "my-first-post")'
+                required: false
+                type: string
+            excerpt:
+                description: 'Post excerpt (short description)'
+                required: false
+                type: string
+            content:
+                description: 'Post content (markdown supported)'
+                required: false
+                type: string
+            author_name:
+                description: 'Author name'
+                required: false
+                type: string
+                default: 'Admin'
+            author_avatar:
+                description: 'Author avatar URL'
+                required: false
+                type: string
+            cover_image:
+                description: 'Cover image URL'
+                required: false
+                type: string
+            tags:
+                description: 'Tags (comma-separated, e.g., "mtg,tutorial,tips")'
+                required: false
+                type: string
+            published:
+                description: 'Publish post immediately?'
+                required: false
+                type: boolean
+                default: false
+
+jobs:
+    manage-blog:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+
+        steps:
+            - name: List all blog posts
+              if: github.event.inputs.action == 'list'
+              run: |
+                  echo "Fetching all blog posts..."
+                  curl -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
+                    "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin" | jq '.'
+
+            - name: Create blog post
+              if: github.event.inputs.action == 'create'
+              run: |
+                  set -e  # Exit on error
+                  echo "Creating new blog post..."
+
+                  # Build tags array
+                  TAGS_ARRAY="[]"
+                  if [ ! -z "${{ github.event.inputs.tags }}" ]; then
+                    IFS=',' read -ra TAGS <<< "${{ github.event.inputs.tags }}"
+                    TAGS_JSON=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
+                    TAGS_ARRAY="$TAGS_JSON"
+                  fi
+
+                  # Build JSON payload
+                  JSON_PAYLOAD=$(jq -n \
+                    --arg title "${{ github.event.inputs.title }}" \
+                    --arg slug "${{ github.event.inputs.slug }}" \
+                    --arg excerpt "${{ github.event.inputs.excerpt }}" \
+                    --arg content "${{ github.event.inputs.content }}" \
+                    --arg author_name "${{ github.event.inputs.author_name }}" \
+                    --arg author_avatar "${{ github.event.inputs.author_avatar }}" \
+                    --arg cover_image "${{ github.event.inputs.cover_image }}" \
+                    --argjson tags "$TAGS_ARRAY" \
+                    --argjson published "${{ github.event.inputs.published }}" \
+                    '{
+                      title: $title,
+                      slug: $slug,
+                      excerpt: $excerpt,
+                      content: $content,
+                      author: {
+                        name: $author_name,
+                        avatar: (if $author_avatar != "" then $author_avatar else null end)
+                      },
+                      coverImage: (if $cover_image != "" then $cover_image else null end),
+                      tags: $tags,
+                      published: $published
+                    }')
+
+                  echo "Payload: $JSON_PAYLOAD"
+
+                  RESPONSE=$(curl -X POST \
+                    -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
+                    -H "Content-Type: application/json" \
+                    -d "$JSON_PAYLOAD" \
+                    "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin")
+
+                  echo "Response: $RESPONSE"
+                  echo "$RESPONSE" | jq '.'
+
+            - name: Update blog post
+              if: github.event.inputs.action == 'update'
+              run: |
+                  set -e  # Exit on error
+                  echo "Updating blog post..."
+
+                  # Build tags array
+                  TAGS_ARRAY="[]"
+                  if [ ! -z "${{ github.event.inputs.tags }}" ]; then
+                    IFS=',' read -ra TAGS <<< "${{ github.event.inputs.tags }}"
+                    TAGS_JSON=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
+                    TAGS_ARRAY="$TAGS_JSON"
+                  fi
+
+                  # Build JSON payload (only include fields that are provided)
+                  JSON_PAYLOAD=$(jq -n \
+                    --arg id "${{ github.event.inputs.post_id }}" \
+                    --arg title "${{ github.event.inputs.title }}" \
+                    --arg slug "${{ github.event.inputs.slug }}" \
+                    --arg excerpt "${{ github.event.inputs.excerpt }}" \
+                    --arg content "${{ github.event.inputs.content }}" \
+                    --arg author_name "${{ github.event.inputs.author_name }}" \
+                    --arg author_avatar "${{ github.event.inputs.author_avatar }}" \
+                    --arg cover_image "${{ github.event.inputs.cover_image }}" \
+                    --argjson tags "$TAGS_ARRAY" \
+                    --argjson published "${{ github.event.inputs.published }}" \
+                    '{
+                      id: $id,
+                      title: (if $title != "" then $title else null end),
+                      slug: (if $slug != "" then $slug else null end),
+                      excerpt: (if $excerpt != "" then $excerpt else null end),
+                      content: (if $content != "" then $content else null end),
+                      author: (if $author_name != "" then {
+                        name: $author_name,
+                        avatar: (if $author_avatar != "" then $author_avatar else null end)
+                      } else null end),
+                      coverImage: (if $cover_image != "" then $cover_image else null end),
+                      tags: (if ($tags | length) > 0 then $tags else null end),
+                      published: $published
+                    } | with_entries(select(.value != null))')
+
+                  echo "Payload: $JSON_PAYLOAD"
+
+                  RESPONSE=$(curl -X PUT \
+                    -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
+                    -H "Content-Type: application/json" \
+                    -d "$JSON_PAYLOAD" \
+                    "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin")
+
+                  echo "Response: $RESPONSE"
+                  echo "$RESPONSE" | jq '.'
+
+            - name: Delete blog post
+              if: github.event.inputs.action == 'delete'
+              run: |
+                  set -e  # Exit on error
+                  echo "Deleting blog post..."
+
+                  RESPONSE=$(curl -X DELETE \
+                    -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
+                    "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin?id=${{ github.event.inputs.post_id }}")
+
+                  echo "Response: $RESPONSE"
+                  echo "$RESPONSE" | jq '.'

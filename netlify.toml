@@ -24,3 +24,10 @@
 
 [context.deploy-preview.environment]
   NETLIFY_BLOBS_CONTEXT = "deploy-preview"
+
+# Redirect traffic to primary domain
+[[redirects]]
+  from = "https://mtg-deck-to-png.netlify.app/*"
+  to = "https://mtgdeckrender.com/:splat"
+  status = 301
+  force = true
