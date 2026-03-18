@@ -7,25 +7,20 @@ let blogStore: ReturnType<typeof getStore> | null = null
 
 function getBlogStore() {
     if (!blogStore) {
-        // Validate environment variables
-        if (!process.env.NETLIFY_SITE_ID || !process.env.NETLIFY_AUTH_TOKEN) {
-            throw new Error(
-                'Missing required environment variables: NETLIFY_SITE_ID and NETLIFY_AUTH_TOKEN must be set for blog storage'
-            )
+        const config: any = { name: 'blog-posts' }
+
+        // Only explicitly set credentials if we're NOT on Netlify (local dev)
+        if (process.env.NETLIFY_SITE_ID && process.env.NETLIFY_AUTH_TOKEN) {
+            config.siteID = process.env.NETLIFY_SITE_ID
+            config.token = process.env.NETLIFY_AUTH_TOKEN
         }
 
-        blogStore = getStore({
-            name: 'blog-posts',
-            siteID: process.env.NETLIFY_SITE_ID,
-            token: process.env.NETLIFY_AUTH_TOKEN
-        })
+        blogStore = getStore(config)
     }
     return blogStore
 }
 
-const DEV_DEBUG_DISABLE_BLOBS =
-    process.env.NODE_ENV === 'development' &&
-    process.env.DEV_DEBUG_DISABLE_BLOBS === 'true'
+const DEV_DEBUG_DISABLE_BLOBS = process.env.NODE_ENV === 'development' && false
 
 /**
  * Get all blog posts metadata (for listing)
