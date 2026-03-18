@@ -43,3 +43,5 @@ next-env.d.ts
 
 # task files
 TASK.MD
+# local netlify folder
+.netlify
