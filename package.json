@@ -26,7 +26,10 @@
         "generate:overlays": "node --env-file=.env.local scripts/generate-overlays.js",
         "bump:patch": "npm version patch && git push && git push --tags",
         "bump:minor": "npm version minor && git push && git push --tags",
-        "bump:major": "npm version major && git push && git push --tags"
+        "bump:major": "npm version major && git push && git push --tags",
+        "netlify:login": "netlify login",
+        "netlify:link": "netlify link",
+        "netlify:preview": "netlify deploy"
     },
     "lint-staged": {
         "*.{ts,tsx, js, jsx, css}": [
@@ -92,6 +95,7 @@
         "eslint-plugin-unused-imports": "^4.2.0",
         "jsdom": "^27.0.0",
         "lint-staged": "^16.1.6",
+        "netlify-cli": "^24.2.0",
         "prettier": "3.6.2",
         "start-server-and-test": "^2.1.2",
         "vite": "^7.1.5",

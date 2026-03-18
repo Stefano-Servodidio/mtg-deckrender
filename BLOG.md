@@ -29,11 +29,11 @@ The blog feature allows you to create, manage, and display blog posts on the MTG
 
 ### Authentication
 
-The admin API uses Bearer token authentication. Set the `BLOG_ADMIN_TOKEN` environment variable in Netlify:
+The admin API uses Bearer token authentication. Set the `ADMIN_AUTH_TOKEN` environment variable in Netlify:
 
 ```bash
 # In Netlify dashboard: Site settings > Environment variables
-BLOG_ADMIN_TOKEN=your-secure-random-token-here
+ADMIN_AUTH_TOKEN=your-secure-random-token-here
 ```
 
 Requests must include the header:
@@ -147,7 +147,7 @@ Add to Netlify environment variables:
 
 ```bash
 # Required for admin API access
-BLOG_ADMIN_TOKEN=your-secure-random-token-here
+ADMIN_AUTH_TOKEN=your-secure-random-token-here
 
 # Already configured for Netlify Blobs
 NETLIFY_SITE_ID=your-site-id
@@ -160,7 +160,7 @@ Add to GitHub repository secrets for the workflow:
 
 ```bash
 # Repository > Settings > Secrets and variables > Actions
-BLOG_ADMIN_TOKEN=your-secure-random-token-here
+ADMIN_AUTH_TOKEN=your-secure-random-token-here
 NETLIFY_DEPLOY_URL=https://your-site.netlify.app
 ```
 
@@ -239,7 +239,7 @@ interface BlogPost {
 
 ### Authentication errors
 
-- Verify `BLOG_ADMIN_TOKEN` is set in Netlify
+- Verify `ADMIN_AUTH_TOKEN` is set in Netlify
 - Check that the token matches in GitHub secrets
 - Ensure the Authorization header is correctly formatted
 

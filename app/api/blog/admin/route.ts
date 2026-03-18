@@ -17,12 +17,12 @@ export const dynamic = 'force-dynamic'
  */
 function isAuthenticated(request: NextRequest): boolean {
     const authHeader = request.headers.get('authorization')
-    const expectedToken = process.env.BLOG_ADMIN_TOKEN
+    const expectedToken = process.env.ADMIN_AUTH_TOKEN
 
     if (!expectedToken) {
         console.warn(
             chalk.yellow(
-                'BLOG_ADMIN_TOKEN not set - admin API will reject all requests'
+                'ADMIN_AUTH_TOKEN not set - admin API will reject all requests'
             )
         )
         return false

@@ -66,7 +66,7 @@ jobs:
               if: github.event.inputs.action == 'list'
               run: |
                   echo "Fetching all blog posts..."
-                  curl -H "Authorization: Bearer ${{ secrets.BLOG_ADMIN_TOKEN }}" \
+                  curl -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
                     "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin" | jq '.'
 
             - name: Create blog post
@@ -111,7 +111,7 @@ jobs:
                   echo "Payload: $JSON_PAYLOAD"
 
                   RESPONSE=$(curl -X POST \
-                    -H "Authorization: Bearer ${{ secrets.BLOG_ADMIN_TOKEN }}" \
+                    -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
                     -H "Content-Type: application/json" \
                     -d "$JSON_PAYLOAD" \
                     "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin")
@@ -163,7 +163,7 @@ jobs:
                   echo "Payload: $JSON_PAYLOAD"
 
                   RESPONSE=$(curl -X PUT \
-                    -H "Authorization: Bearer ${{ secrets.BLOG_ADMIN_TOKEN }}" \
+                    -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
                     -H "Content-Type: application/json" \
                     -d "$JSON_PAYLOAD" \
                     "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin")
@@ -178,7 +178,7 @@ jobs:
                   echo "Deleting blog post..."
 
                   RESPONSE=$(curl -X DELETE \
-                    -H "Authorization: Bearer ${{ secrets.BLOG_ADMIN_TOKEN }}" \
+                    -H "Authorization: Bearer ${{ secrets.ADMIN_AUTH_TOKEN }}" \
                     "${{ secrets.NETLIFY_DEPLOY_URL }}/api/blog/admin?id=${{ github.event.inputs.post_id }}")
 
                   echo "Response: $RESPONSE"
