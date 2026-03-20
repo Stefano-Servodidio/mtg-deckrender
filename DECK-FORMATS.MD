@@ -4,7 +4,7 @@ List of supported deck formats by site / source
 
 ## Table of Contents
 
-- [Moxfield.com](#mofielcomdontg)
+- [Moxfield](#moxfield)
     - [1. Copy for Moxfield (Exact set + card number)](#1-copy-for-moxfield-exact-set--card-number)
     - [2. Copy for Arena](#2-copy-for-arena)
     - [3. Copy for MTGO](#3-copy-for-mtgo)
@@ -16,14 +16,22 @@ List of supported deck formats by site / source
     - [3. .csv file export](#3-csv-file-export)
 - [Magic Arena](#magic-arena)
     - [1. Default export](#1-default-export)
+- [Mtggoldfish](#mtggoldfish)
+    - [1. Text file (default)](#1-text-file-default)
+    - [2. Exact card versions (tabletop)](#2-exact-card-versions-tabletop)
+    - [3. Exact card versions (MTG Arena)](#3-exact-card-versions-mtg-arena)
+    - [4. Exact card versions (Magic Online)](#4-exact-card-versions-magic-online)
+    - [5. Magic Online .dek](#5-magic-online-dek)
 
-## Mofield.com
+## Moxfield
 
 ### 1. Copy for Moxfield (Exact set + card number)
 
-```
+---
+
 60 CARD
 
+```
 4 Abhorrent Oculus (PDSK) 42p
 4 Archon of Cruelty (MH2) 342
 1 Blood Crypt (RNA) 245
@@ -59,9 +67,11 @@ SIDEBOARD:
 1 Surgical Extraction (OTP) 19
 ```
 
-```
+---
+
 COMMANDER
 
+```
 1 Juri, Master of the Revue (MUL) 46
 1 Academy Manufactor (MKC) 221
 1 Arcane Signet (DRC) 52
@@ -154,9 +164,11 @@ COMMANDER
 
 ### 2. Copy for Arena
 
-```
+---
+
 60 CARD
 
+```
 About
 Name Grixis Reanimator
 
@@ -193,9 +205,11 @@ Sideboard
 1 Surgical Extraction
 ```
 
-```
+---
+
 COMMANDER
 
+```
 About
 Name Juri, Master of the Revue
 
@@ -291,9 +305,11 @@ Deck
 
 ### 3. Copy for MTGO
 
-```
+---
+
 60 CARD
 
+```
 4 Abhorrent Oculus
 4 Archon of Cruelty
 1 Blood Crypt
@@ -329,9 +345,11 @@ SIDEBOARD:
 1 Surgical Extraction
 ```
 
-```
+---
+
 COMMANDER
 
+```
 1 Academy Manufactor
 1 Arcane Signet
 1 Arid Mesa
@@ -435,9 +453,11 @@ Same as [Copy for MTGO](#3-copy-for-mtgo)
 
 ### 1. .dek file export
 
-```
+---
+
 60 CARD
 
+```
 <?xml version="1.0" encoding="utf-8"?>
 <Deck xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <NetDeckID>0</NetDeckID>
@@ -477,9 +497,11 @@ Same as [Copy for MTGO](#3-copy-for-mtgo)
 </Deck>
 ```
 
-```
+---
+
 COMMANDER
 
+```
 <?xml version="1.0" encoding="utf-8"?>
 <Deck xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <NetDeckID>0</NetDeckID>
@@ -577,9 +599,11 @@ COMMANDER
 
 ### 2. .txt file export
 
-```
+---
+
 60 CARD
 
+```
 4 Deadly Dispute
 4 Drossforge Bridge
 2 Rakdos Carnarium
@@ -614,9 +638,11 @@ COMMANDER
 
 ```
 
-```
+---
+
 COMMANDER
 
+```
 1 Academy Manufactor
 1 Arcane Signet
 1 Arid Mesa
@@ -712,9 +738,11 @@ COMMANDER
 
 ### 3. .csv file export
 
-```
+---
+
 60 CARD
 
+```
 Card Name,Quantity,ID #,Rarity,Set,Collector #,Premium,Sideboarded,Annotation
 "Mountain",2,83561,Land,ZNR,277/280,No,No,0
 "Plains",3,83543,Land,ZNR,268/280,No,No,0
@@ -758,9 +786,11 @@ Card Name,Quantity,ID #,Rarity,Set,Collector #,Premium,Sideboarded,Annotation
 
 ```
 
-```
+---
+
 COMMANDER
 
+```
 Card Name,Quantity,ID #,Rarity,Set,Collector #,Premium,Sideboarded,Annotation
 "Academy Manufactor",1,90819,Rare,MH2,219/303,No,No,0
 "Arcane Signet",1,78722,Common,ELD,331,No,No,0
@@ -859,9 +889,11 @@ Card Name,Quantity,ID #,Rarity,Set,Collector #,Premium,Sideboarded,Annotation
 
 ### 1. default export
 
-```
+---
+
 60 CARD
 
+```
 Deck
 4 Yawgmoth, Thran Physician (MH1) 116
 1 Swamp (LTR) 267
@@ -904,9 +936,11 @@ Sideboard
 
 ```
 
-```
+---
+
 COMMANDER
 
+```
 Commander
 1 Juri, Master of the Revue (MUL) 111
 
@@ -996,3 +1030,335 @@ Deck
 1 Zulaport Cutthroat (BFZ) 126
 
 ```
+
+## Mtggoldfish
+
+### 1. Text file (default)
+
+---
+
+60 CARD
+
+Same as [MTGO .txt file export](#2-txt-file-export).
+
+---
+
+COMMANDER
+
+```
+1 Abandoned Air Temple
+1 Anointed Peacekeeper
+1 Aven Interrupter
+1 Benevolent Bodyguard
+1 Castle Ardenvale
+1 Cid, Freeflier Pilot
+1 City of Traitors
+1 Cloud, Midgar Mercenary
+1 Crystal Vein
+1 Curious Farm Animals
+1 Drannith Magistrate
+1 Dust Bowl
+1 Eiganjo Castle
+1 Eiganjo, Seat of the Empire
+1 Elite Spellbinder
+1 Ephemerate
+1 Esper Sentinel
+1 Ethersworn Canonist
+1 Flickerwisp
+1 Gemstone Caverns
+1 Ghost Vacuum
+1 Gingerbrute
+1 Giver of Runes
+1 Glimmer Lens
+1 Guide of Souls
+1 Hand of Vecna
+1 Helitrooper
+1 Helping Hand
+1 Jolted Awake
+1 Lay Down Arms
+1 Lion Sash
+1 Mana Tithe
+1 Masterwork of Ingenuity
+1 Mother of Runes
+1 Ocelot Pride
+1 On Thin Ice
+1 Oust
+1 Parallax Wave
+1 Phelia, Exuberant Shepherd
+1 Pre-War Formalwear
+1 Puresteel Paladin
+1 Ranger-Captain of Eos
+1 Recruiter of the Guard
+1 Reverent Mantra
+1 Sanctifier en-Vec
+1 Seasoned Dungeoneer
+1 Shadowspear
+1 Sigarda's Aid
+1 Skrelv, Defector Mite
+1 Skullclamp
+1 Skyclave Apparition
+30 Snow-Covered Plains
+1 Solitude
+1 Spectacular Spider-Man
+1 Springleaf Drum
+1 Starfield Shepherd
+1 Static Prison
+1 Stoneforge Mystic
+1 Swift Reconfiguration
+1 Sword of Feast and Famine
+1 Sword of Fire and Ice
+1 Swords to Plowshares
+1 Tectonic Edge
+1 Thalia, Guardian of Thraben
+1 Thalia, Heretic Cathar
+1 Umezawa's Jitte
+1 Urza's Saga
+1 Voice of Victory
+1 Warden of the Inner Sky
+1 Winter Moon
+1 Witch Enchanter
+```
+
+### 2. Exact card versions (tabletop)
+
+---
+
+60 CARD
+
+```
+4 Boomerang Basics [TLA]
+4 Burst Lightning [FDN]
+3 Eddymurk Crab [BLB]
+3 Elusive Otter [WOE] (F)
+2 Into the Flood Maw [BLB]
+6 Island <251> [THB]
+2 Multiversal Passage <borderless> [SPM]
+4 Opt [J25]
+4 Riverpyre Verge <borderless> [DFT]
+1 Roaring Furnace/Steaming Sauna [DSK]
+1 Sear [ECL]
+4 Sleight of Hand [WOE]
+4 Slickshot Show-Off [OTJ]
+4 Spirebluff Canal [OTJ] (F)
+4 Steam Vents <Shadowmoor - borderless> [ECL]
+4 Stock Up [DFT]
+4 Stormchaser's Talent [BLB]
+1 Wild Ride [TDM]
+1 Willowrush Verge [DFT]
+
+1 Annul [KHM]
+1 Broadside Barrage [DFT]
+2 Fire Magic [FIN]
+2 Get Out [DSK]
+2 Ral, Crackling Wit [BLB]
+1 Roaring Furnace/Steaming Sauna [DSK]
+1 Sear [ECL]
+2 Soul-Guide Lantern [FDN]
+2 Spell Pierce [XLN]
+1 Torch the Tower [WOE]
+```
+
+---
+
+COMMANDER
+
+```
+1 Abandoned Air Temple [TLA]
+1 Anointed Peacekeeper [DMU]
+1 Aven Interrupter [OTJ]
+1 Benevolent Bodyguard [PLIST]
+1 Castle Ardenvale [TDC]
+1 Cid, Freeflier Pilot [FIC]
+1 City of Traitors [EX]
+1 Cloud, Midgar Mercenary [FIN]
+1 Crystal Vein [6ED]
+1 Curious Farm Animals [TLA]
+1 Drannith Magistrate <Mayor Tong of Chin Village - borderless> [TLE]
+1 Dust Bowl <showcase> [OTP]
+1 Eiganjo Castle [CHK]
+1 Eiganjo, Seat of the Empire [NEO]
+1 Elite Spellbinder [STX]
+1 Ephemerate [MH1]
+1 Esper Sentinel [MH2]
+1 Ethersworn Canonist [ALA]
+1 Flickerwisp [PLIST]
+1 Gemstone Caverns [TSR]
+1 Ghost Vacuum [DSK]
+1 Gingerbrute [J25]
+1 Giver of Runes <retro> [MH2] (FE)
+1 Glimmer Lens [ONC]
+1 Guide of Souls [MH3]
+1 Hand of Vecna [AFR]
+1 Helitrooper [FIC]
+1 Helping Hand [LCI]
+1 Jolted Awake [MH3]
+1 Lay Down Arms [BRO]
+1 Lion Sash [NEO] (F)
+1 Mana Tithe [MB1]
+1 Masterwork of Ingenuity [PIP]
+1 Mother of Runes [DDO]
+1 Ocelot Pride [MH3]
+1 On Thin Ice [MH1]
+1 Oust [DDP]
+1 Parallax Wave [PLIST]
+1 Phelia, Exuberant Shepherd [MH3]
+1 Pre-War Formalwear [PIP]
+1 Puresteel Paladin [FIC]
+1 Ranger-Captain of Eos <Knights of San d'Oria> [FCA]
+1 Recruiter of the Guard [MH3]
+1 Reverent Mantra [MM]
+1 Sanctifier en-Vec [MH2]
+1 Seasoned Dungeoneer <extended> [CLB]
+1 Shadowspear [THB]
+1 Sigarda's Aid <precon> [CMR]
+1 Skrelv, Defector Mite <showcase> [ONE]
+1 Skullclamp [FIC]
+1 Skyclave Apparition [BLC]
+30 Snow-Covered Plains <276> [KHM]
+1 Solitude [MH2]
+1 Spectacular Spider-Man <borderless> [SPM]
+1 Springleaf Drum [ECL]
+1 Starfield Shepherd [EOE]
+1 Static Prison [MH3]
+1 Stoneforge Mystic [WWK]
+1 Swift Reconfiguration <extended> [NEC]
+1 Sword of Feast and Famine [ACR]
+1 Sword of Fire and Ice <BLB Special Guest> [SPG]
+1 Swords to Plowshares [GN3]
+1 Tectonic Edge [M3C]
+1 Thalia, Guardian of Thraben <showcase> [VOW]
+1 Thalia, Heretic Cathar <retro> [INR]
+1 Umezawa's Jitte [PLIST]
+1 Urza's Saga <showcase> [MH2]
+1 Voice of Victory [TDM]
+1 Warden of the Inner Sky [LCI]
+1 Winter Moon [MH3]
+1 Witch Enchanter [MH3]
+```
+
+### 3. Exact card versions (MTG Arena)
+
+---
+
+60 CARD
+
+```
+1 Archenemy's Charm <borderless - surreal space> [EOE] (F)
+2 Bitter Triumph [LCI] (F)
+1 Cavern of Souls <prerelease> [LCI] (F)
+2 Day of Black Sun <prerelease> [TLA] (F)
+2 Deadly Cover-Up <prerelease> [MKM] (F)
+4 Deceit
+3 Doomsday Excruciator [DSK] (F)
+1 Duress <beginner box> [FDN]
+4 Gloomlake Verge <borderless> [DSK] (F)
+2 Harvester of Misery
+2 Insatiable Avarice <prerelease> [OTJ] (F)
+4 Kavaero, Mind-Bitten [OM1]
+1 Malboro [FIN]
+4 Requiting Hex
+4 Restless Reef <prerelease> [LCI] (F)
+1 Shoot the Sheriff [OTJ] (F)
+4 Stock Up [DFT] (F)
+10 Swamp <252> [THB]
+2 Undercity Sewers <prerelease> [MKM] (F)
+4 Watery Grave <borderless - galaxy foil> [EOE] (F)
+2 Winternight Stories <prerelease> [TDM] (F)
+
+1 Annul <promo pack> [EOE] (F)
+1 Cruelclaw's Heist <showcase> [BLB] (F)
+2 Duress <beginner box> [FDN]
+2 Flashfreeze <beginner box> [FDN]
+2 Intimidation Tactics [DFT] (F)
+2 Oildeep Gearhulk <prerelease> [DFT] (F)
+1 Overlord of the Balemurk <Japan Showcase> [DSK]
+2 Quantum Riddler <borderless - surreal space> [EOE] (F)
+1 Soul-Guide Lantern <beginner box> [FDN]
+1 Strategic Betrayal [TDM]
+```
+
+---
+
+COMMANDER
+
+```
+1 Abandoned Air Temple <prerelease> [TLA] (F)
+1 Ademi of the Silkchutes [OM1]
+1 Anointed Peacekeeper <prerelease> [DMU] (F)
+1 Aven Interrupter <prerelease> [OTJ] (F)
+1 Benevolent Bodyguard [EMA] (F)
+1 Castle Ardenvale <planeswalker stamp> [ELD] (F)
+1 Cid, Freeflier Pilot
+1 City of Traitors [TPR] (F)
+1 Cloud, Midgar Mercenary <prerelease> [FIN] (F)
+1 Crystal Vein [C14] (F)
+1 Curious Farm Animals [TLA] (F)
+1 Drannith Magistrate <planeswalker stamp> [IKO] (F)
+1 Dust Bowl <showcase> [OTP] (F)
+1 Eiganjo Castle [CHK] (F)
+1 Eiganjo, Seat of the Empire <prerelease> [NEO] (F)
+1 Elite Spellbinder <planeswalker stamp> [STX] (F)
+1 Ephemerate <japanese> [STA] (FE)
+1 Esper Sentinel [MH2]
+1 Ethersworn Canonist [MMA] (F)
+1 Flickerwisp [C14] (F)
+1 Gemstone Caverns [TSP] (F)
+1 Ghost Vacuum <showcase> [DSK] (F)
+1 Gingerbrute [WOE] (F)
+1 Giver of Runes [MH1]
+1 Glimmer Lens [ONC]
+1 Guide of Souls [MH3] (F)
+1 Hand of Vecna <prerelease> [AFR] (F)
+1 Helitrooper
+1 Helping Hand [LCI] (F)
+1 Jolted Awake <retro> [MH3] (F)
+1 Lay Down Arms <promo pack> [BRO] (F)
+1 Lion Sash <prerelease> [NEO] (F)
+1 Mana Tithe <japanese> [STA] (FE)
+1 Masterwork of Ingenuity [C14] (F)
+1 Mother of Runes [MB1]
+1 Ocelot Pride <retro> [MH3]
+1 On Thin Ice [MH1] (F)
+1 Oust [MB1]
+1 Parallax Wave [VMA] (F)
+1 Phelia, Exuberant Shepherd <foil etched> [MH3] (F)
+1 Pre-War Formalwear
+1 Puresteel Paladin [DPA]
+1 Ranger-Captain of Eos [MH1]
+1 Recruiter of the Guard <borderless> [MH3] (F)
+1 Reverent Mantra [MM] (F)
+1 Sanctifier en-Vec
+1 Seasoned Dungeoneer
+1 Shadowspear <planeswalker stamp> [THB] (F)
+1 Sigarda's Aid [SIR]
+1 Skrelv, Defector Mite <prerelease> [ONE] (F)
+1 Skullclamp [C20]
+1 Skyclave Apparition <planeswalker stamp> [ZNR] (F)
+30 Snow-Covered Plains <277> [KHM] (F)
+1 Solitude
+1 Springleaf Drum <schematics> [BRR] (F)
+1 Starfield Shepherd <promo pack> [EOE]
+1 Static Prison [MH3] (F)
+1 Stoneforge Mystic <OTJ Special Guest> [SPG]
+1 Swift Reconfiguration
+1 Sword of Feast and Famine [MS2]
+1 Sword of Fire and Ice [DST]
+1 Swords to Plowshares [LCC]
+1 Tectonic Edge [MB1]
+1 Thalia, Guardian of Thraben <foil etched> [MUL] (FE)
+1 Thalia, Heretic Cathar [SIR]
+1 Umezawa's Jitte [PRM-GPP] (F)
+1 Urza's Saga
+1 Voice of Victory <prerelease> [TDM] (F)
+1 Warden of the Inner Sky <prerelease> [LCI] (F)
+1 Winter Moon [MH3] (F)
+1 Witch Enchanter [MH3] (F)
+```
+
+### 4. Exact card versions (Magic Online)
+
+same as [Exact card versions (MTG Arena)](#3-exact-card-versions-mtg-arena).
+
+### 5. Magic Online .dek
+
+Same as [.dek file export](#1-dek-file-export) from MTGO, **but the commander is missing the commander-specific annotation**!
