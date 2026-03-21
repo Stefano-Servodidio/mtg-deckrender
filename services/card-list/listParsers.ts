@@ -38,26 +38,47 @@ function parseQtyAndRest(
 }
 
 /**
- * For double-faced cards exported as "Front / Back" or "Front/Back",
- * keep only the front face name.
+ * For double-faced cards exported as "Front / Back", keep only the front face name.
+ * Only handles the standard " / " separator (with spaces) to avoid false positives
+ * on collector numbers that may contain slashes (e.g. "277/280").
  */
 function trimDfc(name: string): string {
     const slashIdx = name.indexOf(' / ')
     if (slashIdx !== -1) return name.slice(0, slashIdx).trim()
-    // Some exports use "Name/Name" without spaces
-    const compactIdx = name.indexOf('/')
-    if (compactIdx > 0 && compactIdx < name.length - 1) {
-        // Only trim if first part looks like a real word (no set codes)
-        const part = name.slice(0, compactIdx).trim()
-        if (/[a-z]/i.test(part)) return part
-    }
     return name
 }
 
 // ─── MTGO .dek XML parser ────────────────────────────────────────────────────
 
-const CARDS_ELEMENT_RE =
-    /<Cards\s+CatID="(\d+)"\s+Quantity="(\d+)"\s+Sideboard="(\w+)"\s+Name="([^"]+)"\s+Annotation="(\d+)"/g
+/**
+ * Match a single <Cards ... /> element regardless of XML attribute order.
+ * Extracts CatID, Quantity, Sideboard, Name, and Annotation attributes.
+ */
+const CARDS_ELEMENT_RE = /<Cards\b([^/]*)\s*\/>/g
+const ATTR_RE = /(\w+)="([^"]*)"/g
+
+function parseCardsElement(element: string): {
+    catId: number
+    quantity: number
+    sideboard: boolean
+    name: string
+    annotation: number
+} | null {
+    const attrs: Record<string, string> = {}
+    let m: RegExpExecArray | null
+    ATTR_RE.lastIndex = 0
+    while ((m = ATTR_RE.exec(element)) !== null) {
+        attrs[m[1]] = m[2]
+    }
+    if (!attrs.CatID || !attrs.Quantity || !attrs.Name) return null
+    return {
+        catId: parseInt(attrs.CatID, 10),
+        quantity: parseInt(attrs.Quantity, 10),
+        sideboard: attrs.Sideboard?.toLowerCase() === 'true',
+        name: attrs.Name,
+        annotation: parseInt(attrs.Annotation ?? '0', 10)
+    }
+}
 
 /**
  * Parse an MTGO .dek XML string.
@@ -72,11 +93,9 @@ export function parseMtgoDek(text: string): ParsedCard[] {
 
     CARDS_ELEMENT_RE.lastIndex = 0
     while ((m = CARDS_ELEMENT_RE.exec(text)) !== null) {
-        const catId = parseInt(m[1], 10)
-        const quantity = parseInt(m[2], 10)
-        const sideboard = m[3].toLowerCase() === 'true'
-        const name = m[4]
-        const annotation = parseInt(m[5], 10)
+        const parsed = parseCardsElement(m[0])
+        if (!parsed) continue
+        const { catId, quantity, sideboard, name, annotation } = parsed
 
         // Commander annotation value
         const isCommander = annotation === 16777728
@@ -100,7 +119,8 @@ export function parseMtgoDek(text: string): ParsedCard[] {
 // ─── MTGO .csv parser ────────────────────────────────────────────────────────
 
 /**
- * Minimal CSV row tokenizer that handles double-quoted fields.
+ * CSV row tokenizer that handles double-quoted fields per RFC 4180.
+ * Escaped quotes within a quoted field are represented as "" (two consecutive quotes).
  */
 function parseCsvRow(row: string): string[] {
     const fields: string[] = []
@@ -110,7 +130,13 @@ function parseCsvRow(row: string): string[] {
     for (let i = 0; i < row.length; i++) {
         const ch = row[i]
         if (ch === '"') {
-            inQuote = !inQuote
+            if (inQuote && row[i + 1] === '"') {
+                // Escaped quote inside a quoted field
+                cur += '"'
+                i++ // skip next quote
+            } else {
+                inQuote = !inQuote
+            }
         } else if (ch === ',' && !inQuote) {
             fields.push(cur)
             cur = ''

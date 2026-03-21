@@ -25,14 +25,30 @@ function identifierKey(id: ScryfallIdentifier): string {
 }
 
 /**
+ * Extract a human-readable card name from a ParsedCard for use in progress
+ * messages and error reporting. Falls back to the first identifier key.
+ */
+function getCardName(pc: ParsedCard): string {
+    for (const candidate of pc.identifierCandidates) {
+        const id = candidate.identifier
+        if ('name' in id) return id.name
+    }
+    return identifierKey(pc.identifierCandidates[0].identifier)
+}
+
+/**
  * Try to match a returned Scryfall card against one of the request
- * identifier objects (name-based fallback for unordered responses).
+ * identifier objects. Uses a matched-set to avoid matching the same
+ * request twice when multiple cards share a name.
  */
 function matchCardToRequest(
     card: ScryfallCard,
-    requests: Array<{ id: ScryfallIdentifier; parsedCard: ParsedCard }>
+    requests: Array<{ id: ScryfallIdentifier; parsedCard: ParsedCard }>,
+    alreadyMatched: Set<ParsedCard>
 ): ParsedCard | undefined {
+    // First pass: exact collector_number + set match
     for (const req of requests) {
+        if (alreadyMatched.has(req.parsedCard)) continue
         const id = req.id
         if (
             'collector_number' in id &&
@@ -43,7 +59,9 @@ function matchCardToRequest(
             return req.parsedCard
         }
     }
+    // Second pass: name match (case-insensitive)
     for (const req of requests) {
+        if (alreadyMatched.has(req.parsedCard)) continue
         const id = req.id
         if ('name' in id && card.name.toLowerCase() === id.name.toLowerCase()) {
             return req.parsedCard
@@ -181,13 +199,17 @@ export async function POST(request: NextRequest) {
                     parsedCard: ParsedCard
                 }> = []
                 const resolvedKeys = new Set<string>()
+                const matchedParsedCards = new Set<ParsedCard>()
 
                 for (const scryfallCard of foundScryfallCards) {
                     const parsedCard = matchCardToRequest(
                         scryfallCard,
-                        requests
+                        requests,
+                        matchedParsedCards
                     )
                     if (!parsedCard) continue
+
+                    matchedParsedCards.add(parsedCard)
 
                     const cardItem = createCardItem(
                         scryfallCard,
@@ -257,8 +279,7 @@ export async function POST(request: NextRequest) {
                         }
                         cachedCards.push(cardData)
                         cachedCardsCount++
-                        const cardName =
-                            'name' in bestId ? bestId.name : cacheKey
+                        const cardName = getCardName(card)
                         console.log(
                             chalk.cyan(`Cache hit for card: ${cardName}`)
                         )
@@ -302,12 +323,7 @@ export async function POST(request: NextRequest) {
                     // Process found cards from primary pass
                     for (const { cardItem, parsedCard } of primaryFound) {
                         if (cardItem.image_uri === null) {
-                            const name =
-                                'name' in
-                                parsedCard.identifierCandidates[0].identifier
-                                    ? parsedCard.identifierCandidates[0]
-                                          .identifier.name
-                                    : 'unknown'
+                            const name = getCardName(parsedCard)
                             errors.push(name)
                             processedCards++
                             controller.send({
@@ -357,12 +373,7 @@ export async function POST(request: NextRequest) {
                                 })
                             } else {
                                 // No more fallback tiers; mark as not_found
-                                const name =
-                                    'name' in
-                                    pc.identifierCandidates[0].identifier
-                                        ? pc.identifierCandidates[0].identifier
-                                              .name
-                                        : 'unknown'
+                                const name = getCardName(pc)
                                 errors.push(name)
                                 console.log(
                                     chalk.yellow(`Card not found: ${name}`)
@@ -391,13 +402,7 @@ export async function POST(request: NextRequest) {
 
                             for (const { cardItem, parsedCard } of retryFound) {
                                 if (cardItem.image_uri === null) {
-                                    const name =
-                                        'name' in
-                                        parsedCard.identifierCandidates[0]
-                                            .identifier
-                                            ? parsedCard.identifierCandidates[0]
-                                                  .identifier.name
-                                            : 'unknown'
+                                    const name = getCardName(parsedCard)
                                     errors.push(name)
                                     processedCards++
                                     controller.send({
@@ -433,12 +438,7 @@ export async function POST(request: NextRequest) {
 
                             // Cards still not found after retry are final errors
                             for (const pc of retryNotFound) {
-                                const name =
-                                    'name' in
-                                    pc.identifierCandidates[0].identifier
-                                        ? pc.identifierCandidates[0].identifier
-                                              .name
-                                        : 'unknown'
+                                const name = getCardName(pc)
                                 errors.push(name)
                                 console.log(
                                     chalk.yellow(
