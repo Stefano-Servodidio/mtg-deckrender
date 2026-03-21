@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { POST, GET } from '../route'
 import { NextRequest } from 'next/server'
+import * as cardListService from '@/services/card-list'
 import * as decklistUtils from '@/utils/decklist'
 import * as cacheUtils from '@/utils/cache'
 import { CardItem } from '@/types/api'
@@ -67,26 +68,20 @@ describe('Cards API route', () => {
     })
 
     it('POST returns 400 for empty decklist', async () => {
-        vi.spyOn(decklistUtils, 'parseDecklist').mockReturnValue([])
         const req = createRequest({ decklist: '' })
         const res = await POST(req)
         expect(res.status).toBe(400)
         const json = await res.json()
-        expect(json.error).toMatch(
-            /Invalid request. Expected decklist to be a string./
-        )
+        expect(json.error).toMatch(/Invalid request/)
     })
 
     it('POST returns 400 for >75 unique cards', async () => {
-        const cards = Array.from({ length: 76 }, (_, i) => ({
-            name: `Card${i}`,
-            quantity: 1
-        }))
-        const cardsString = cards
-            .map((c) => `${c.quantity} ${c.name}`)
-            .join('\n')
-        vi.spyOn(decklistUtils, 'parseDecklist').mockReturnValue([cardsString])
-        const req = createRequest({ decklist: '...' })
+        // Build a real decklist with 76 unique cards
+        const decklist = Array.from(
+            { length: 76 },
+            (_, i) => `1 UniqueCard${i}`
+        ).join('\n')
+        const req = createRequest({ decklist })
         const res = await POST(req)
         expect(res.status).toBe(400)
         const json = await res.json()
@@ -94,14 +89,6 @@ describe('Cards API route', () => {
     })
 
     it('POST streams progress and complete for valid decklist', async () => {
-        const cards = [
-            { name: 'Island', quantity: 2, groupId: 1 },
-            { name: 'Mountain', quantity: 3, groupId: 1 }
-        ]
-        const cardsString = cards
-            .map((c) => `${c.quantity} ${c.name}`)
-            .join('\n')
-        vi.spyOn(decklistUtils, 'parseDecklist').mockReturnValue([cardsString])
         vi.spyOn(decklistUtils, 'createCardItem').mockImplementation(
             (data, quantity, groupId) =>
                 ({
@@ -111,27 +98,14 @@ describe('Cards API route', () => {
                     groupId
                 }) as CardItem
         )
-        vi.spyOn(decklistUtils, 'createMockCardItem').mockImplementation(
-            (name, quantity, groupId) =>
-                ({
-                    name,
-                    image_uri: null,
-                    quantity,
-                    groupId
-                }) as CardItem
-        )
-        vi.spyOn(cacheUtils.collectionCardCache, 'get').mockReturnValue(
-            undefined
-        )
+        vi.spyOn(cacheUtils.cardCache, 'get').mockReturnValue(undefined)
         vi.spyOn(global, 'fetch').mockResolvedValue({
             ok: true,
             status: 200,
-            json: async () => ({
-                data: [{ name: 'Island' }, { name: 'Mountain' }]
-            })
+            json: async () => ({ name: 'Island' })
         } as any)
 
-        const req = createRequest({ decklist: 'Island\nMountain' })
+        const req = createRequest({ decklist: '1 Island' })
         const res = await POST(req)
         expect(res.body).toBeInstanceOf(ReadableStream)
         // Read the stream and check for 'complete'
@@ -149,11 +123,6 @@ describe('Cards API route', () => {
 
     it('POST uses cache for cached cards', async () => {
         const now = Date.now()
-        const cards = [{ name: 'Forest', quantity: 1, groupId: 1 }]
-        const cardsString = cards
-            .map((c) => `${c.quantity} ${c.name}`)
-            .join('\n')
-        vi.spyOn(decklistUtils, 'parseDecklist').mockReturnValue([cardsString])
         vi.spyOn(cacheUtils.cardCache, 'get').mockReturnValue({
             data: {
                 name: 'Forest',
@@ -179,9 +148,11 @@ describe('Cards API route', () => {
     })
 
     it('POST returns 500 on unexpected error', async () => {
-        vi.spyOn(decklistUtils, 'parseDecklist').mockImplementation(() => {
-            throw new Error('fail')
-        })
+        vi.spyOn(cardListService, 'parseDecklistToRequests').mockImplementation(
+            () => {
+                throw new Error('fail')
+            }
+        )
         const req = createRequest({ decklist: 'Island' })
         const res = await POST(req)
         expect(res.status).toBe(500)
