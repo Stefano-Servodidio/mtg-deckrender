@@ -6,10 +6,12 @@
  *  2. Dispatches to the appropriate format-specific parser.
  *  3. Returns a `ParsedDecklist` ready for use in API routes.
  *
- * groupId convention (used throughout the application):
- *   0 = commander
- *   1 = main deck
- *   2 = sideboard
+ * groupId convention:
+ *   0           = commander (always, all formats that support it)
+ *   1, 2, 3, …  = card groups in progressive positive integers.
+ *                 For most formats: 1 = main deck, 2 = sideboard.
+ *                 Formats with blank-line separation may produce
+ *                 additional groups (3, 4, …).
  */
 
 import { detectFormat } from './listMatchers'
@@ -91,3 +93,10 @@ export type {
     IdentifierCandidate,
     ScryfallIdentifier
 } from './types'
+export {
+    identifierKey,
+    getCardName,
+    matchCardToRequest
+} from './collectionUtils'
+export { fetchScryfallBatch } from './batchFetch'
+export type { BatchRequest, BatchResult } from './batchFetch'

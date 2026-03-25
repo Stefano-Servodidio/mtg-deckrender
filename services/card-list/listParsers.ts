@@ -102,12 +102,22 @@ export function parseMtgoDek(text: string): ParsedCard[] {
 
         const groupId = isCommander ? 0 : sideboard ? 2 : 1
 
+        /**
+         * MTGO API constraint: the Scryfall /cards/collection API only
+         * accepts mtgo_id values whose decimal representation has exactly
+         * 3 or 4 digits (i.e. 2 < length < 5). Values outside this range
+         * cause a 400 Bad Request. Omit the identifier when the constraint
+         * is not satisfied and fall back to name-only lookup.
+         */
+        const catIdLength = String(catId).length
+        const validMtgoId = catIdLength > 2 && catIdLength < 5
+
         cards.push({
             quantity,
             groupId,
             rawLine: m[0],
             identifierCandidates: [
-                buildMtgoIdCandidate(catId),
+                ...(validMtgoId ? [buildMtgoIdCandidate(catId)] : []),
                 buildNameCandidate(name)
             ]
         })
@@ -183,8 +193,19 @@ export function parseMtgoCsv(text: string): ParsedCard[] {
         const isCommander = sideboarded && annotation === 16777728
         const groupId = isCommander ? 0 : sideboarded ? 2 : 1
 
+        /**
+         * MTGO API constraint: the Scryfall /cards/collection API only
+         * accepts mtgo_id values whose decimal representation has exactly
+         * 3 or 4 digits (i.e. 2 < length < 5). Values outside this range
+         * cause a 400 Bad Request. Omit the identifier when the constraint
+         * is not satisfied and fall back to collector+set or name.
+         */
+        const mtgoIdLength = String(mtgoId).length
+        const validMtgoId =
+            !isNaN(mtgoId) && mtgoId > 0 && mtgoIdLength > 2 && mtgoIdLength < 5
+
         const candidates = []
-        if (!isNaN(mtgoId) && mtgoId > 0) {
+        if (validMtgoId) {
             candidates.push(buildMtgoIdCandidate(mtgoId))
         }
         if (set && collectorRaw) {
@@ -241,7 +262,6 @@ function parseSetCollectorLine(
 // ─── Moxfield exact parser ────────────────────────────────────────────────────
 
 /** Separator patterns shared by Moxfield/MTGO plain-text formats. */
-const SIDEBOARD_HEADER_RE = /^sideboard[:\s]*$/i
 const SIDEBOARD_COLON_RE = /^sideboard:/i
 const DOUBLE_NEWLINE_RE = /\r?\n\r?\n/
 
@@ -377,8 +397,9 @@ function parseMtgGoldfishLine(
 
 /**
  * Parse MTGGoldfish exact variant decklists (tabletop, Arena, Magic Online).
- * Section separator: blank line (main → sideboard).
- * Commander identification is not available in this format.
+ * Section separator: blank line. groupIds are progressive positive integers
+ * starting at 1 (section index + 1). Commander identification is not available
+ * in this format.
  */
 export function parseMtgGoldfishExact(text: string): ParsedCard[] {
     const cards: ParsedCard[] = []
@@ -387,7 +408,7 @@ export function parseMtgGoldfishExact(text: string): ParsedCard[] {
     const sections = text.split(DOUBLE_NEWLINE_RE)
 
     for (let s = 0; s < sections.length; s++) {
-        const groupId = s === 0 ? 1 : 2 // first section = main, rest = sideboard
+        const groupId = s + 1 // progressive: 1, 2, 3, …
         for (const rawLine of sections[s].split('\n')) {
             const card = parseMtgGoldfishLine(rawLine, groupId)
             if (card) cards.push(card)
@@ -455,8 +476,10 @@ export function parseMoxfieldArena(text: string): ParsedCard[] {
  * - "count name" lines (space or tab separated)
  * - `SIDEBOARD:` / `Sideboard:` / `SB:` / `--` header for sideboard section
  * - Blank-line section split: if the last section has exactly 1 unique card
- *   (total count may vary) and no SIDEBOARD marker was found, that card is
- *   treated as the commander (groupId 0).
+ *   line and no SIDEBOARD marker was found, that card is treated as the
+ *   commander (groupId 0).
+ * - Dynamic groupIds: commander = 0; other sections get progressive positive
+ *   integers starting at 1.
  *
  * All other formats fall through to this parser as a last resort.
  */
@@ -470,10 +493,8 @@ export function parsePlainText(text: string): ParsedCard[] {
     const SIDEBOARD_MARKERS = /^(sideboard[:\s]*|sb:|sb\s*$|--\s*)$/im
 
     const sideboardMarkerMatch = SIDEBOARD_MARKERS.exec(normalised)
-    let foundExplicitSideboard = false
 
     if (sideboardMarkerMatch) {
-        foundExplicitSideboard = true
         const mainText = normalised.slice(0, sideboardMarkerMatch.index)
         const sideText = normalised.slice(
             sideboardMarkerMatch.index + sideboardMarkerMatch[0].length
@@ -530,8 +551,8 @@ export function parsePlainText(text: string): ParsedCard[] {
     }
 
     for (let s = 0; s < mainSections.length; s++) {
-        // First section → main (groupId 1), subsequent → sideboard (groupId 2)
-        const groupId = s === 0 ? 1 : 2
+        // Progressive groupIds: section 0 → 1, section 1 → 2, section 2 → 3, …
+        const groupId = s + 1
         for (const rawLine of mainSections[s].split('\n')) {
             const parsed = parseQtyAndRest(rawLine)
             if (!parsed) continue

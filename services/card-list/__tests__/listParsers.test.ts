@@ -12,17 +12,25 @@ import {
 // ─── parseMtgoDek ────────────────────────────────────────────────────────────
 
 describe('parseMtgoDek', () => {
+    // Use 3-4 digit CatIDs (valid range per MTGO API constraint)
     const DEK_60 = `<?xml version="1.0" encoding="utf-8"?>
 <Deck>
-  <Cards CatID="83555" Quantity="1" Sideboard="false" Name="Swamp" Annotation="0" />
-  <Cards CatID="83567" Quantity="2" Sideboard="false" Name="Forest" Annotation="0" />
-  <Cards CatID="50256" Quantity="3" Sideboard="true" Name="Thoughtseize" Annotation="0" />
+  <Cards CatID="555" Quantity="1" Sideboard="false" Name="Swamp" Annotation="0" />
+  <Cards CatID="567" Quantity="2" Sideboard="false" Name="Forest" Annotation="0" />
+  <Cards CatID="5026" Quantity="3" Sideboard="true" Name="Thoughtseize" Annotation="0" />
 </Deck>`
 
+    // Commander deck uses an out-of-range CatID to test fallback
     const DEK_CMD = `<?xml version="1.0" encoding="utf-8"?>
 <Deck>
-  <Cards CatID="78726" Quantity="1" Sideboard="false" Name="Command Tower" Annotation="0" />
+  <Cards CatID="726" Quantity="1" Sideboard="false" Name="Command Tower" Annotation="0" />
   <Cards CatID="142375" Quantity="1" Sideboard="true" Name="Juri, Master of the Revue" Annotation="16777728" />
+</Deck>`
+
+    // A deck with only 5-digit+ IDs (all should fall back to name-only)
+    const DEK_LARGE_IDS = `<?xml version="1.0" encoding="utf-8"?>
+<Deck>
+  <Cards CatID="83555" Quantity="1" Sideboard="false" Name="Swamp" Annotation="0" />
 </Deck>`
 
     it('parses main deck cards (Sideboard=false) as groupId 1', () => {
@@ -48,7 +56,7 @@ describe('parseMtgoDek', () => {
         expect(cmd!.groupId).toBe(0)
     })
 
-    it('sets mtgo_id as primary identifier', () => {
+    it('sets mtgo_id as primary identifier for valid 3-4 digit CatIDs', () => {
         const cards = parseMtgoDek(DEK_60)
         expect(cards[0].identifierCandidates[0].type).toBe('mtgo_id')
         const id = cards[0].identifierCandidates[0].identifier
@@ -61,6 +69,14 @@ describe('parseMtgoDek', () => {
         expect(last.type).toBe('name')
     })
 
+    it('omits mtgo_id when CatID has 5 or more digits (API constraint)', () => {
+        const cards = parseMtgoDek(DEK_LARGE_IDS)
+        expect(cards).toHaveLength(1)
+        // Only name identifier should be present; no mtgo_id
+        expect(cards[0].identifierCandidates).toHaveLength(1)
+        expect(cards[0].identifierCandidates[0].type).toBe('name')
+    })
+
     it('returns empty array for empty input', () => {
         expect(parseMtgoDek('')).toHaveLength(0)
     })
@@ -69,19 +85,18 @@ describe('parseMtgoDek', () => {
 // ─── parseMtgoCsv ────────────────────────────────────────────────────────────
 
 describe('parseMtgoCsv', () => {
+    // Use 3-4 digit IDs so mtgo_id is valid; 5-digit IDs to test exclusion
     const CSV = `Card Name,Quantity,ID #,Rarity,Set,Collector #,Premium,Sideboarded,Annotation
-"Mountain",2,83561,Land,ZNR,277/280,No,No,0
-"Plains",3,83543,Land,ZNR,268/280,No,No,0
-"Thoughtseize",1,50256,Rare,THS,107/249,No,Yes,0
+"Mountain",2,561,Land,ZNR,277/280,No,No,0
+"Plains",3,543,Land,ZNR,268/280,No,No,0
+"Thoughtseize",1,5026,Rare,THS,107/249,No,Yes,0
 "Juri, Master of the Revue",1,142375,Uncommon,EOC,119,No,Yes,16777728`
+
+    const CSV_LARGE_ID = `Card Name,Quantity,ID #,Rarity,Set,Collector #,Premium,Sideboarded,Annotation
+"Lightning Bolt",4,83561,Common,M11,149,No,No,0`
 
     it('parses main deck (Sideboarded=No) as groupId 1', () => {
         const cards = parseMtgoCsv(CSV)
-        const mountain = cards.find(
-            (c) =>
-                c.identifierCandidates[1] &&
-                'name' in cards[0].identifierCandidates.at(-1)!.identifier
-        )
         const mains = cards.filter((c) => c.groupId === 1)
         expect(mains.length).toBe(2)
     })
@@ -98,7 +113,7 @@ describe('parseMtgoCsv', () => {
         expect(cmd!.groupId).toBe(0)
     })
 
-    it('sets mtgo_id as primary identifier', () => {
+    it('sets mtgo_id as primary identifier for valid 3-4 digit IDs', () => {
         const cards = parseMtgoCsv(CSV)
         expect(cards[0].identifierCandidates[0].type).toBe('mtgo_id')
     })
@@ -109,6 +124,16 @@ describe('parseMtgoCsv', () => {
         // Collector number should be trimmed of "/280" suffix
         const id = cards[0].identifierCandidates[1].identifier
         expect('collector_number' in id && id.collector_number).toBe('277')
+    })
+
+    it('omits mtgo_id when ID # has 5 or more digits (API constraint)', () => {
+        const cards = parseMtgoCsv(CSV_LARGE_ID)
+        expect(cards).toHaveLength(1)
+        // Should fall back to collector_set as first, then name
+        expect(cards[0].identifierCandidates[0].type).toBe('collector_set')
+        expect(
+            cards[0].identifierCandidates.every((c) => c.type !== 'mtgo_id')
+        ).toBe(true)
     })
 
     it('returns empty for header-only input', () => {

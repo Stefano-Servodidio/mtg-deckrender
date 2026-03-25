@@ -1,7 +1,12 @@
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
-import { createCardItem, sleep } from '../../../utils/decklist'
+import { sleep } from '../../../utils/decklist'
 import { parseDecklistToRequests } from '@/services/card-list'
+import {
+    identifierKey,
+    getCardName,
+    fetchScryfallBatch
+} from '@/services/card-list'
 import type {
     DeckFormat,
     ParsedCard,
@@ -11,64 +16,6 @@ import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
 import { createSSEStream } from '@/utils/stream'
-import { ScryfallCard } from '@/types/scryfall'
-
-/**
- * Build a stable string key for a ScryfallIdentifier (used for mapping
- * not_found responses back to our ParsedCard objects).
- */
-function identifierKey(id: ScryfallIdentifier): string {
-    if ('mtgo_id' in id) return `mtgo_id:${id.mtgo_id}`
-    if ('collector_number' in id) return `cn:${id.set}:${id.collector_number}`
-    if ('set' in id) return `ns:${id.set}:${id.name}`
-    return `n:${id.name}`
-}
-
-/**
- * Extract a human-readable card name from a ParsedCard for use in progress
- * messages and error reporting. Falls back to the first identifier key.
- */
-function getCardName(pc: ParsedCard): string {
-    for (const candidate of pc.identifierCandidates) {
-        const id = candidate.identifier
-        if ('name' in id) return id.name
-    }
-    return identifierKey(pc.identifierCandidates[0].identifier)
-}
-
-/**
- * Try to match a returned Scryfall card against one of the request
- * identifier objects. Uses a matched-set to avoid matching the same
- * request twice when multiple cards share a name.
- */
-function matchCardToRequest(
-    card: ScryfallCard,
-    requests: Array<{ id: ScryfallIdentifier; parsedCard: ParsedCard }>,
-    alreadyMatched: Set<ParsedCard>
-): ParsedCard | undefined {
-    // First pass: exact collector_number + set match
-    for (const req of requests) {
-        if (alreadyMatched.has(req.parsedCard)) continue
-        const id = req.id
-        if (
-            'collector_number' in id &&
-            'set' in id &&
-            card.collector_number === id.collector_number &&
-            card.set === id.set
-        ) {
-            return req.parsedCard
-        }
-    }
-    // Second pass: name match (case-insensitive)
-    for (const req of requests) {
-        if (alreadyMatched.has(req.parsedCard)) continue
-        const id = req.id
-        if ('name' in id && card.name.toLowerCase() === id.name.toLowerCase()) {
-            return req.parsedCard
-        }
-    }
-    return undefined
-}
 
 export async function POST(request: NextRequest) {
     if (isMaintenanceMode()) {
@@ -137,121 +84,11 @@ export async function POST(request: NextRequest) {
             let processedCards = 0
             let cachedCardsCount = 0
 
-            /**
-             * Submit a batch of (identifier, parsedCard) pairs to Scryfall's
-             * /cards/collection endpoint. Returns found CardItems and the list
-             * of ParsedCards that were not_found for retry.
-             */
-            async function fetchBatch(
-                requests: Array<{
-                    id: ScryfallIdentifier
-                    parsedCard: ParsedCard
-                }>,
-                batchLabel: string
-            ): Promise<{
-                found: Array<{ cardItem: CardItem; parsedCard: ParsedCard }>
-                notFound: ParsedCard[]
-            }> {
-                const identifiers = requests.map((r) => r.id)
-
-                const response = await fetch(
-                    `${process.env.API_URL_SCRYFALL}/cards/collection`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'User-Agent':
-                                process.env.API_USER_AGENT ||
-                                'mtg-deck-to-png/1.0'
-                        },
-                        body: JSON.stringify({ identifiers })
-                    }
-                )
-
-                console.log(
-                    chalk.cyan(`${batchLabel} Status: ${response.status}`)
-                )
-
-                if (!response.ok) {
-                    console.log(
-                        chalk.yellow(`${batchLabel} failed: `),
-                        response.status,
-                        response.statusText
-                    )
-                    throw new Error(
-                        `HTTP ERROR POST ${process.env.API_URL_SCRYFALL}/cards/collection ${response.status}: ${response.statusText}`
-                    )
-                }
-
-                const batchData = await response.json()
-                const foundScryfallCards: ScryfallCard[] = batchData.data || []
-                const notFoundIdentifiers: ScryfallIdentifier[] =
-                    batchData.not_found || []
-
-                // Build key → parsedCard map for not_found resolution
-                const keyToCard = new Map<string, ParsedCard>()
-                for (const req of requests) {
-                    keyToCard.set(identifierKey(req.id), req.parsedCard)
-                }
-
-                const found: Array<{
-                    cardItem: CardItem
-                    parsedCard: ParsedCard
-                }> = []
-                const resolvedKeys = new Set<string>()
-                const matchedParsedCards = new Set<ParsedCard>()
-
-                for (const scryfallCard of foundScryfallCards) {
-                    const parsedCard = matchCardToRequest(
-                        scryfallCard,
-                        requests,
-                        matchedParsedCards
-                    )
-                    if (!parsedCard) continue
-
-                    matchedParsedCards.add(parsedCard)
-
-                    const cardItem = createCardItem(
-                        scryfallCard,
-                        parsedCard.quantity,
-                        parsedCard.groupId
-                    )
-                    found.push({ cardItem, parsedCard })
-
-                    // Track which parsedCards were resolved (by first candidate key)
-                    const firstKey = identifierKey(
-                        parsedCard.identifierCandidates[0].identifier
-                    )
-                    resolvedKeys.add(firstKey)
-                }
-
-                // Cards in not_found: find their ParsedCard for retry
-                const notFoundCards: ParsedCard[] = []
-                for (const nfId of notFoundIdentifiers) {
-                    const key = identifierKey(nfId)
-                    const pc = keyToCard.get(key)
-                    if (pc) notFoundCards.push(pc)
-                }
-
-                // Also handle ParsedCards that weren't in not_found but had no match
-                // (e.g. if Scryfall drops duplicates)
-                for (const req of requests) {
-                    const key = identifierKey(req.id)
-                    if (
-                        !resolvedKeys.has(key) &&
-                        !notFoundIdentifiers.some(
-                            (nf) => identifierKey(nf) === key
-                        )
-                    ) {
-                        // Not resolved, not explicitly not_found – treat as not_found
-                        if (!notFoundCards.includes(req.parsedCard)) {
-                            notFoundCards.push(req.parsedCard)
-                        }
-                    }
-                }
-
-                return { found, notFound: notFoundCards }
-            }
+            // Scryfall API config (resolved once per request)
+            const scryfallBaseUrl =
+                process.env.API_URL_SCRYFALL ?? 'https://api.scryfall.com'
+            const userAgent =
+                process.env.API_USER_AGENT ?? 'mtg-deck-to-png/1.0'
 
             // Process each batch
             for (
@@ -315,9 +152,11 @@ export async function POST(request: NextRequest) {
                     }))
 
                     const { found: primaryFound, notFound: primaryNotFound } =
-                        await fetchBatch(
+                        await fetchScryfallBatch(
                             primaryRequests,
-                            `Batch ${batchIndex + 1}`
+                            `Batch ${batchIndex + 1}`,
+                            scryfallBaseUrl,
+                            userAgent
                         )
 
                     // Process found cards from primary pass
@@ -395,9 +234,11 @@ export async function POST(request: NextRequest) {
                             const {
                                 found: retryFound,
                                 notFound: retryNotFound
-                            } = await fetchBatch(
+                            } = await fetchScryfallBatch(
                                 retryRequests,
-                                `Batch ${batchIndex + 1} retry`
+                                `Batch ${batchIndex + 1} retry`,
+                                scryfallBaseUrl,
+                                userAgent
                             )
 
                             for (const { cardItem, parsedCard } of retryFound) {
