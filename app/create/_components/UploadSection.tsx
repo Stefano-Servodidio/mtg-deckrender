@@ -10,10 +10,11 @@ import {
     useColorModeValue,
     VStack,
     Progress,
-    useToast
+    useToast,
+    Link
 } from '@chakra-ui/react'
 import { useCallback, useState } from 'react'
-import { FaUpload } from 'react-icons/fa'
+import { FaUpload, FaBook } from 'react-icons/fa'
 import { useAnalytics } from '@/hooks/useAnalytics'
 
 interface ProgressInfo {
@@ -219,25 +220,46 @@ const UploadSection: React.FC<UploadSectionProps> = ({
             )}
 
             {/* Upload Button */}
-            <Button
-                data-testid="upload-button"
-                size="lg"
-                leftIcon={<FaUpload />}
-                onClick={handleUpload}
-                isLoading={isLoadingCards}
-                colorScheme="orange"
-                loadingText="Uploading..."
-                w={{ base: 'full', md: 'auto' }}
-                px={8}
-                _hover={{
-                    transform: 'translateY(-2px)',
-                    boxShadow: 'lg'
-                }}
-                transition="all 0.2s"
-                disabled={!decklistText || isLoadingCards}
-            >
-                Upload Decklist
-            </Button>
+            <HStack spacing={4} w={{ base: 'full', md: 'auto' }}>
+                <Button
+                    data-testid="upload-button"
+                    size="lg"
+                    leftIcon={<FaUpload />}
+                    onClick={handleUpload}
+                    isLoading={isLoadingCards}
+                    colorScheme="orange"
+                    loadingText="Uploading..."
+                    w={{ base: 'full', md: 'auto' }}
+                    px={8}
+                    _hover={{
+                        transform: 'translateY(-2px)',
+                        boxShadow: 'lg'
+                    }}
+                    transition="all 0.2s"
+                    disabled={!decklistText || isLoadingCards}
+                >
+                    Upload Decklist
+                </Button>
+                <Link
+                    href="/guide"
+                    color="purple.600"
+                    fontSize="sm"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    _hover={{ textDecoration: 'underline' }}
+                    whiteSpace="nowrap"
+                    onClick={() =>
+                        analytics.trackLinkClick(
+                            'Format Guide (Upload)',
+                            '/guide'
+                        )
+                    }
+                >
+                    <Box as={FaBook} display="inline" mr={1} />
+                    Format Guide
+                </Link>
+            </HStack>
         </VStack>
     )
 }

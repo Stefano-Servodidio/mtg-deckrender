@@ -1,12 +1,8 @@
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
-import {
-    parseDecklist,
-    getUniqueCards,
-    createCardItem,
-    createMockCardItem,
-    sleep
-} from '../../../utils/decklist'
+import { createCardItem, sleep } from '../../../utils/decklist'
+import { parseDecklistToRequests } from '@/services/card-list'
+import type { DeckFormat } from '@/services/card-list'
 import { CardItem } from '@/types/api'
 import { cardCache } from '@/utils/cache'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
@@ -21,7 +17,12 @@ export async function POST(request: NextRequest) {
         console.log(chalk.yellow('API: ', chalk.cyan('POST /api/cards')))
 
         // decklist is a string with one card name per line
-        const { decklist } = await request.json()
+        // format is an optional DeckFormat value pre-identified client-side
+        const body = await request.json()
+        const { decklist, format } = body as {
+            decklist?: string
+            format?: DeckFormat
+        }
 
         if (!decklist || typeof decklist !== 'string') {
             return NextResponse.json(
@@ -30,14 +31,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const groups = parseDecklist(decklist)
-
-        // Parse the decklist to get unique cards and their quantities
-        const uniqueCards = groups
-            .map(
-                (group, index) => getUniqueCards(group, index + 1) // 1 for main deck, 2 for sideboard, etc.
-            )
-            .flat()
+        const parsed = parseDecklistToRequests(decklist, format)
+        const uniqueCards = parsed.cards
 
         if (!uniqueCards.length) {
             return NextResponse.json(
@@ -71,7 +66,24 @@ export async function POST(request: NextRequest) {
 
             // Fetch card data from Scryfall for each unique card, with cache
             for (let i = 0; i < uniqueCards.length; i++) {
-                const { name, quantity, groupId } = uniqueCards[i]
+                const parsedCard = uniqueCards[i]
+                // For the /api/cards route, always use the name-only identifier
+                // (this endpoint uses the fuzzy named lookup, not the collection API)
+                const nameCandidate = parsedCard.identifierCandidates.find(
+                    (c) => c.type === 'name'
+                )
+                const name =
+                    nameCandidate && 'name' in nameCandidate.identifier
+                        ? nameCandidate.identifier.name
+                        : parsedCard.identifierCandidates[0] &&
+                            'name' in
+                                parsedCard.identifierCandidates[0].identifier
+                          ? parsedCard.identifierCandidates[0].identifier.name
+                          : ''
+
+                if (!name) continue
+
+                const { quantity, groupId } = parsedCard
                 const cacheKey = name.toLowerCase()
                 const cached = cardCache.get(cacheKey)
 
@@ -170,27 +182,15 @@ export async function POST(request: NextRequest) {
                     })
                     // eslint-disable-next-line unused-imports/no-unused-vars
                 } catch (_fetchError) {
-                    // Fallback to mock data for demonstration
-                    console.log(
-                        chalk.yellow(
-                            `API unavailable, using mock data for ${name}`
-                        )
-                    )
-
-                    const mockCardData = createMockCardItem(
-                        name,
-                        quantity,
-                        groupId
-                    )
-                    cards.push(mockCardData)
-
-                    // Send progress update with mock card
+                    // API unavailable: mark as error (no mock fallback)
+                    errors.push(name)
+                    console.log(chalk.yellow(`Failed to fetch card: ${name}`))
                     controller.send({
                         type: 'progress',
                         current: i + 1,
                         total: totalCards,
-                        message: `Loaded ${name} (mock data)`,
-                        card: mockCardData
+                        message: `Failed to fetch ${name}`,
+                        error: name
                     })
                 }
 
@@ -220,7 +220,7 @@ export async function GET() {
 
     return NextResponse.json({
         message: 'Card Images API',
-        usage: 'POST with { "decklist": "4x Card Name 1\n4x Card Name 2" }',
+        usage: 'POST with { "decklist": "4x Card Name 1\n4x Card Name 2", "format": "(optional) detected format" }',
         description:
             'Fetches card information and images for the provided text decklist. Supports up to 75 unique cards.',
         limits: {

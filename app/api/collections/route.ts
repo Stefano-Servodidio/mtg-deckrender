@@ -1,12 +1,17 @@
 import chalk from 'chalk'
 import { NextRequest, NextResponse } from 'next/server'
+import { sleep } from '../../../utils/decklist'
+import { parseDecklistToRequests } from '@/services/card-list'
 import {
-    parseDecklist,
-    getUniqueCards,
-    createCardItem,
-    createMockCardItem,
-    sleep
-} from '../../../utils/decklist'
+    identifierKey,
+    getCardName,
+    fetchScryfallBatch
+} from '@/services/card-list'
+import type {
+    DeckFormat,
+    ParsedCard,
+    ScryfallIdentifier
+} from '@/services/card-list'
 import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
@@ -22,7 +27,12 @@ export async function POST(request: NextRequest) {
         console.log(process.env.API_URL_SCRYFALL)
 
         // decklist is a string with one card name per line
-        const { decklist } = await request.json()
+        // format is an optional DeckFormat value pre-identified client-side
+        const body = await request.json()
+        const { decklist, format } = body as {
+            decklist?: string
+            format?: DeckFormat
+        }
 
         if (!decklist || typeof decklist !== 'string') {
             return NextResponse.json(
@@ -31,14 +41,8 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const groups = parseDecklist(decklist)
-
-        // Parse the decklist to get unique cards and their quantities
-        const uniqueCards = groups
-            .map(
-                (group, index) => getUniqueCards(group, index + 1) // 1 for main deck, 2 for sideboard, etc.
-            )
-            .flat()
+        const parsed = parseDecklistToRequests(decklist, format)
+        const uniqueCards = parsed.cards
 
         if (!uniqueCards.length) {
             return NextResponse.json(
@@ -47,9 +51,9 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        if (uniqueCards.length > 100) {
+        if (uniqueCards.length > 150) {
             return NextResponse.json(
-                { error: 'Decklist exceeds the maximum of 100 unique cards.' },
+                { error: 'Decklist exceeds the maximum of 150 unique cards.' },
                 { status: 400 }
             )
         }
@@ -72,13 +76,19 @@ export async function POST(request: NextRequest) {
             })
 
             // Split cards into batches
-            const batches: (typeof uniqueCards)[] = []
+            const batches: ParsedCard[][] = []
             for (let i = 0; i < uniqueCards.length; i += BATCH_SIZE) {
                 batches.push(uniqueCards.slice(i, i + BATCH_SIZE))
             }
 
             let processedCards = 0
             let cachedCardsCount = 0
+
+            // Scryfall API config (resolved once per request)
+            const scryfallBaseUrl =
+                process.env.API_URL_SCRYFALL ?? 'https://api.scryfall.com'
+            const userAgent =
+                process.env.API_USER_AGENT ?? 'mtg-deck-to-png/1.0'
 
             // Process each batch
             for (
@@ -90,31 +100,33 @@ export async function POST(request: NextRequest) {
 
                 // Check cache first and separate cached vs non-cached cards
                 const cachedCards: CardItem[] = []
-                const cardsToFetch: typeof uniqueCards = []
+                const cardsToFetch: ParsedCard[] = []
 
                 for (const card of batch) {
-                    const cacheKey = card.name.toLowerCase()
+                    // Cache key: use best candidate identifier
+                    const bestId = card.identifierCandidates[0].identifier
+                    const cacheKey = identifierKey(bestId)
                     const cached = collectionCardCache.get(cacheKey)
 
                     if (cached && cached.expires > now) {
-                        const cardData = {
+                        const cardData: CardItem = {
                             ...cached.data,
                             quantity: card.quantity,
                             groupId: card.groupId
                         }
                         cachedCards.push(cardData)
                         cachedCardsCount++
+                        const cardName = getCardName(card)
                         console.log(
-                            chalk.cyan(`Cache hit for card: ${card.name}`)
+                            chalk.cyan(`Cache hit for card: ${cardName}`)
                         )
 
                         processedCards++
-                        // Send progress update for cached card
                         controller.send({
                             type: 'progress',
                             current: processedCards,
                             total: totalCards,
-                            message: `Loaded ${card.name} (cached)`,
+                            message: `Loaded ${cardName} (cached)`,
                             card: cardData
                         })
                     } else {
@@ -126,7 +138,6 @@ export async function POST(request: NextRequest) {
 
                 // Fetch non-cached cards using Collections API
                 if (cardsToFetch.length > 0) {
-                    // Send progress update for batch fetching
                     controller.send({
                         type: 'progress',
                         current: processedCards,
@@ -134,93 +145,125 @@ export async function POST(request: NextRequest) {
                         message: `Fetching batch ${batchIndex + 1}/${batches.length} (${cardsToFetch.length} cards)...`
                     })
 
-                    const identifiers = cardsToFetch.map((card) => ({
-                        name: card.name
+                    // Build primary request: best candidate per card
+                    const primaryRequests = cardsToFetch.map((pc) => ({
+                        id: pc.identifierCandidates[0].identifier,
+                        parsedCard: pc
                     }))
 
-                    const response = await fetch(
-                        `${process.env.API_URL_SCRYFALL}/cards/collection`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'User-Agent':
-                                    process.env.API_USER_AGENT ||
-                                    'mtg-deck-to-png/1.0'
-                            },
-                            body: JSON.stringify({ identifiers })
+                    const { found: primaryFound, notFound: primaryNotFound } =
+                        await fetchScryfallBatch(
+                            primaryRequests,
+                            `Batch ${batchIndex + 1}`,
+                            scryfallBaseUrl,
+                            userAgent
+                        )
+
+                    // Process found cards from primary pass
+                    for (const { cardItem, parsedCard } of primaryFound) {
+                        if (cardItem.image_uri === null) {
+                            const name = getCardName(parsedCard)
+                            errors.push(name)
+                            processedCards++
+                            controller.send({
+                                type: 'progress',
+                                current: processedCards,
+                                total: totalCards,
+                                message: `No image available for ${name}`,
+                                error: name
+                            })
+                            continue
                         }
-                    )
 
-                    console.log(
-                        chalk.cyan(
-                            `Fetching batch ${batchIndex + 1}, Status: ${response.status}`
+                        cards.push(cardItem)
+
+                        const cacheKey = identifierKey(
+                            parsedCard.identifierCandidates[0].identifier
                         )
-                    )
+                        collectionCardCache.set(cacheKey, {
+                            data: cardItem,
+                            expires: now + CACHE_DURATION
+                        })
 
-                    if (!response.ok) {
-                        console.log(
-                            chalk.yellow(`Batch ${batchIndex + 1} failed: `),
-                            response.status,
-                            response.statusText
-                        )
-                        throw new Error(
-                            `HTTP ERROR POST ${process.env.API_URL_SCRYFALL}/cards/collection ${response.status}: ${response.statusText}`
-                        )
-                    } else {
-                        const batchData = await response.json()
-                        const foundCards = batchData.data || []
+                        processedCards++
+                        controller.send({
+                            type: 'progress',
+                            current: processedCards,
+                            total: totalCards,
+                            message: `Loaded ${cardItem.name}`,
+                            card: cardItem
+                        })
+                    }
 
-                        // Process each card in the fetch list
-                        for (const card of cardsToFetch) {
-                            const cacheKey = card.name.toLowerCase()
-                            let scryfallData = null
+                    // Single retry pass for not_found cards using next fallback tier
+                    if (primaryNotFound.length > 0) {
+                        const retryRequests: Array<{
+                            id: ScryfallIdentifier
+                            parsedCard: ParsedCard
+                        }> = []
 
-                            for (const foundCard of foundCards) {
-                                // Exact match first
-                                if (foundCard.name.toLowerCase() === cacheKey) {
-                                    scryfallData = foundCard
-                                    break
-                                } else if (
-                                    foundCard.name
-                                        .toLowerCase()
-                                        .includes(cacheKey) &&
-                                    !cards.find(
-                                        (c) =>
-                                            c.name.toLowerCase() ===
-                                            foundCard.name.toLowerCase()
-                                    )
-                                ) {
-                                    // Partial match if no exact match and not already added
-                                    scryfallData = foundCard
-                                }
-                            }
-
-                            if (scryfallData) {
-                                const cardData = createCardItem(
-                                    scryfallData,
-                                    card.quantity,
-                                    card.groupId
+                        for (const pc of primaryNotFound) {
+                            // Find next candidate after the one already tried
+                            const nextCandidate = pc.identifierCandidates[1]
+                            if (nextCandidate) {
+                                retryRequests.push({
+                                    id: nextCandidate.identifier,
+                                    parsedCard: pc
+                                })
+                            } else {
+                                // No more fallback tiers; mark as not_found
+                                const name = getCardName(pc)
+                                errors.push(name)
+                                console.log(
+                                    chalk.yellow(`Card not found: ${name}`)
                                 )
+                                processedCards++
+                                controller.send({
+                                    type: 'progress',
+                                    current: processedCards,
+                                    total: totalCards,
+                                    message: `Card not found: ${name}`,
+                                    error: name
+                                })
+                            }
+                        }
 
-                                if (cardData.image_uri === null) {
-                                    errors.push(card.name)
+                        if (retryRequests.length > 0) {
+                            await sleep(50) // respect rate limit between retry and next batch
+
+                            const {
+                                found: retryFound,
+                                notFound: retryNotFound
+                            } = await fetchScryfallBatch(
+                                retryRequests,
+                                `Batch ${batchIndex + 1} retry`,
+                                scryfallBaseUrl,
+                                userAgent
+                            )
+
+                            for (const { cardItem, parsedCard } of retryFound) {
+                                if (cardItem.image_uri === null) {
+                                    const name = getCardName(parsedCard)
+                                    errors.push(name)
                                     processedCards++
                                     controller.send({
                                         type: 'progress',
                                         current: processedCards,
                                         total: totalCards,
-                                        message: `No image available for ${card.name}`,
-                                        error: card.name
+                                        message: `No image available for ${name}`,
+                                        error: name
                                     })
                                     continue
                                 }
 
-                                cards.push(cardData)
+                                cards.push(cardItem)
 
-                                // Cache the card data for 24 hours
+                                const cacheKey = identifierKey(
+                                    parsedCard.identifierCandidates[0]
+                                        .identifier
+                                )
                                 collectionCardCache.set(cacheKey, {
-                                    data: cardData,
+                                    data: cardItem,
                                     expires: now + CACHE_DURATION
                                 })
 
@@ -229,32 +272,27 @@ export async function POST(request: NextRequest) {
                                     type: 'progress',
                                     current: processedCards,
                                     total: totalCards,
-                                    message: `Loaded ${card.name}`,
-                                    card: cardData
+                                    message: `Loaded ${cardItem.name}`,
+                                    card: cardItem
                                 })
-                            } else {
-                                // Card not found, add to errors or use mock
-                                errors.push(card.name)
+                            }
+
+                            // Cards still not found after retry are final errors
+                            for (const pc of retryNotFound) {
+                                const name = getCardName(pc)
+                                errors.push(name)
                                 console.log(
                                     chalk.yellow(
-                                        `Card not found: ${card.name}, using mock data`
+                                        `Card not found after retry: ${name}`
                                     )
                                 )
-
-                                const mockCardData = createMockCardItem(
-                                    card.name,
-                                    card.quantity,
-                                    card.groupId
-                                )
-                                cards.push(mockCardData)
-
                                 processedCards++
                                 controller.send({
                                     type: 'progress',
                                     current: processedCards,
                                     total: totalCards,
-                                    message: `Loaded ${card.name} (mock data)`,
-                                    card: mockCardData
+                                    message: `Card not found: ${name}`,
+                                    error: name
                                 })
                             }
                         }
@@ -269,7 +307,7 @@ export async function POST(request: NextRequest) {
 
             let sortedByGroup = cards
             if (cachedCardsCount > 0 && cachedCardsCount < cards.length) {
-                // If we used a mix of  cached and non-cached cards, re-sort the final list by groupId to maintain original order
+                // Re-sort to maintain groupId order when mixing cached and fresh cards
                 sortedByGroup = cards.sort((a, b) => a.groupId - b.groupId)
             }
 
@@ -296,7 +334,7 @@ export async function GET() {
 
     return NextResponse.json({
         message: 'Collections API',
-        usage: 'POST with { "decklist": "4x Card Name 1\n4x Card Name 2" }',
+        usage: 'POST with { "decklist": "4x Card Name 1\n4x Card Name 2", "format": "(optional) detected format" }',
         description:
             'Fetches card information and images using Scryfall Collections API. Supports up to 150 unique cards with batch processing.',
         limits: {
