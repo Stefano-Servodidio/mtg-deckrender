@@ -4,6 +4,7 @@ List of supported deck formats by site / source
 
 ## Table of Contents
 
+- [Parsing Behavior](#parsing-behavior)
 - [Moxfield](#moxfield)
     - [1. Copy for Moxfield (Exact set + card number)](#1-copy-for-moxfield-exact-set--card-number)
     - [2. Copy for Arena](#2-copy-for-arena)
@@ -22,6 +23,68 @@ List of supported deck formats by site / source
     - [3. Exact card versions (MTG Arena)](#3-exact-card-versions-mtg-arena)
     - [4. Exact card versions (Magic Online)](#4-exact-card-versions-magic-online)
     - [5. Magic Online .dek](#5-magic-online-dek)
+
+---
+
+## Parsing Behavior
+
+### Format Detection
+
+The application automatically detects the deck format from the submitted text.
+Detection is deterministic and bounded to the first 40 non-empty lines of the
+input. If the format cannot be detected with confidence, the parser falls back
+to plain-text mode.
+
+**Detection priority (highest to lowest):**
+
+| Priority | Format                      | Detection signal                                                     |
+| -------- | --------------------------- | -------------------------------------------------------------------- |
+| 1        | MTGO `.dek` XML             | XML prolog + `<Deck>` root element                                   |
+| 2        | MTGO `.csv`                 | Exact CSV header: `Card Name,Quantity,ID #,…`                        |
+| 3        | Moxfield exact              | `(SET) collector_number` tokens + optional `SIDEBOARD:`              |
+| 4        | Arena default               | `Deck` / `Commander` / `Sideboard` section headers + `(SET) number`  |
+| 5        | MTGGoldfish exact           | `[SET]` tokens, optional `<treatment>`, optional `(F)`/`(FE)` suffix |
+| 6        | Moxfield Arena / plain text | `About` / `Name` / `Deck` headers or plain `qty name` lines          |
+
+Formats 1 and 2 use early-stop detection (a single definitive pattern is
+sufficient). Formats 3–6 use weighted heuristic scoring capped at 10.
+
+### Identifier Preference Order
+
+For each card line the parser constructs an ordered list of Scryfall identifier
+candidates. The most reliable identifier is tried first; if Scryfall returns
+`not_found`, the next candidate is tried in a single retry pass:
+
+1. `{ mtgo_id }` — MTGO `.dek` and `.csv` only. **Constraint**: only values
+   with exactly 3 or 4 decimal digits are submitted (i.e. `100 ≤ id ≤ 9999`).
+   Values outside this range are silently omitted to avoid Scryfall 400 errors.
+2. `{ collector_number, set }` — Moxfield exact, Arena default, MTGO `.csv`.
+3. `{ name, set }` — MTGGoldfish exact, MTGO `.csv` fallback.
+4. `{ name }` — All formats. Last resort.
+
+### Group ID Convention
+
+Each card is assigned a `groupId` that controls how it is laid out in the
+generated image:
+
+| `groupId` | Meaning                                                                       |
+| --------- | ----------------------------------------------------------------------------- |
+| `0`       | Commander (always group zero, all formats that support it)                    |
+| `1`       | Main deck (first card group)                                                  |
+| `2`       | Sideboard (second card group, or next section after main)                     |
+| `3+`      | Additional groups (blank-line-separated sections in MTGGoldfish / plain text) |
+
+### Known Limitations
+
+- **MTGO ID range constraint**: Scryfall only accepts `mtgo_id` values in the
+  range 100–9999. IDs outside this range (including most modern printings) fall
+  back to name or collector-number lookup automatically.
+- **MTGGoldfish commander**: The MTGGoldfish export format does not include a
+  commander section header; commander detection is not possible from this format.
+- **Moxfield exact commander**: Same as MTGGoldfish — no commander section in
+  the "Copy for Moxfield" export.
+
+---
 
 ## Moxfield
 

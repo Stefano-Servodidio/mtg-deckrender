@@ -94,6 +94,20 @@ export function Footer() {
                             Report a bug
                         </Link>
                         <Link
+                            href="/guide"
+                            color={linkColor}
+                            fontSize="sm"
+                            _hover={{ textDecoration: 'underline' }}
+                            onClick={() =>
+                                analytics.trackLinkClick(
+                                    'Format Guide',
+                                    '/guide'
+                                )
+                            }
+                        >
+                            Format Guide
+                        </Link>
+                        <Link
                             href="https://ko-fi.com/stefanoservodidio"
                             color={linkColor}
                             fontSize="sm"

@@ -136,3 +136,59 @@ extract `{name}` from the `<Card>` element's `Name` attribute. If a validated ma
 - "exact versions" should fallback permissively to best-effort parsing rather than failing outright, to maximize successful matches while still preferring exact when available.
 - keep server-only logs for format detection and parsing details to aid troubleshooting without exposing complexity to users
 - reorganize `utils/decklist` to delegate to new service while preserving existing API for compatibility; reorganize logic into `services/card-list/` for clearer separation of concerns and easier testing when appropriate.
+
+---
+
+## Phase 10: Image Cache Rework
+
+Replace the current `card.id`-only cache key with **exact version identifiers**
+(`${set}:${collector_number}`). This ensures each cached image corresponds to
+the exact printing that was resolved by the upstream API routes.
+
+### Constraints
+
+- A `CardItem` only reaches the `deck-png` route after being successfully
+  resolved by `/api/cards` or `/api/collections`. Scryfall always returns `set`
+  and `collector_number` for every card it returns. Unresolvable cards are
+  excluded by the upstream routes before reaching `deck-png`.
+- Therefore the exact-version key is always available and no fallback to
+  `id:${uuid}` is needed.
+
+### Sub-tasks
+
+**A) Types and key computation**
+
+- Add `set` and `collector_number` as required fields to `CardItem`.
+- Update `createCardItem()` in `utils/decklist.ts` to populate them.
+- Add `exactVersionKey(card: CardItem): string` helper (`utils/cacheKeys.ts`).
+
+**B) In-memory cache upgrade**
+
+- Refactor `CircularCache` from FIFO to LRU (Map re-insertion on `get`).
+- Remove the separate `keys[]` array to eliminate drift risk.
+- Add optional `maxAge` constructor parameter for TTL-based expiry on image entries.
+- Add `peek()` (non-promoting read) and improve `size()` helpers.
+- Update unit tests.
+
+**C) Image download utilities**
+
+- Replace `cacheKey = \`${card.id}\``with`exactVersionKey(card)`in`downloadCardImage`.
+- Replace `cardId` param in `getImageFromBlobs` / `saveImageToBlobs` with the version key.
+- Update `StoredImageMetadata` to record `set`, `collector_number`, and `scryfallId`.
+- Update `needsRevalidation` to use the same key.
+
+**D) Collections/cards API alignment**
+
+- Verify `collectionCardCache` key strategy is consistent with `cardImageCache`.
+- Document the key format in a shared constant.
+
+**E) Tests**
+
+- Unit tests for `exactVersionKey()`.
+- Unit tests for updated `CircularCache` (LRU eviction order, TTL expiry).
+- Update `cardImageStorage` tests to use version keys.
+
+**F) Migration note**
+
+- Existing Blobs entries keyed by UUID become orphaned (not deleted); first access
+  re-downloads from Scryfall. Document in code comment.

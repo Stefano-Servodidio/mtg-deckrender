@@ -12,12 +12,12 @@ reprint.
 
 ## 1) Motivation
 
-| Current behaviour                                    | Target behaviour                                            |
-| ---------------------------------------------------- | ----------------------------------------------------------- |
-| Cache key = Scryfall UUID (`card.id`)                | Cache key = `${set}:${collector_number}` (exact version)    |
-| UUID is only available after a Scryfall lookup       | Exact-version key is known at parse time from the decklist  |
-| A name-only lookup may return any printing           | Exact-version key guarantees the correct printing is cached |
-| No way to pre-warm or invalidate a specific printing | Cache key is meaningful and human-readable                  |
+| Current behaviour                        | Target behaviour                              |
+| ---------------------------------------- | --------------------------------------------- |
+| Cache key = Scryfall UUID (`card.id`)    | Cache key = `${set}:${collector_number}`      |
+| UUID carries no version semantics        | Exact-version key guarantees correct printing |
+| Name-only lookup may return any printing | Key is deterministic and matches user request |
+| No way to invalidate a specific printing | Cache key is meaningful and human-readable    |
 
 ---
 
@@ -34,21 +34,18 @@ Examples:
 - `mh2:342` for Archon of Cruelty (MH2) #342
 - `eld:1` for a card at collector number 1 in Eldraine
 
-### When exact-version key is not available
+### Key derivation
 
-Some decklist formats (plain text, Moxfield Arena copy) only provide a card
-name. For these, continue to use the Scryfall UUID (`card.id`) once the lookup
-completes, prefixed to avoid collisions:
+A card image only reaches the `deck-png` route after it has been successfully
+resolved by `/api/cards` or `/api/collections`. Both routes return a `CardItem`
+populated from a Scryfall response which **always** includes `set` and
+`collector_number`. Therefore:
 
-```
-id:${card.id}
-```
-
-### Key derivation order (mirrors identifier candidate priority)
-
-1. If the decklist provided `set + collector_number` → `${set}:${collector_number}`
-2. If the decklist provided `set + name` only → store using UUID after lookup
-3. Name-only → store using UUID after lookup
+- Every `CardItem` that arrives at `downloadCardImage` is guaranteed to carry
+  `set` and `collector_number`.
+- The key is always `${set.toLowerCase()}:${collector_number}`.
+- No UUID-based fallback is needed or supported. Cards that could not be
+  resolved by the upstream APIs are excluded before reaching deck-png.
 
 ---
 
@@ -131,14 +128,13 @@ these fields continues to compile. Populate them from `ScryfallCard` in
 
 ```typescript
 function exactVersionKey(card: CardItem): string {
-    if (card.set && card.collector_number) {
-        return `${card.set.toLowerCase()}:${card.collector_number}`
-    }
-    return `id:${card.id}`
+    return `${card.set!.toLowerCase()}:${card.collector_number!}`
 }
 ```
 
-Replace `const cacheKey = \`${card.id}\``with`exactVersionKey(card)`in`utils/api.ts` for both memory cache and Blobs lookups.
+Replace `const cacheKey = \`${card.id}\``with`exactVersionKey(card)`in`utils/api.ts` for both memory cache and Blobs lookups. The non-null assertions
+are safe because cards reaching this function have already passed through the
+Scryfall lookup and are guaranteed to carry both fields.
 
 ### 4c) Netlify Blobs storage key
 
@@ -165,9 +161,9 @@ exact-version key internally.
 
 ### Phase A — Types and key computation
 
-- [ ] Add `set` and `collector_number` to `CardItem` (optional fields).
+- [ ] Add `set` and `collector_number` as **required** fields to `CardItem` (Scryfall always returns them; all existing callers already populate them via `createCardItem`).
 - [ ] Update `createCardItem()` in `utils/decklist.ts` to populate them from `ScryfallCard`.
-- [ ] Add `exactVersionKey(card: CardItem): string` helper to `utils/api.ts` or a dedicated `utils/cacheKeys.ts`.
+- [ ] Add `exactVersionKey(card: CardItem): string` helper (returns `${set}:${collector_number}`) to `utils/cacheKeys.ts`.
 
 ### Phase B — In-memory cache
 

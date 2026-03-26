@@ -9,7 +9,7 @@ import {
     HStack,
     MenuButton
 } from '@chakra-ui/react'
-import { FaHome, FaImage } from 'react-icons/fa'
+import { FaHome, FaImage, FaBook } from 'react-icons/fa'
 import Link from 'next/link'
 import { Menu, IconButton, MenuList, MenuItem } from '@chakra-ui/react'
 import { FaBars } from 'react-icons/fa'
@@ -111,6 +111,22 @@ export function Navbar() {
                                 Create
                             </Button>
                         </Link>
+                        <Link href="/guide" style={{ textDecoration: 'none' }}>
+                            <Button
+                                variant="ghost"
+                                leftIcon={<FaBook />}
+                                size="md"
+                                onClick={() =>
+                                    analytics.trackLinkClick('Guide', '/guide')
+                                }
+                                _hover={{
+                                    bg: 'purple.50',
+                                    color: 'purple.600'
+                                }}
+                            >
+                                Format Guide
+                            </Button>
+                        </Link>
                     </HStack>
                     <Box
                         data-testid="navbar-links-mobile"
@@ -156,6 +172,22 @@ export function Navbar() {
                                         _hover={{ bg: 'orange.50' }}
                                     >
                                         Create
+                                    </MenuItem>
+                                </Link>
+                                <Link href="/guide" passHref>
+                                    <MenuItem
+                                        icon={<FaBook />}
+                                        fontWeight="bold"
+                                        color={'purple.600'}
+                                        onClick={() =>
+                                            analytics.trackLinkClick(
+                                                'Guide (Mobile)',
+                                                '/guide'
+                                            )
+                                        }
+                                        _hover={{ bg: 'purple.50' }}
+                                    >
+                                        Format Guide
                                     </MenuItem>
                                 </Link>
                             </MenuList>
