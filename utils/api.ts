@@ -58,7 +58,13 @@ export async function downloadCardImage(
 
         // 3. Download from Scryfall (only if not cached anywhere)
         console.log(chalk.yellow(`Downloading from Scryfall: ${card.name}`))
-        const response = await fetch(card.image_uri as string)
+        const response = await fetch(card.image_uri as string, {
+            headers: {
+                'User-Agent':
+                    'MTGDeckToPNG/1.0 (https://github.com/Stefano-Servodidio/mtg-deckrender)',
+                Accept: 'image/jpeg,image/png,image/*'
+            }
+        })
 
         if (!response.ok) {
             throw new Error(`Failed to fetch image for ${card.name}`)

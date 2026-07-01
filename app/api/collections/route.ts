@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
                                 'Content-Type': 'application/json',
                                 'User-Agent':
                                     process.env.API_USER_AGENT ||
-                                    'mtg-deck-to-png/1.0'
+                                    'mtg-deck-render/1.0'
                             },
                             body: JSON.stringify({ identifiers })
                         }
