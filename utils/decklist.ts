@@ -3,6 +3,11 @@
 
 import { CardItem } from '@/types/api'
 import { ScryfallCard } from '@/types/scryfall'
+import {
+    DECK_FORMAT,
+    DeckFormat,
+    normalizeCardLine
+} from './deckFormatDetection'
 
 // Regex patterns to match separator lines
 // Use word boundaries to prevent matching "sb" within card names like "Kinsbaile Aspirant"
@@ -50,17 +55,25 @@ export function parseDecklist(decklist: string): string[] {
 }
 
 /**
- * Extract unique cards from a decklist section with their quantities
- * Each line should be in format: "4x Card Name" or "4 Card Name"
+ * Extract unique cards from a decklist section with their quantities.
+ * Each line should be in format: "4x Card Name" or "4 Card Name".
+ * When a format is provided, format-specific tokens (e.g. set codes, foil
+ * markers, MTGO sideboard prefixes) are stripped before name extraction.
  */
 export function getUniqueCards(
     decklist: string,
-    groupId: number
+    groupId: number,
+    format: DeckFormat = DECK_FORMAT.PLAIN
 ): { name: string; quantity: number; groupId: number }[] {
-    // Replace first space with # to split quantity and name, then trim lines
+    // Normalize each line according to the detected format, then replace the
+    // first space with '#' to split quantity from card name.
     const cardStrings = decklist
         .split('\n')
-        .map((line) => line.replace('\r', '').replace(' ', '#').trim())
+        .map((line) =>
+            normalizeCardLine(line.replace(/\r/g, ''), format)
+                .replace(' ', '#')
+                .trim()
+        )
 
     // Filter out empty lines
     return cardStrings.reduce<

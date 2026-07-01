@@ -7,6 +7,7 @@ import {
     createMockCardItem,
     sleep
 } from '../../../utils/decklist'
+import { detectDeckFormat } from '../../../utils/deckFormatDetection'
 import { CardItem } from '@/types/api'
 import { collectionCardCache } from '@/utils/cache'
 import { isMaintenanceMode, maintenanceResponse } from '@/utils/maintenance'
@@ -32,11 +33,12 @@ export async function POST(request: NextRequest) {
         }
 
         const groups = parseDecklist(decklist)
+        const format = detectDeckFormat(decklist)
 
         // Parse the decklist to get unique cards and their quantities
         const uniqueCards = groups
             .map(
-                (group, index) => getUniqueCards(group, index + 1) // 1 for main deck, 2 for sideboard, etc.
+                (group, index) => getUniqueCards(group, index + 1, format) // 1 for main deck, 2 for sideboard, etc.
             )
             .flat()
 
