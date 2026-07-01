@@ -1,4 +1,4 @@
-# mtg-deck-to-png
+# mtg-deck-render
 
 A simple decklist image creator built with Next.js and React. This app allows users to create images from Magic: The Gathering decklists, making it easy to share or print your decks.
 
